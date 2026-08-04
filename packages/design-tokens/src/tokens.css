@@ -1,0 +1,110 @@
+/*
+ * Miroir CSS des tokens Embranche (voir `src/index.ts`).
+ * Les variables `--emb-*` de palette sont posees dynamiquement par l'app en
+ * fonction de la reliure du recit et du mode jour/nuit ; ce qui est ici est la
+ * part statique : typographie, rayons, espacements, animations.
+ */
+
+:root {
+  --emb-font-ui: 'Bricolage Grotesque', system-ui, -apple-system, sans-serif;
+  --emb-font-prose: 'Newsreader', Georgia, serif;
+
+  --emb-radius-sm: 6px;
+  --emb-radius-md: 9px;
+  --emb-radius-lg: 12px;
+  --emb-radius-xl: 18px;
+  --emb-radius-pill: 999px;
+
+  --emb-space-xs: 4px;
+  --emb-space-sm: 8px;
+  --emb-space-md: 12px;
+  --emb-space-lg: 16px;
+  --emb-space-xl: 24px;
+  --emb-space-2xl: 32px;
+
+  --emb-shadow-card: 0 6px 16px -8px rgba(40, 30, 20, 0.4);
+  --emb-shadow-raised: 0 18px 50px -24px rgba(40, 30, 20, 0.4);
+  --emb-shadow-bubble: 0 3px 10px -7px rgba(20, 15, 8, 0.5);
+
+  /* Repli : palette jour, reliure « encre ». L'app ecrase ces valeurs. */
+  --emb-bg: #f6f2ea;
+  --emb-panel: #ffffff;
+  --emb-line: #eee3d2;
+  --emb-rule: rgba(60, 45, 20, 0.05);
+  --emb-ink: #332920;
+  --emb-sub: #8a7d64;
+  --emb-accent: #22344f;
+  --emb-accent-paper: #22344f;
+  --emb-on-accent: #f6f0e2;
+  --emb-grad: linear-gradient(160deg, #16202f, #3a4f6e);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--emb-font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 8px;
+}
+
+@keyframes embFade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes embFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes embDot {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  40% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
