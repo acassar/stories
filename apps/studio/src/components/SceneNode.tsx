@@ -31,9 +31,7 @@ export function SceneNode({ data, selected }: NodeProps<SceneFlowNode>) {
           {scene.title || scene.id}
         </div>
         {isStart && <span className="scene-node__badge scene-node__badge--start">DÉPART</span>}
-        <span
-          className={`scene-node__badge${scene.ending ? ' scene-node__badge--ending' : ''}`}
-        >
+        <span className={`scene-node__badge${scene.ending ? ' scene-node__badge--ending' : ''}`}>
           {scene.ending ? 'FIN' : `${scene.choices.length} choix`}
         </span>
       </div>

@@ -125,10 +125,11 @@ export class StoryEngine {
     return this._state;
   }
 
-  /** Instantane courant — reference stable tant que l'etat ne change pas. */
-  getSnapshot(): EngineSnapshot {
-    return this._snapshot;
-  }
+  /**
+   * Instantane courant — reference stable tant que l'etat ne change pas.
+   * Liee a l'instance : `useSyncExternalStore` la recoit detachee du moteur.
+   */
+  readonly getSnapshot = (): EngineSnapshot => this._snapshot;
 
   getCurrentScene(): ResolvedScene {
     return this._snapshot.scene;
@@ -186,7 +187,9 @@ export class StoryEngine {
       ...next,
       currentSceneId: choice.target,
       history: [...next.history, { sceneId: from, choiceId: choice.id, label: choice.label }],
-      visited: next.visited.includes(choice.target) ? next.visited : [...next.visited, choice.target],
+      visited: next.visited.includes(choice.target)
+        ? next.visited
+        : [...next.visited, choice.target],
       updatedAt: this.clock(),
     };
 

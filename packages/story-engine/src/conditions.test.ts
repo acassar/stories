@@ -58,7 +58,13 @@ describe('evaluateCondition', () => {
           op: 'and',
           conditions: [
             { op: 'eq', variable: 'prudent', value: true },
-            { op: 'or', conditions: [{ op: 'hasItem', item: 'epee' }, { op: 'gt', variable: 'karma', value: 1 }] },
+            {
+              op: 'or',
+              conditions: [
+                { op: 'hasItem', item: 'epee' },
+                { op: 'gt', variable: 'karma', value: 1 },
+              ],
+            },
             { op: 'not', condition: { op: 'visited', scene: 'chateau' } },
           ],
         },
@@ -67,7 +73,10 @@ describe('evaluateCondition', () => {
     ).toBe(true);
 
     expect(
-      evaluateCondition({ op: 'and', conditions: [{ op: 'always' }, { op: 'hasItem', item: 'epee' }] }, context),
+      evaluateCondition(
+        { op: 'and', conditions: [{ op: 'always' }, { op: 'hasItem', item: 'epee' }] },
+        context,
+      ),
     ).toBe(false);
   });
 });

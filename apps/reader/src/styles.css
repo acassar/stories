@@ -1,0 +1,594 @@
+@import '@embranche/design-tokens/fonts';
+@import '@embranche/design-tokens/css';
+
+/*
+ * Peau du lecteur — pensee petit ecran d'abord.
+ *
+ * Les couleurs ne sont jamais ecrites ici : l'app pose les variables
+ * `--emb-*` sur la racine de l'ecran en fonction de la reliure du recit et du
+ * mode jour/nuit, et cette feuille ne fait que les consommer.
+ */
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--emb-bg);
+  color: var(--emb-ink);
+  /* Le texte doit rester lisible sans zoom, et le pouce ne doit pas
+     declencher de zoom accidentel sur double-tap. */
+  font-size: 16px;
+  touch-action: manipulation;
+  overscroll-behavior-y: none;
+}
+
+.screen {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--emb-bg);
+  color: var(--emb-ink);
+  transition: background 0.25s ease;
+  /* Encoches et barres systeme. */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+}
+
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ---------------------------------------------------------------- boutons */
+
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--emb-line);
+  background: transparent;
+  color: var(--emb-ink);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.icon-btn:active {
+  background: var(--emb-panel);
+}
+.icon-btn:focus-visible {
+  outline: 2px solid var(--emb-accent);
+  outline-offset: 2px;
+}
+
+.icon-btn--over {
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(6px);
+  color: #fff;
+}
+
+/* Bouton principal : pleine largeur, atteignable au pouce. */
+.cta {
+  width: 100%;
+  min-height: 52px;
+  border: none;
+  background: var(--emb-accent);
+  color: var(--emb-on-accent);
+  font: 600 14px var(--emb-font-ui);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 16px;
+  border-radius: var(--emb-radius-sm);
+  cursor: pointer;
+}
+.cta:active {
+  filter: brightness(0.94);
+}
+
+.cta--quiet {
+  background: transparent;
+  border: 1px solid var(--emb-line);
+  color: var(--emb-ink);
+  text-transform: none;
+  letter-spacing: 0.02em;
+  font-size: 13px;
+  min-height: 46px;
+  padding: 13px;
+}
+
+/* ------------------------------------------------------------ bibliotheque */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px 8px;
+  flex: none;
+}
+
+.library {
+  padding: 4px 20px 32px;
+}
+
+.library__eyebrow {
+  font: italic 400 14px var(--emb-font-prose);
+  color: var(--emb-sub);
+}
+
+.library__title {
+  font: italic 600 26px var(--emb-font-prose);
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  margin: 0;
+}
+
+.rule {
+  height: 1px;
+  background: var(--emb-line);
+  margin: 16px 0 14px;
+  border: 0;
+}
+
+.card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.story-card {
+  display: flex;
+  gap: 13px;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--emb-line);
+  background: var(--emb-panel);
+  border-radius: 8px;
+  padding: 10px;
+  cursor: pointer;
+  align-items: stretch;
+  color: inherit;
+  animation: embFade 0.4s both;
+}
+.story-card:active {
+  transform: scale(0.995);
+}
+
+.story-card__cover {
+  width: 66px;
+  height: 92px;
+  border-radius: 3px 7px 7px 3px;
+  flex: none;
+  position: relative;
+  overflow: hidden;
+}
+.story-card__cover::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: rgba(0, 0, 0, 0.24);
+}
+
+.story-card__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.story-card__tag {
+  font: 600 10px var(--emb-font-ui);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--emb-accent);
+}
+
+.story-card__title {
+  font: italic 600 18px var(--emb-font-prose);
+  margin-top: 6px;
+  line-height: 1.15;
+}
+
+.story-card__author {
+  font: italic 400 12px var(--emb-font-prose);
+  color: var(--emb-sub);
+  margin-top: 2px;
+}
+
+.story-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 9px;
+  font: 400 11px var(--emb-font-ui);
+  color: var(--emb-sub);
+  flex-wrap: wrap;
+}
+.story-card__meta strong {
+  font-weight: 600;
+  color: var(--emb-accent);
+}
+
+.resume-chip {
+  font: 600 10px var(--emb-font-ui);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--emb-on-accent);
+  background: var(--emb-accent);
+  border-radius: var(--emb-radius-pill);
+  padding: 3px 8px;
+}
+
+/* ------------------------------------------------------------------ detail */
+
+.detail__cover {
+  height: 290px;
+  position: relative;
+  overflow: hidden;
+  flex: none;
+}
+.detail__cover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, var(--emb-bg) 6%, transparent 62%);
+}
+
+.detail__cover-actions {
+  position: absolute;
+  top: calc(8px + env(safe-area-inset-top));
+  left: 16px;
+  right: 16px;
+  display: flex;
+  justify-content: space-between;
+  z-index: 2;
+}
+
+.detail__heading {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: 18px;
+  z-index: 2;
+}
+
+.detail__tag {
+  font: 600 11px var(--emb-font-ui);
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.detail__title {
+  font: italic 600 32px var(--emb-font-prose);
+  color: #fff;
+  margin: 9px 0 0;
+  line-height: 1.08;
+}
+
+.detail__body {
+  padding: 6px 24px calc(30px + env(safe-area-inset-bottom));
+}
+
+.detail__author {
+  font: italic 400 13px var(--emb-font-prose);
+  color: var(--emb-sub);
+}
+
+.detail__blurb {
+  font: 400 16px/1.62 var(--emb-font-prose);
+  opacity: 0.92;
+  margin-top: 14px;
+}
+
+.stats {
+  display: flex;
+  margin-top: 22px;
+  border-top: 1px solid var(--emb-line);
+  border-bottom: 1px solid var(--emb-line);
+  padding: 14px 0;
+}
+
+.stats__item {
+  flex: 1;
+  text-align: center;
+}
+.stats__item + .stats__item {
+  border-left: 1px solid var(--emb-line);
+}
+
+.stats__value {
+  font: 600 19px var(--emb-font-ui);
+  color: var(--emb-accent);
+}
+
+.stats__label {
+  font: 400 10px var(--emb-font-ui);
+  color: var(--emb-sub);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+
+.detail__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+/* --------------------------------------------------------- correspondance */
+
+.reading {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  /* Reglure de papier, en fond de la conversation. */
+  background-image: repeating-linear-gradient(
+    var(--emb-rule) 0,
+    var(--emb-rule) 1px,
+    transparent 1px,
+    transparent 34px
+  );
+}
+
+.reading__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px 11px;
+  flex: none;
+  border-bottom: 1px solid var(--emb-line);
+  background: var(--emb-bg);
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid var(--emb-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: italic 600 15px var(--emb-font-prose);
+  color: var(--emb-accent);
+  flex: none;
+}
+
+.reading__who {
+  flex: 1;
+  min-width: 0;
+}
+
+.reading__name {
+  font: italic 600 15px var(--emb-font-prose);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reading__status {
+  font: italic 400 12px var(--emb-font-prose);
+  color: var(--emb-sub);
+}
+
+.thread {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 16px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  list-style: none;
+  margin: 0;
+}
+
+.bubble-row {
+  display: flex;
+}
+.bubble-row--player {
+  justify-content: flex-end;
+}
+
+.bubble {
+  max-width: 78%;
+  background: var(--emb-panel);
+  color: var(--emb-ink);
+  border: 1px solid var(--emb-line);
+  font: italic 400 16px/1.48 var(--emb-font-prose);
+  padding: 10px 13px;
+  border-radius: 4px 16px 16px 16px;
+  box-shadow: var(--emb-shadow-bubble);
+  animation: embFade 0.3s both;
+}
+
+.bubble--player {
+  background: var(--emb-accent);
+  color: var(--emb-on-accent);
+  border-color: var(--emb-accent);
+  font-style: normal;
+  border-radius: 16px 16px 4px 16px;
+}
+
+.typing {
+  background: var(--emb-panel);
+  border: 1px solid var(--emb-line);
+  border-radius: 4px 14px 14px 14px;
+  padding: 12px 16px;
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+.typing span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--emb-sub);
+  animation: embDot 1.1s infinite;
+}
+.typing span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.typing span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.answers {
+  flex: none;
+  padding: 10px 16px calc(20px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: linear-gradient(to top, var(--emb-bg) 75%, transparent);
+}
+
+.answers__label {
+  font: 400 10px var(--emb-font-ui);
+  color: var(--emb-sub);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+/* Cible tactile large : un choix se tape au pouce, sans viser. */
+.answer {
+  align-self: flex-end;
+  max-width: 88%;
+  min-height: 48px;
+  text-align: right;
+  border: 1px solid var(--emb-accent);
+  background: transparent;
+  color: var(--emb-accent);
+  font: italic 500 15px var(--emb-font-prose);
+  padding: 12px 16px;
+  border-radius: 14px 14px 3px 14px;
+  cursor: pointer;
+}
+.answer:active {
+  background: var(--emb-accent);
+  color: var(--emb-on-accent);
+}
+
+/* -------------------------------------------------------------------- fin */
+
+.ending {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 30px 28px calc(26px + env(safe-area-inset-bottom));
+  overflow-y: auto;
+}
+
+.ending__seal {
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12px 26px -10px rgba(20, 15, 8, 0.4);
+  animation: embFloat 4s ease-in-out infinite;
+  flex: none;
+}
+
+.ending__type {
+  font: 600 11px var(--emb-font-ui);
+  color: var(--emb-accent);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-top: 20px;
+}
+
+.ending__name {
+  font: italic 600 27px var(--emb-font-prose);
+  margin: 8px 0 0;
+  line-height: 1.12;
+}
+
+.ending__blurb {
+  font: 400 15px/1.6 var(--emb-font-prose);
+  opacity: 0.85;
+  margin-top: 12px;
+  max-width: 280px;
+}
+
+.ending__stats {
+  border-top: 1px solid var(--emb-line);
+  border-bottom: 1px solid var(--emb-line);
+  padding: 14px 0;
+  margin-top: 22px;
+  display: flex;
+  gap: 28px;
+}
+
+.ending__actions {
+  width: 100%;
+  margin-top: auto;
+  padding-top: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ------------------------------------------------------------------ divers */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.toast {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  background: var(--emb-panel);
+  border: 1px solid var(--emb-line);
+  color: var(--emb-ink);
+  border-radius: var(--emb-radius-lg);
+  padding: 12px 14px;
+  font: 400 14px var(--emb-font-prose);
+  box-shadow: 0 12px 30px -12px rgba(20, 15, 8, 0.5);
+  z-index: 20;
+}
+
+/*
+ * Montee en gamme : au-dela du telephone, la lecture est recentree en colonne
+ * plutot qu'etiree — un texte large est un texte penible.
+ */
+@media (min-width: 720px) {
+  .screen {
+    max-width: 560px;
+    margin: 0 auto;
+    box-shadow: 0 0 80px -30px rgba(20, 15, 8, 0.45);
+  }
+  .library {
+    padding-inline: 28px;
+  }
+  .bubble {
+    max-width: 68%;
+  }
+}

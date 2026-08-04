@@ -63,9 +63,7 @@ export function ConditionEditor({ value, onChange, knownVariables, sceneIds }: P
             style={{ width: 'auto', padding: '4px 8px', fontSize: 12 }}
             value={flat.join}
             onChange={(event) =>
-              onChange(
-                unflattenCondition({ ...flat, join: event.target.value as 'and' | 'or' }),
-              )
+              onChange(unflattenCondition({ ...flat, join: event.target.value as 'and' | 'or' }))
             }
             aria-label="Joindre les tests par"
           >

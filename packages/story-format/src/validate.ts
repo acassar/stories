@@ -91,7 +91,11 @@ export function parseGameState(input: unknown): GameState {
   const parsed = gameStateSchema.safeParse(input);
   if (!parsed.success) {
     throw new StoryFormatError('Sauvegarde invalide', [
-      { severity: 'error', code: 'schema', message: parsed.error.issues[0]?.message ?? 'forme inattendue' },
+      {
+        severity: 'error',
+        code: 'schema',
+        message: parsed.error.issues[0]?.message ?? 'forme inattendue',
+      },
     ]);
   }
   return parsed.data;

@@ -527,7 +527,11 @@ body {
 }
 
 .input--mono {
-  font: 400 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font:
+    400 12px/1.5 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
 }
 
 .card {

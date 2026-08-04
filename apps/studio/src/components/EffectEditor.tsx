@@ -47,7 +47,10 @@ export function EffectEditor({ value, onChange, knownVariables }: Props) {
               style={{ flex: '1 1 auto', padding: '7px 9px', fontSize: 12 }}
               value={effect.op}
               onChange={(event) =>
-                setAt(index, migrateEffect(effect, event.target.value as Effect['op'], knownVariables))
+                setAt(
+                  index,
+                  migrateEffect(effect, event.target.value as Effect['op'], knownVariables),
+                )
               }
               aria-label="Type d’effet"
             >
@@ -104,7 +107,9 @@ export function EffectEditor({ value, onChange, knownVariables }: Props) {
                 style={{ padding: '7px 9px', fontSize: 12, width: 90 }}
                 type="number"
                 value={effect.value}
-                onChange={(event) => setAt(index, { ...effect, value: Number(event.target.value) || 0 })}
+                onChange={(event) =>
+                  setAt(index, { ...effect, value: Number(event.target.value) || 0 })
+                }
                 aria-label="Quantité"
               />
             )}
@@ -116,7 +121,10 @@ export function EffectEditor({ value, onChange, knownVariables }: Props) {
                 min={1}
                 value={effect.quantity ?? 1}
                 onChange={(event) =>
-                  setAt(index, { ...effect, quantity: Math.max(1, Number(event.target.value) || 1) })
+                  setAt(index, {
+                    ...effect,
+                    quantity: Math.max(1, Number(event.target.value) || 1),
+                  })
                 }
                 aria-label="Quantité"
               />
@@ -137,7 +145,14 @@ function migrateEffect(effect: Effect, op: Effect['op'], knownVariables: string[
       return { op, variable, value: 'value' in effect ? effect.value : true };
     case 'inc':
     case 'dec':
-      return { op, variable, value: typeof effect === 'object' && 'value' in effect && typeof effect.value === 'number' ? effect.value : 1 };
+      return {
+        op,
+        variable,
+        value:
+          typeof effect === 'object' && 'value' in effect && typeof effect.value === 'number'
+            ? effect.value
+            : 1,
+      };
     case 'toggle':
     case 'unset':
       return { op, variable };

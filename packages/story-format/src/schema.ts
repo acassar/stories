@@ -36,8 +36,16 @@ export const conditionSchema: z.ZodType<Condition> = z.lazy(() =>
       variable: z.string().min(1),
       value: variableValueSchema,
     }),
-    z.object({ op: z.literal('hasItem'), item: identifier, quantity: z.number().int().min(1).optional() }),
-    z.object({ op: z.literal('lacksItem'), item: identifier, quantity: z.number().int().min(1).optional() }),
+    z.object({
+      op: z.literal('hasItem'),
+      item: identifier,
+      quantity: z.number().int().min(1).optional(),
+    }),
+    z.object({
+      op: z.literal('lacksItem'),
+      item: identifier,
+      quantity: z.number().int().min(1).optional(),
+    }),
     z.object({ op: z.literal('visited'), scene: identifier }),
     z.object({ op: z.literal('notVisited'), scene: identifier }),
     z.object({ op: z.literal('and'), conditions: z.array(conditionSchema).min(1) }),
@@ -52,8 +60,16 @@ export const effectSchema: z.ZodType<Effect> = z.discriminatedUnion('op', [
   z.object({ op: z.literal('dec'), variable: z.string().min(1), value: z.number() }),
   z.object({ op: z.literal('toggle'), variable: z.string().min(1) }),
   z.object({ op: z.literal('unset'), variable: z.string().min(1) }),
-  z.object({ op: z.literal('addItem'), item: identifier, quantity: z.number().int().min(1).optional() }),
-  z.object({ op: z.literal('removeItem'), item: identifier, quantity: z.number().int().min(1).optional() }),
+  z.object({
+    op: z.literal('addItem'),
+    item: identifier,
+    quantity: z.number().int().min(1).optional(),
+  }),
+  z.object({
+    op: z.literal('removeItem'),
+    item: identifier,
+    quantity: z.number().int().min(1).optional(),
+  }),
 ]);
 
 export const textBlockSchema = z.object({

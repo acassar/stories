@@ -138,7 +138,9 @@ function StoryPanel({ story, onChange }: { story: Story; onChange: (story: Story
             type="number"
             min={0}
             value={story.estimatedMinutes ?? 0}
-            onChange={(event) => set({ estimatedMinutes: Math.max(0, Number(event.target.value) || 0) })}
+            onChange={(event) =>
+              set({ estimatedMinutes: Math.max(0, Number(event.target.value) || 0) })
+            }
           />
         </label>
         <label style={{ flex: 1 }}>
@@ -158,9 +160,7 @@ function StoryPanel({ story, onChange }: { story: Story; onChange: (story: Story
             className="input"
             value={story.narrator?.name ?? ''}
             placeholder="Elara"
-            onChange={(event) =>
-              set({ narrator: { ...story.narrator, name: event.target.value } })
-            }
+            onChange={(event) => set({ narrator: { ...story.narrator, name: event.target.value } })}
           />
         </label>
         <label style={{ flex: 1 }}>
@@ -316,9 +316,7 @@ function ScenePanel({ story, scene, issues, onChange, onSelect }: ScenePanelProp
               className="input"
               value={scene.ending.type}
               placeholder="Fin lumineuse"
-              onChange={(event) =>
-                set({ ending: { ...scene.ending!, type: event.target.value } })
-              }
+              onChange={(event) => set({ ending: { ...scene.ending!, type: event.target.value } })}
             />
           </label>
           <label>
@@ -326,9 +324,7 @@ function ScenePanel({ story, scene, issues, onChange, onSelect }: ScenePanelProp
             <input
               className="input"
               value={scene.ending.name}
-              onChange={(event) =>
-                set({ ending: { ...scene.ending!, name: event.target.value } })
-              }
+              onChange={(event) => set({ ending: { ...scene.ending!, name: event.target.value } })}
             />
           </label>
           <label>
@@ -337,9 +333,7 @@ function ScenePanel({ story, scene, issues, onChange, onSelect }: ScenePanelProp
               className="textarea"
               rows={2}
               value={scene.ending.blurb}
-              onChange={(event) =>
-                set({ ending: { ...scene.ending!, blurb: event.target.value } })
-              }
+              onChange={(event) => set({ ending: { ...scene.ending!, blurb: event.target.value } })}
             />
           </label>
         </div>
@@ -365,10 +359,18 @@ function ScenePanel({ story, scene, issues, onChange, onSelect }: ScenePanelProp
               <div className="card" key={choice.id}>
                 <input
                   className="input"
-                  style={{ border: 'none', borderBottom: '1.5px solid #eee3d2', borderRadius: 0, padding: '3px 0 7px', fontFamily: 'var(--emb-font-prose)' }}
+                  style={{
+                    border: 'none',
+                    borderBottom: '1.5px solid #eee3d2',
+                    borderRadius: 0,
+                    padding: '3px 0 7px',
+                    fontFamily: 'var(--emb-font-prose)',
+                  }}
                   value={choice.label}
                   onChange={(event) =>
-                    onChange(updateChoice(story, scene.id, choice.id, { label: event.target.value }))
+                    onChange(
+                      updateChoice(story, scene.id, choice.id, { label: event.target.value }),
+                    )
                   }
                   aria-label="Libellé du choix"
                 />

@@ -7,7 +7,13 @@
  * savoir exactement quand re-rendre.
  */
 
-import type { Effect, GameState, ItemId, VariableName, VariableValue } from '@embranche/story-format';
+import type {
+  Effect,
+  GameState,
+  ItemId,
+  VariableName,
+  VariableValue,
+} from '@embranche/story-format';
 
 /** Partie de l'etat qu'un effet peut toucher. */
 export interface MutableSlice {

@@ -30,7 +30,9 @@ export const clairiereStory: Story = {
       position: { x: 400, y: 26 },
       blocks: [
         { text: "Le sentier s'enfonce sous les fougères plus hautes que toi." },
-        { text: "Devant, deux lueurs t'appellent — l'une vers le sol, l'autre vers la cime. Laquelle suis-tu ?" },
+        {
+          text: "Devant, deux lueurs t'appellent — l'une vers le sol, l'autre vers la cime. Laquelle suis-tu ?",
+        },
       ],
       choices: [
         { id: 'vers-lucioles', label: 'Suivre les lucioles', target: 'lucioles' },
@@ -43,7 +45,9 @@ export const clairiereStory: Story = {
       position: { x: 170, y: 220 },
       blocks: [
         { text: "Les lucioles s'assemblent." },
-        { text: "Elles forment une porte de lumière qui palpite doucement, comme un cœur qui t'attend." },
+        {
+          text: "Elles forment une porte de lumière qui palpite doucement, comme un cœur qui t'attend.",
+        },
       ],
       choices: [
         { id: 'franchir', label: 'Franchir le portail', target: 'portail' },
@@ -80,7 +84,10 @@ export const clairiereStory: Story = {
       id: 'portail',
       title: 'Le Royaume Lumière',
       position: { x: 70, y: 420 },
-      blocks: [{ text: 'Tu franchis le seuil.' }, { text: "La forêt te couronne gardien de l'aube." }],
+      blocks: [
+        { text: 'Tu franchis le seuil.' },
+        { text: "La forêt te couronne gardien de l'aube." },
+      ],
       choices: [],
       ending: {
         type: 'Fin lumineuse',
@@ -115,7 +122,8 @@ export const clairiereStory: Story = {
       ending: {
         type: 'Fin lumineuse',
         name: 'Le Château des Nues',
-        blurb: "D'un bond, tu rejoins les nuages et découvres une cité oubliée qui n'attendait que toi.",
+        blurb:
+          "D'un bond, tu rejoins les nuages et découvres une cité oubliée qui n'attendait que toi.",
       },
     },
   },
@@ -155,7 +163,7 @@ export const verlaineStory: Story = {
       position: { x: 170, y: 230 },
       blocks: [
         { text: 'Une photo manque, arrachée.' },
-        { text: "À sa place, une adresse griffonnée à la hâte : quai 7, minuit." },
+        { text: 'À sa place, une adresse griffonnée à la hâte : quai 7, minuit.' },
       ],
       choices: [
         { id: 'secretaire', label: 'Interroger la secrétaire', target: 'secretaire' },
@@ -187,7 +195,8 @@ export const verlaineStory: Story = {
       ending: {
         type: 'Affaire élucidée',
         name: 'L’Aube au Quai 7',
-        blurb: "Au petit jour, l'ombre que tu suivais se retourne. Tu avais raison depuis le début.",
+        blurb:
+          "Au petit jour, l'ombre que tu suivais se retourne. Tu avais raison depuis le début.",
       },
     },
     secretaire: {
@@ -269,7 +278,10 @@ export const cimesStory: Story = {
       id: 'accalmie',
       title: "L'accalmie",
       position: { x: 180, y: 230 },
-      blocks: [{ text: 'Tu patientes.' }, { text: 'Le ciel se dégage enfin… mais la lumière baisse déjà.' }],
+      blocks: [
+        { text: 'Tu patientes.' },
+        { text: 'Le ciel se dégage enfin… mais la lumière baisse déjà.' },
+      ],
       choices: [
         { id: 'repartir', label: 'Repartir vers le sommet', target: 'sommet' },
         { id: 'redescendre', label: 'Redescendre, sage', target: 'sage' },
@@ -279,7 +291,10 @@ export const cimesStory: Story = {
       id: 'gloire',
       title: 'Le Toit du Monde',
       position: { x: 520, y: 430 },
-      blocks: [{ text: 'Le sommet est à toi.' }, { text: "Le monde entier s'étend sous tes crampons." }],
+      blocks: [
+        { text: 'Le sommet est à toi.' },
+        { text: "Le monde entier s'étend sous tes crampons." },
+      ],
       choices: [],
       ending: {
         type: 'Fin triomphale',
@@ -291,7 +306,10 @@ export const cimesStory: Story = {
       id: 'chute',
       title: 'La Crevasse',
       position: { x: 740, y: 430 },
-      blocks: [{ text: 'La glace cède.' }, { text: "La montagne, elle, ne pardonne pas l'impatience." }],
+      blocks: [
+        { text: 'La glace cède.' },
+        { text: "La montagne, elle, ne pardonne pas l'impatience." },
+      ],
       choices: [],
       ending: {
         type: 'Fin tragique',
@@ -363,7 +381,10 @@ export const inconnuStory: Story = {
       id: 'trompe',
       title: 'Non, c’est bien toi',
       position: { x: 620, y: 180 },
-      blocks: [{ text: "Non. C'est bien à toi que je parle, Alex." }, { text: 'Et le temps presse.' }],
+      blocks: [
+        { text: "Non. C'est bien à toi que je parle, Alex." },
+        { text: 'Et le temps presse.' },
+      ],
       choices: [
         { id: 'mon-nom', label: 'Comment connaissez-vous mon nom ?', target: 'qui' },
         { id: 'raccroche', label: 'Je raccroche.', target: 'raccroche' },
@@ -401,7 +422,8 @@ export const inconnuStory: Story = {
       ending: {
         type: 'Fin silencieuse',
         name: 'Silence Radio',
-        blurb: "Tu poses le téléphone. Au matin, plus aucune trace de l'appel. Tu ne sauras jamais.",
+        blurb:
+          "Tu poses le téléphone. Au matin, plus aucune trace de l'appel. Tu ne sauras jamais.",
       },
     },
     voiture: {
@@ -425,7 +447,8 @@ export const inconnuStory: Story = {
       ending: {
         type: 'Fin sombre',
         name: 'La Porte Close',
-        blurb: "Tu refermes le rideau. Dehors, le moteur s'éteint — et quelque chose d'autre avec lui.",
+        blurb:
+          "Tu refermes le rideau. Dehors, le moteur s'éteint — et quelque chose d'autre avec lui.",
       },
     },
   },

@@ -88,12 +88,7 @@ export function App() {
       {openStory ? (
         <Editor story={openStory} onChange={saveStory} onBack={() => setOpenId(null)} />
       ) : (
-        <Dashboard
-          stories={stories}
-          onOpen={setOpenId}
-          onSave={saveStory}
-          onDelete={deleteStory}
-        />
+        <Dashboard stories={stories} onOpen={setOpenId} onSave={saveStory} onDelete={deleteStory} />
       )}
     </div>
   );

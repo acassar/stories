@@ -70,7 +70,8 @@ describe('createLocalRepository', () => {
 });
 
 describe('importStoryFile', () => {
-  const asFile = (content: string) => new File([content], 'histoire.json', { type: 'application/json' });
+  const asFile = (content: string) =>
+    new File([content], 'histoire.json', { type: 'application/json' });
 
   it('accepte un export du studio', async () => {
     const result = await importStoryFile(asFile(JSON.stringify(clairiereStory)));

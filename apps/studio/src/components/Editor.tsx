@@ -96,7 +96,10 @@ function EditorCanvas({ story, onChange, onBack }: Props) {
       }
       const scene = story.scenes[source];
       if (!scene) return;
-      const choice = createChoice({ target, label: story.scenes[target]?.title ?? 'Nouveau choix' });
+      const choice = createChoice({
+        target,
+        label: story.scenes[target]?.title ?? 'Nouveau choix',
+      });
       onChange(updateScene(story, source, { choices: [...scene.choices, choice] }));
     },
     [story, onChange],
@@ -161,7 +164,12 @@ function EditorCanvas({ story, onChange, onBack }: Props) {
               proOptions={{ hideAttribution: false }}
               deleteKeyCode={['Backspace', 'Delete']}
             >
-              <Background variant={BackgroundVariant.Dots} gap={22} size={1.2} color={studio.gridDot} />
+              <Background
+                variant={BackgroundVariant.Dots}
+                gap={22}
+                size={1.2}
+                color={studio.gridDot}
+              />
               <Controls showInteractive={false} />
               <MiniMap
                 pannable

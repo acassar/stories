@@ -49,7 +49,11 @@ export function inspectState(
   state: GameState,
 ): { resumable: boolean; reason?: string; staleVersion: boolean } {
   if (state.storyId !== story.id) {
-    return { resumable: false, reason: 'La sauvegarde appartient a un autre recit.', staleVersion: false };
+    return {
+      resumable: false,
+      reason: 'La sauvegarde appartient a un autre recit.',
+      staleVersion: false,
+    };
   }
   if (!story.scenes[state.currentSceneId]) {
     return {

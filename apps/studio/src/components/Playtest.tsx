@@ -133,7 +133,11 @@ function PlaytestSession({ story, fromSceneId, mode, onToggleMode }: SessionProp
       >
         <header
           className="inline"
-          style={{ padding: '14px 16px 10px', borderBottom: `1px solid ${tokens.line}`, flex: 'none' }}
+          style={{
+            padding: '14px 16px 10px',
+            borderBottom: `1px solid ${tokens.line}`,
+            flex: 'none',
+          }}
         >
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ font: `italic 600 15px ${'var(--emb-font-prose)'}` }}>
@@ -165,12 +169,22 @@ function PlaytestSession({ story, fromSceneId, mode, onToggleMode }: SessionProp
 
         <div
           ref={scroller}
-          style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 6px', display: 'flex', flexDirection: 'column', gap: 9 }}
+          style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: '16px 16px 6px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 9,
+          }}
         >
           {transcript.map((message, index) => (
             <div
               key={index}
-              style={{ display: 'flex', justifyContent: message.fromPlayer ? 'flex-end' : 'flex-start' }}
+              style={{
+                display: 'flex',
+                justifyContent: message.fromPlayer ? 'flex-end' : 'flex-start',
+              }}
             >
               <div
                 style={{
@@ -211,7 +225,9 @@ function PlaytestSession({ story, fromSceneId, mode, onToggleMode }: SessionProp
               <div style={{ font: 'italic 600 22px var(--emb-font-prose)', marginTop: 6 }}>
                 {scene.ending.name}
               </div>
-              <div style={{ font: '400 14px/1.55 var(--emb-font-prose)', opacity: 0.85, marginTop: 8 }}>
+              <div
+                style={{ font: '400 14px/1.55 var(--emb-font-prose)', opacity: 0.85, marginTop: 8 }}
+              >
                 {scene.ending.blurb}
               </div>
             </div>
@@ -219,7 +235,13 @@ function PlaytestSession({ story, fromSceneId, mode, onToggleMode }: SessionProp
         </div>
 
         <footer
-          style={{ flex: 'none', padding: '10px 16px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}
+          style={{
+            flex: 'none',
+            padding: '10px 16px 20px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+          }}
         >
           {scene.allChoices.map((choice) => (
             <button

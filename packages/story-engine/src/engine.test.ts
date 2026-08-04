@@ -255,7 +255,12 @@ describe('StoryEngine — retour en arriere', () => {
           position: { x: 0, y: 0 },
           blocks: [{ text: 'A' }],
           choices: [
-            { id: 'go', label: 'Aller', target: 'b', effects: [{ op: 'set', variable: 'flag', value: false }] },
+            {
+              id: 'go',
+              label: 'Aller',
+              target: 'b',
+              effects: [{ op: 'set', variable: 'flag', value: false }],
+            },
           ],
         },
         b: {
@@ -372,6 +377,16 @@ describe('StoryEngine — evenements', () => {
     expect(listener).toHaveBeenCalledTimes(1);
   });
 
+  it('expose subscribe et getSnapshot detachables, comme useSyncExternalStore les passe', () => {
+    const { subscribe, getSnapshot } = e;
+    const listener = vi.fn();
+    subscribe(listener);
+    expect(getSnapshot().scene.id).toBe('hall');
+    e.choose('soulever');
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(getSnapshot().state.variables.cle).toBe(true);
+  });
+
   it('expose un instantane dont la reference ne change qu’avec l’etat', () => {
     const first = e.getSnapshot();
     expect(e.getSnapshot()).toBe(first);
@@ -394,9 +409,7 @@ describe('StoryEngine — evenements', () => {
     const listener = vi.fn();
     e.on('choice:applied', listener);
     e.choose('partir');
-    expect(listener).toHaveBeenCalledWith(
-      expect.objectContaining({ from: 'hall', to: 'dehors' }),
-    );
+    expect(listener).toHaveBeenCalledWith(expect.objectContaining({ from: 'hall', to: 'dehors' }));
   });
 
   it('emet story:ended a l’arrivee sur une fin', () => {

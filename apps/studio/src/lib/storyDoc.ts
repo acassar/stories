@@ -19,7 +19,11 @@ export function updateScene(story: Story, sceneId: SceneId, patch: Partial<Scene
   return { ...story, scenes: { ...story.scenes, [sceneId]: { ...scene, ...patch } } };
 }
 
-export function moveScene(story: Story, sceneId: SceneId, position: { x: number; y: number }): Story {
+export function moveScene(
+  story: Story,
+  sceneId: SceneId,
+  position: { x: number; y: number },
+): Story {
   return updateScene(story, sceneId, { position });
 }
 

@@ -21,7 +21,11 @@ describe('graph', () => {
     // 2 + 3 + 2 choix ; les trois fins n'en ont aucun.
     expect(edges).toHaveLength(7);
     const edge = edges.find((e) => e.id === 'start:vers-lucioles');
-    expect(edge).toMatchObject({ source: 'start', target: 'lucioles', sourceHandle: 'vers-lucioles' });
+    expect(edge).toMatchObject({
+      source: 'start',
+      target: 'lucioles',
+      sourceHandle: 'vers-lucioles',
+    });
   });
 
   it('anime les aretes conditionnelles pour les distinguer', () => {

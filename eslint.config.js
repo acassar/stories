@@ -15,7 +15,12 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        // `_` en prefixe = volontairement ignore, y compris pour retirer une
+        // cle par destructuration (`const { ending: _drop, ...rest } = scene`).
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', ignoreRestSiblings: true },
+      ],
     },
   },
 
@@ -37,7 +42,7 @@ export default tseslint.config(
             {
               group: ['react', 'react-*', 'react/*', '@xyflow/*', '*.css'],
               message:
-                "Le coeur doit rester agnostique du framework UI : pas de React ni de CSS dans story-engine / story-format.",
+                'Le coeur doit rester agnostique du framework UI : pas de React ni de CSS dans story-engine / story-format.',
             },
           ],
         },

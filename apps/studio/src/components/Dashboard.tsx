@@ -146,7 +146,9 @@ export function Dashboard({ stories, onOpen, onSave, onDelete }: Props) {
                   <div className="row__name">{story.title}</div>
                   <div className="row__meta">
                     {story.tag ?? 'Sans genre'} · {story.author ?? 'anonyme'}
-                    {errors > 0 && <span style={{ color: 'var(--st-danger)' }}> · {errors} erreur(s)</span>}
+                    {errors > 0 && (
+                      <span style={{ color: 'var(--st-danger)' }}> · {errors} erreur(s)</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -183,7 +185,9 @@ export function Dashboard({ stories, onOpen, onSave, onDelete }: Props) {
                   type="button"
                   className="btn btn--icon btn--danger"
                   onClick={() => {
-                    if (window.confirm(`Supprimer « ${story.title} » ? Cette action est définitive.`)) {
+                    if (
+                      window.confirm(`Supprimer « ${story.title} » ? Cette action est définitive.`)
+                    ) {
                       onDelete(story.id);
                     }
                   }}
