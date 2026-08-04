@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "noEmit": true,
+    "types": ["vite/client"],
+    "paths": {
+      "@embranche/story-format": ["../../packages/story-format/src/index.ts"],
+      "@embranche/story-engine": ["../../packages/story-engine/src/index.ts"],
+      "@embranche/design-tokens": ["../../packages/design-tokens/src/index.ts"]
+    }
+  },
+  "include": ["src", "vite.config.ts"]
+}

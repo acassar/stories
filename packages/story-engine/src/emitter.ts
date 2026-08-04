@@ -10,8 +10,12 @@
 export type Listener<T> = (payload: T) => void;
 export type Unsubscribe = () => void;
 
-/** `EventMap` associe chaque nom d'evenement au type de sa charge utile. */
-export class Emitter<EventMap extends Record<string, unknown>> {
+/**
+ * `EventMap` associe chaque nom d'evenement au type de sa charge utile.
+ * La contrainte est `object` et non `Record<string, unknown>` : une `interface`
+ * n'a pas de signature d'index implicite et serait autrement rejetee.
+ */
+export class Emitter<EventMap extends object> {
   private readonly listeners = new Map<keyof EventMap, Set<Listener<never>>>();
 
   on<K extends keyof EventMap>(event: K, listener: Listener<EventMap[K]>): Unsubscribe {

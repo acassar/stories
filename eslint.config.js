@@ -82,6 +82,10 @@ export default tseslint.config(
         AudioContext: 'readonly',
         Event: 'readonly',
         KeyboardEvent: 'readonly',
+        structuredClone: 'readonly',
+        crypto: 'readonly',
+        alert: 'readonly',
+        confirm: 'readonly',
       },
     },
     rules: {
