@@ -6,6 +6,8 @@ import { StoryEngine } from '@embranche/story-engine';
 import { sceneMessages, speakerOf, validateStory } from '@embranche/story-format';
 import type { GameState, Story } from '@embranche/story-format';
 
+import { Overlay } from './Overlay';
+
 interface Props {
   story: Story;
   /** Start scene of the test — lets the author play from the selected scene. */
@@ -24,9 +26,11 @@ export function Playtest({ story, fromSceneId, onClose }: Props) {
     [story],
   );
 
+  const fromScene = fromSceneId ? story.scenes[fromSceneId] : undefined;
+
   if (blocking.length > 0) {
     return (
-      <Overlay onClose={onClose}>
+      <Overlay label="Playtest" onClose={onClose}>
         <div className="panel" style={{ maxWidth: 420, padding: 24, gap: 12 }}>
           <div className="inspector__label">Playtest impossible</div>
           <p className="section-help">
@@ -48,10 +52,10 @@ export function Playtest({ story, fromSceneId, onClose }: Props) {
   }
 
   return (
-    <Overlay onClose={onClose}>
+    <Overlay label="Playtest" onClose={onClose}>
       <PlaytestSession
         story={story}
-        fromSceneId={fromSceneId ?? null}
+        fromSceneId={fromScene ? fromScene.id : null}
         mode={mode}
         onToggleMode={() => setMode((current) => (current === 'light' ? 'dark' : 'light'))}
       />
@@ -61,35 +65,23 @@ export function Playtest({ story, fromSceneId, onClose }: Props) {
           Le moteur qui tourne ici est exactement celui du lecteur : mêmes conditions, mêmes effets,
           même historique. Les choix grisés sont ceux dont la condition n’est pas remplie.
         </p>
+        {/*
+          Starting elsewhere than at the beginning means starting with an empty
+          state: the variables the story would have set on the way there are not
+          set. Worth saying, rather than letting the author read a branch that
+          behaves oddly for a reason the tool knows about.
+        */}
+        {fromScene && (
+          <p>
+            Départ forcé sur « {fromScene.title || fromScene.id} », avec l’état initial du récit :
+            ce qui aurait été posé en chemin ne l’est pas.
+          </p>
+        )}
         <button type="button" className="btn" onClick={onClose}>
           Fermer le playtest
         </button>
       </aside>
     </Overlay>
-  );
-}
-
-function Overlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
-  return (
-    <div
-      className="drawer"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Playtest"
-      onClick={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      {children}
-    </div>
   );
 }
 

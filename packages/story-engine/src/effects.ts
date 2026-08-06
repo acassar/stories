@@ -67,17 +67,30 @@ function applyEffect(slice: MutableSlice, effect: Effect): void {
 }
 
 /**
- * Applies a list of effects in order and returns a new state. Order matters:
+ * Applies a list of effects to a slice and returns a new one. Order matters:
  * `inc` then `set` does not yield the same result as `set` then `inc`.
+ *
+ * Exposed on its own because reachability analysis walks over slices, not over
+ * full game states: it has no history and no clock to carry around.
  */
+export function applyEffectsToSlice(
+  slice: Readonly<MutableSlice>,
+  effects: readonly Effect[] | undefined,
+): MutableSlice {
+  if (!effects || effects.length === 0) {
+    return { variables: { ...slice.variables }, inventory: { ...slice.inventory } };
+  }
+  const next: MutableSlice = {
+    variables: { ...slice.variables },
+    inventory: { ...slice.inventory },
+  };
+  for (const effect of effects) applyEffect(next, effect);
+  return next;
+}
+
+/** Same, on a full game state: everything else in the state is left untouched. */
 export function applyEffects(state: GameState, effects: readonly Effect[] | undefined): GameState {
   if (!effects || effects.length === 0) return state;
-
-  const slice: MutableSlice = {
-    variables: { ...state.variables },
-    inventory: { ...state.inventory },
-  };
-  for (const effect of effects) applyEffect(slice, effect);
-
+  const slice = applyEffectsToSlice(state, effects);
   return { ...state, variables: slice.variables, inventory: slice.inventory };
 }

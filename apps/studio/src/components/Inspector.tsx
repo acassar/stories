@@ -1,15 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { STORY_THEMES, kinds, themeLabels } from '@embranche/design-tokens';
 import type { StoryTheme } from '@embranche/design-tokens';
-import { collectStoryVariables } from '@embranche/story-format';
+import { collectStoryVariables, slugify } from '@embranche/story-format';
 import type { Scene, SceneId, SceneKind, Story, ValidationIssue } from '@embranche/story-format';
 
 import {
   addLink,
-  duplicateScene,
   removeLink,
-  removeScene,
+  renameSceneId,
   setKind,
   setStartScene,
   soleIncomingLink,
@@ -23,50 +22,134 @@ import { EffectEditor } from './EffectEditor';
 
 interface Props {
   story: Story;
-  selectedId: SceneId | null;
+  selectedIds: SceneId[];
   issues: ValidationIssue[];
   onChange: (story: Story) => void;
-  onSelect: (sceneId: SceneId | null) => void;
+  onSelect: (sceneId: SceneId) => void;
+  onDeleteSelection: () => void;
+  onDuplicateSelection: () => void;
 }
 
 /** Editing panel: the selected scene, or the story metadata. */
-export function Inspector({ story, selectedId, issues, onChange, onSelect }: Props) {
+export function Inspector({
+  story,
+  selectedIds,
+  issues,
+  onChange,
+  onSelect,
+  onDeleteSelection,
+  onDuplicateSelection,
+}: Props) {
   const [tab, setTab] = useState<'scene' | 'story'>('scene');
+  const selectedId = selectedIds.length === 1 ? selectedIds[0] : undefined;
   const scene = selectedId ? story.scenes[selectedId] : undefined;
   const activeTab = scene ? tab : 'story';
+  const knownVariables = [...collectStoryVariables(story)].sort();
 
   return (
     <aside className="inspector" aria-label="Panneau d’édition">
-      <div className="inline" style={{ marginBottom: 4 }}>
+      {/*
+        One datalist for the whole panel. Rendering it inside each condition row
+        would repeat the same DOM id as many times as there are rows, and a
+        duplicated id is a broken autocompletion.
+      */}
+      <datalist id="emb-known-variables">
+        {knownVariables.map((name) => (
+          <option key={name} value={name} />
+        ))}
+      </datalist>
+
+      <div className="tabs" role="tablist">
         <button
           type="button"
-          className={`btn btn--small${activeTab === 'scene' ? ' btn--success' : ''}`}
+          role="tab"
+          aria-selected={activeTab === 'scene'}
+          className={`tabs__tab${activeTab === 'scene' ? ' tabs__tab--on' : ''}`}
           onClick={() => setTab('scene')}
           disabled={!scene}
         >
-          Scène
+          Nœud
         </button>
         <button
           type="button"
-          className={`btn btn--small${activeTab === 'story' ? ' btn--success' : ''}`}
+          role="tab"
+          aria-selected={activeTab === 'story'}
+          className={`tabs__tab${activeTab === 'story' ? ' tabs__tab--on' : ''}`}
           onClick={() => setTab('story')}
         >
           Récit
         </button>
       </div>
 
-      {activeTab === 'story' ? (
+      {selectedIds.length > 1 ? (
+        <SelectionPanel
+          story={story}
+          selectedIds={selectedIds}
+          onSelect={onSelect}
+          onDelete={onDeleteSelection}
+          onDuplicate={onDuplicateSelection}
+        />
+      ) : activeTab === 'story' ? (
         <StoryPanel story={story} onChange={onChange} />
       ) : scene ? (
         <ScenePanel
           story={story}
           scene={scene}
+          knownVariables={knownVariables}
           issues={issues.filter((issue) => issue.sceneId === scene.id)}
           onChange={onChange}
           onSelect={onSelect}
+          onDelete={onDeleteSelection}
+          onDuplicate={onDuplicateSelection}
         />
       ) : null}
     </aside>
+  );
+}
+
+// ---------------------------------------------------------------------------
+
+/** Bulk gestures. Editing several nodes at once would mean editing none. */
+function SelectionPanel({
+  story,
+  selectedIds,
+  onSelect,
+  onDelete,
+  onDuplicate,
+}: {
+  story: Story;
+  selectedIds: SceneId[];
+  onSelect: (sceneId: SceneId) => void;
+  onDelete: () => void;
+  onDuplicate: () => void;
+}) {
+  return (
+    <>
+      <div className="inspector__label">{selectedIds.length} nœuds sélectionnés</div>
+      <div className="field__hint">
+        Le contenu s’édite un nœud à la fois. Ici, les gestes qui portent sur le lot.
+      </div>
+
+      <div className="stack" style={{ marginTop: 14 }}>
+        {selectedIds.slice(0, 12).map((id) => (
+          <button key={id} type="button" className="btn btn--small" onClick={() => onSelect(id)}>
+            {kinds[story.scenes[id]?.kind ?? 'npc'].label} · {nodeName(story, id)}
+          </button>
+        ))}
+        {selectedIds.length > 12 && (
+          <div className="field__hint">et {selectedIds.length - 12} autre(s)…</div>
+        )}
+      </div>
+
+      <div className="stack" style={{ marginTop: 20 }}>
+        <button type="button" className="btn" onClick={onDuplicate}>
+          Dupliquer le lot (Ctrl+D)
+        </button>
+        <button type="button" className="btn btn--danger" onClick={onDelete}>
+          Supprimer {selectedIds.length} nœuds
+        </button>
+      </div>
+    </>
   );
 }
 
@@ -132,8 +215,8 @@ function StoryPanel({ story, onChange }: { story: Story; onChange: (story: Story
         </select>
       </label>
 
-      <div className="inline" style={{ marginTop: 14 }}>
-        <label style={{ flex: 1 }}>
+      <div className="grid-2">
+        <label className="field">
           <span className="field__label">Durée (min)</span>
           <input
             className="input"
@@ -145,7 +228,7 @@ function StoryPanel({ story, onChange }: { story: Story; onChange: (story: Story
             }
           />
         </label>
-        <label style={{ flex: 1 }}>
+        <label className="field">
           <span className="field__label">Version</span>
           <input
             className="input"
@@ -155,8 +238,8 @@ function StoryPanel({ story, onChange }: { story: Story; onChange: (story: Story
         </label>
       </div>
 
-      <div className="inline" style={{ marginTop: 14 }}>
-        <label style={{ flex: 1 }}>
+      <div className="grid-2">
+        <label className="field">
           <span className="field__label">Interlocuteur</span>
           <input
             className="input"
@@ -165,7 +248,7 @@ function StoryPanel({ story, onChange }: { story: Story; onChange: (story: Story
             onChange={(event) => set({ narrator: { ...story.narrator, name: event.target.value } })}
           />
         </label>
-        <label style={{ flex: 1 }}>
+        <label className="field">
           <span className="field__label">Statut affiché</span>
           <input
             className="input"
@@ -204,13 +287,24 @@ function StoryPanel({ story, onChange }: { story: Story; onChange: (story: Story
 interface ScenePanelProps {
   story: Story;
   scene: Scene;
+  knownVariables: string[];
   issues: ValidationIssue[];
   onChange: (story: Story) => void;
-  onSelect: (sceneId: SceneId | null) => void;
+  onSelect: (sceneId: SceneId) => void;
+  onDelete: () => void;
+  onDuplicate: () => void;
 }
 
-function ScenePanel({ story, scene, issues, onChange, onSelect }: ScenePanelProps) {
-  const knownVariables = [...collectStoryVariables(story)].sort();
+function ScenePanel({
+  story,
+  scene,
+  knownVariables,
+  issues,
+  onChange,
+  onSelect,
+  onDelete,
+  onDuplicate,
+}: ScenePanelProps) {
   const sceneIds = Object.keys(story.scenes);
   const isStart = story.startSceneId === scene.id;
   const palette = kinds[scene.kind];
@@ -255,20 +349,29 @@ function ScenePanel({ story, scene, issues, onChange, onSelect }: ScenePanelProp
         <span className="field__hint">{kindHelp[scene.kind]}</span>
       </div>
 
+      {/*
+        The hint sits outside the label, tied by `aria-describedby`. Nested in
+        it, it would become part of the accessible name of the field: a screen
+        reader would announce the whole notice on every tab stop.
+      */}
       {scene.kind === 'choice' && (
-        <label className="field">
-          <span className="field__label">Libellé du bouton</span>
+        <div className="field">
+          <label className="field__label" htmlFor="emb-choice-label">
+            Libellé du bouton
+          </label>
           <input
+            id="emb-choice-label"
             className="input"
             value={scene.label ?? ''}
             placeholder="Mentir"
+            aria-describedby="emb-choice-label-hint"
             onChange={(event) => set({ label: event.target.value })}
           />
-          <span className="field__hint">
+          <span className="field__hint" id="emb-choice-label-hint">
             Ce que le joueur lit sur le bouton. Le message envoyé, lui, s’écrit ci-dessous —
             laisse-le vide pour envoyer le libellé tel quel.
           </span>
-        </label>
+        </div>
       )}
 
       <label className="field">
@@ -278,8 +381,9 @@ function ScenePanel({ story, scene, issues, onChange, onSelect }: ScenePanelProp
           value={scene.title}
           onChange={(event) => set({ title: event.target.value })}
         />
-        <span className="field__hint">Identifiant : {scene.id}</span>
       </label>
+
+      <SceneIdField story={story} scene={scene} onChange={onChange} onSelect={onSelect} />
 
       {scene.kind === 'choice' && (
         <IncomingLinkPanel
@@ -291,7 +395,7 @@ function ScenePanel({ story, scene, issues, onChange, onSelect }: ScenePanelProp
         />
       )}
 
-      <div className="field" style={{ borderTop: `2px solid ${palette.border}`, paddingTop: 12 }}>
+      <div className="section" style={{ borderTopColor: palette.border }}>
         <div className="inline">
           <span className="field__label" style={{ margin: 0 }}>
             {scene.kind === 'npc' ? 'Messages envoyés' : 'Ce que dit le joueur'}
@@ -327,6 +431,9 @@ function ScenePanel({ story, scene, issues, onChange, onSelect }: ScenePanelProp
                 aria-label={`Message ${index + 1}`}
               />
               <div className="inline" style={{ marginTop: 6 }}>
+                <span className="field__hint" style={{ margin: 0 }}>
+                  Message {index + 1}
+                </span>
                 <span className="app__spacer" />
                 <button
                   type="button"
@@ -389,14 +496,13 @@ function ScenePanel({ story, scene, issues, onChange, onSelect }: ScenePanelProp
       )}
 
       {!scene.ending && (
-        <>
+        <div className="section">
           <div className="row-between">
             <span className="field__label" style={{ margin: 0 }}>
               Suites ({scene.next.length})
             </span>
             <select
-              className="select"
-              style={{ width: 'auto', padding: '5px 8px', fontSize: 12 }}
+              className="select select--compact"
               value=""
               onChange={(event) => {
                 if (event.target.value) onChange(addLink(story, scene.id, event.target.value));
@@ -418,7 +524,7 @@ function ScenePanel({ story, scene, issues, onChange, onSelect }: ScenePanelProp
             {describeFlow(story, scene)}
           </div>
 
-          <div className="stack">
+          <div className="stack" style={{ marginTop: 10 }}>
             {scene.next.map((link) => {
               const target = story.scenes[link.to];
               return (
@@ -428,8 +534,8 @@ function ScenePanel({ story, scene, issues, onChange, onSelect }: ScenePanelProp
                       ↳ vers
                     </span>
                     <select
-                      className="select"
-                      style={{ flex: 1, minWidth: 0, padding: '7px 9px', fontSize: 12 }}
+                      className="select select--compact"
+                      style={{ flex: 1 }}
                       value={link.to}
                       onChange={(event) =>
                         onChange(updateLink(story, scene.id, link.id, { to: event.target.value }))
@@ -442,6 +548,17 @@ function ScenePanel({ story, scene, issues, onChange, onSelect }: ScenePanelProp
                         </option>
                       ))}
                     </select>
+                    {target && (
+                      <button
+                        type="button"
+                        className="btn btn--icon"
+                        onClick={() => onSelect(target.id)}
+                        title={`Ouvrir « ${nodeName(story, target.id)} »`}
+                        aria-label={`Ouvrir ${nodeName(story, target.id)}`}
+                      >
+                        ↗
+                      </button>
+                    )}
                     <button
                       type="button"
                       className="btn btn--icon btn--danger"
@@ -451,17 +568,6 @@ function ScenePanel({ story, scene, issues, onChange, onSelect }: ScenePanelProp
                       ✕
                     </button>
                   </div>
-
-                  {target && (
-                    <button
-                      type="button"
-                      className="btn btn--small"
-                      style={{ marginTop: 6 }}
-                      onClick={() => onSelect(target.id)}
-                    >
-                      Ouvrir « {nodeName(story, target.id)} »
-                    </button>
-                  )}
 
                   {/*
                     On a link to a choice, condition and effects can also be
@@ -493,13 +599,13 @@ function ScenePanel({ story, scene, issues, onChange, onSelect }: ScenePanelProp
               </div>
             )}
           </div>
-        </>
+        </div>
       )}
 
       {issues.length > 0 && (
         <div className="stack" style={{ marginTop: 18 }}>
           {issues.map((issue, index) => (
-            <div key={index} className={`pill pill--${issue.severity}`}>
+            <div key={index} className={`pill pill--${issue.severity} pill--block`}>
               {issue.message}
             </div>
           ))}
@@ -515,29 +621,87 @@ function ScenePanel({ story, scene, issues, onChange, onSelect }: ScenePanelProp
         >
           Marquer comme scène de départ
         </button>
-        <button
-          type="button"
-          className="btn"
-          onClick={() => {
-            const result = duplicateScene(story, scene.id);
-            onChange(result.story);
-            onSelect(result.sceneId);
-          }}
-        >
-          Dupliquer cette scène
+        <button type="button" className="btn" onClick={onDuplicate}>
+          Dupliquer ce nœud
         </button>
-        <button
-          type="button"
-          className="btn btn--danger"
-          onClick={() => {
-            onChange(removeScene(story, scene.id));
-            onSelect(null);
-          }}
-        >
+        <button type="button" className="btn btn--danger" onClick={onDelete}>
           Supprimer ce nœud
         </button>
       </div>
     </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+
+/**
+ * Renaming the node id (STU-8).
+ *
+ * `renameSceneId` already repoints every link that targeted the node, so the
+ * operation is safe; what was missing was the field. The value is held locally
+ * while typing — renaming on every keystroke would create one node id per
+ * letter, and repoint the whole story each time.
+ */
+function SceneIdField({
+  story,
+  scene,
+  onChange,
+  onSelect,
+}: {
+  story: Story;
+  scene: Scene;
+  onChange: (story: Story) => void;
+  onSelect: (sceneId: SceneId) => void;
+}) {
+  const [draft, setDraft] = useState(scene.id);
+  useEffect(() => setDraft(scene.id), [scene.id]);
+
+  const target = slugify(draft, scene.id);
+  const taken = target !== scene.id && Boolean(story.scenes[target]);
+  const changed = target !== scene.id;
+
+  const apply = () => {
+    if (!changed || taken) {
+      setDraft(scene.id);
+      return;
+    }
+    onChange(renameSceneId(story, scene.id, draft));
+    onSelect(target);
+  };
+
+  return (
+    <label className="field">
+      <span className="field__label">Identifiant</span>
+      <div className="inline">
+        <input
+          className="input input--mono"
+          style={{ flex: 1 }}
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+          onBlur={apply}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') event.currentTarget.blur();
+            if (event.key === 'Escape') setDraft(scene.id);
+          }}
+          aria-label="Identifiant du nœud"
+        />
+        <button
+          type="button"
+          className="btn btn--small"
+          disabled={!changed || taken}
+          onClick={apply}
+        >
+          Renommer
+        </button>
+      </div>
+      <span className="field__hint">
+        {taken
+          ? `« ${target} » est déjà pris.`
+          : changed
+            ? `Deviendra « ${target} » ; tous les liens qui visent ce nœud suivront.`
+            : 'Il apparaît dans le JSON exporté et dans les conditions « a vu la scène ».'}
+      </span>
+    </label>
   );
 }
 
@@ -601,7 +765,7 @@ function IncomingLinkPanel({
   }
 
   return (
-    <div className="field">
+    <div className="section">
       <span className="field__label">Quand ce bouton apparaît</span>
       <ConditionEditor
         value={incoming.link.condition}
@@ -611,7 +775,7 @@ function IncomingLinkPanel({
           onChange(updateLink(story, incoming.sceneId, incoming.link.id, { condition }))
         }
       />
-      <span className="field__label" style={{ marginTop: 10 }}>
+      <span className="field__label" style={{ marginTop: 12 }}>
         Ce que l’appuyer déclenche
       </span>
       <EffectEditor

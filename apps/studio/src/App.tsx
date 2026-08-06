@@ -86,7 +86,14 @@ export function App() {
       </header>
 
       {openStory ? (
-        <Editor story={openStory} onChange={saveStory} onBack={() => setOpenId(null)} />
+        // Keyed on the story: opening another one starts a fresh editing
+        // session, undo stack included.
+        <Editor
+          key={openStory.id}
+          story={openStory}
+          onChange={saveStory}
+          onBack={() => setOpenId(null)}
+        />
       ) : (
         <Dashboard stories={stories} onOpen={setOpenId} onSave={saveStory} onDelete={deleteStory} />
       )}

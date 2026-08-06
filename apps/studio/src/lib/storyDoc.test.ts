@@ -7,10 +7,13 @@ import {
   addChild,
   addLink,
   addScene,
+  copyScenes,
   countEndings,
   duplicateScene,
+  pasteScenes,
   removeLink,
   removeScene,
+  removeScenes,
   renameSceneId,
   setKind,
   setStartScene,
@@ -151,5 +154,82 @@ describe('storyDoc', () => {
 
   it('counts the endings', () => {
     expect(countEndings(clairiereStory)).toBe(3);
+  });
+});
+
+describe('copy and paste', () => {
+  it('copies nothing when nothing is selected', () => {
+    expect(copyScenes(clone(), [])).toBeNull();
+    expect(copyScenes(clone(), ['fantome'])).toBeNull();
+  });
+
+  it('pastes a copy under a free id, without touching the original', () => {
+    const story = clone();
+    const clipboard = copyScenes(story, ['lucioles'])!;
+    const result = pasteScenes(story, clipboard);
+
+    expect(result.sceneIds).toEqual(['lucioles-2']);
+    expect(story.scenes['lucioles-2']).toBeUndefined();
+    expect(result.story.scenes['lucioles-2']?.title).toBe(story.scenes.lucioles?.title);
+  });
+
+  it('offsets the copy so it does not hide the original', () => {
+    const story = clone();
+    const result = pasteScenes(story, copyScenes(story, ['lucioles'])!, { x: 40, y: 40 });
+    expect(result.story.scenes['lucioles-2']?.position).toEqual({
+      x: story.scenes.lucioles!.position.x + 40,
+      y: story.scenes.lucioles!.position.y + 40,
+    });
+  });
+
+  it('keeps a fragment wired to itself: a copied branch stays a branch', () => {
+    const story = clone();
+    const clipboard = copyScenes(story, ['c-lucioles', 'lucioles'])!;
+    const result = pasteScenes(story, clipboard);
+
+    const copiedChoice = result.story.scenes['c-lucioles-2'];
+    expect(copiedChoice?.next[0]?.to).toBe('lucioles-2');
+    // Link ids are regenerated: two links must never share one inside a node.
+    expect(copiedChoice?.next[0]?.id).not.toBe(story.scenes['c-lucioles']?.next[0]?.id);
+  });
+
+  it('keeps a link leaving the fragment when its target still exists', () => {
+    const story = clone();
+    const result = pasteScenes(story, copyScenes(story, ['c-lucioles'])!);
+    // The copy was not taken with its target, so it keeps pointing at it.
+    expect(result.story.scenes['c-lucioles-2']?.next[0]?.to).toBe('lucioles');
+    expect(validateStory(result.story).issues.filter((i) => i.severity === 'error')).toEqual([]);
+  });
+
+  it('drops a link whose target exists nowhere, rather than dangling', () => {
+    const story = clone();
+    const clipboard = copyScenes(story, ['c-lucioles'])!;
+    const trimmed = removeScene(story, 'lucioles');
+
+    const result = pasteScenes(trimmed, clipboard);
+    expect(result.story.scenes['c-lucioles-2']?.next).toEqual([]);
+  });
+
+  it('pastes twice without the two copies sharing anything', () => {
+    const story = clone();
+    const clipboard = copyScenes(story, ['lucioles'])!;
+    const first = pasteScenes(story, clipboard);
+    const second = pasteScenes(first.story, clipboard);
+
+    expect(second.sceneIds).toEqual(['lucioles-3']);
+    const a = first.story.scenes['lucioles-2']!;
+    const b = second.story.scenes['lucioles-3']!;
+    expect(a.blocks).not.toBe(b.blocks);
+    expect(a.next[0]?.id).not.toBe(b.next[0]?.id);
+  });
+
+  it('deletes several nodes in one operation', () => {
+    const story = removeScenes(clone(), ['c-lucioles', 'lucioles']);
+    expect(story.scenes['c-lucioles']).toBeUndefined();
+    expect(story.scenes.lucioles).toBeUndefined();
+    // No link is left pointing at what was removed.
+    expect(
+      Object.values(story.scenes).flatMap((scene) => scene.next.map((link) => link.to)),
+    ).not.toContain('lucioles');
   });
 });

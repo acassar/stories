@@ -1,6 +1,6 @@
 # Backlog — Embranche
 
-Backlog dérivé du cahier des charges initial. L'**itération 1** est livrée ; le reste est priorisé et prêt à être pris.
+Backlog dérivé du cahier des charges initial. Les **itérations 1 et 2** sont livrées ; le reste est priorisé et prêt à être pris.
 
 **Légende priorité** — P0 bloquant · P1 prochaine itération · P2 souhaitable · P3 un jour peut-être
 **Taille** — S ≈ ½ j · M ≈ 1–2 j · L ≈ 3–5 j · XL ≈ > 1 semaine
@@ -37,20 +37,22 @@ La définition de « terminé » du cahier des charges est atteinte : on crée u
 
 ---
 
-## Itération 2 — Rendre le studio agréable à vivre
+## Itération 2 — Rendre le studio agréable à vivre ✅ livrée
 
-Une fois qu'on écrit vraiment, ce sont ces manques-là qui font mal.
+Une fois qu'on écrit vraiment, ce sont ces manques-là qui faisaient mal. Le studio se pilote maintenant au clavier, se range tout seul, se relit et s'explique.
 
-| ID     | Item                                     | Priorité | Taille | Détail                                                                                                                                        |
-| ------ | ---------------------------------------- | -------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| STU-7  | Annuler / rétablir                       | P0       | M      | Pile d'historique sur le document. Les opérations de `lib/storyDoc` sont déjà pures et immuables — le socle est là.                            |
-| STU-8  | Renommer l'identifiant d'une scène depuis l'UI | P1  | S      | `renameSceneId` existe et repointe déjà tout ce qui visait la scène ; il manque le champ dans le panneau.                                       |
-| STU-9  | Mise en page automatique du graphe       | P1       | M      | Un bouton « ranger » (dagre ou elk) pour les récits importés sans positions cohérentes.                                                        |
-| STU-10 | Sélection multiple, copier / coller       | P2       | M      | Déplacer et dupliquer un morceau de récit d'un bloc.                                                                                            |
-| STU-11 | Recherche plein texte dans les scènes     | P2       | S      | Retrouver une réplique dans un récit de cinquante nœuds.                                                                                        |
-| STU-12 | Tableau des variables du récit            | P1       | M      | Vue dédiée : qui écrit quoi, qui lit quoi, quelles variables ne sont jamais lues. Les fonctions de collecte existent dans `story-format`.        |
-| STU-13 | Playtest depuis la scène sélectionnée     | P2       | S      | Le paramètre `fromSceneId` est déjà câblé dans `Playtest`, il manque le point d'entrée dans la barre d'outils.                                  |
-| STU-14 | Aperçu des chemins morts                  | P2       | M      | Surligner les scènes inatteignables *compte tenu des conditions*, pas seulement du graphe — un choix conditionné à l'impossible est un orphelin. |
+| ID     | Item                                           | Taille | Où ça vit                                                                                                                    |
+| ------ | ---------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| STU-7  | Annuler / rétablir                             | M      | `lib/history` (pile pure) + `hooks/useStoryHistory`. Les frappes et les déplacements se regroupent en une étape.               |
+| STU-8  | Renommer l'identifiant d'une scène depuis l'UI | S      | Champ dans le panneau, adossé à `renameSceneId` qui repointait déjà tout ce qui visait la scène.                              |
+| STU-9  | Mise en page automatique du graphe             | M      | `lib/layout` — mise en couches maison, sans dépendance : rang, ordre barycentrique, coordonnées.                              |
+| STU-10 | Sélection multiple, copier / coller             | M      | `copyScenes` / `pasteScenes` dans `lib/storyDoc` : un fragment recopié reste branché sur le reste du récit.                    |
+| STU-11 | Recherche plein texte dans les scènes           | S      | `lib/search` (insensible à la casse et aux accents) + surlignage des nœuds trouvés sur le canevas.                             |
+| STU-12 | Tableau des variables du récit                  | M      | `analyzeStory` dans `story-format`, rendu par `VariablesPanel` : qui écrit, qui lit, ce qui ne sert plus.                      |
+| STU-13 | Playtest depuis la scène sélectionnée           | S      | Bouton « ▶ D'ici » ; le playtest annonce que l'état de départ est celui du récit, pas celui du chemin.                        |
+| STU-14 | Aperçu des chemins morts                        | M      | `exploreReachable` dans `story-engine` : parcours borné de l'espace d'états, qui dit franchement quand il n'a pas pu conclure. |
+
+Livré avec, sur le même canevas : mise en relief de l'amont et de l'aval du nœud sélectionné, arêtes fléchées, légende, sélection multiple à la souris, raccourcis clavier, barre d'anomalies repliable et panneau d'édition qui ne déborde plus.
 
 ---
 
@@ -101,7 +103,8 @@ Ce n'est pas de l'oubli, ce sont des choix.
 | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Le playtest du studio redessine sa propre vue de lecture   | Partager des composants React entre les deux apps demanderait un `packages/ui`, donc du React dans un paquet partagé. Le playtest est un outil de relecture, pas le lecteur : la duplication reste petite et honnête. Si elle grossit, extraire `packages/ui` — le cœur, lui, ne bouge pas. |
 | Les conditions imbriquées s'éditent en JSON brut           | L'éditeur structuré couvre le cas courant. Plutôt que de réécrire une forme riche en la simplifiant — donc en perdant de l'information — on montre le JSON, validé par le schéma.                                                                                     |
-| Pas d'annulation dans le studio                            | STU-7. Les opérations d'édition sont déjà pures et immuables, exprès pour que la pile d'historique soit une addition, pas une réécriture.                              |
+| L'analyse des chemins morts est bornée                     | Elle explore l'espace des états atteignables, qui est exponentiel dans le pire des cas. Au-delà de son plafond, elle le dit et ne conclut pas, plutôt que de présenter une réponse partielle comme un verdict. |
+| Le presse-papiers du studio vit en mémoire                 | Copier un fragment dans un onglet et le coller dans un autre demanderait de sérialiser vers le presse-papiers système, donc de gérer un format d'échange et du texte hostile. Le geste courant — dupliquer une branche dans le même récit — n'en a pas besoin. |
 | Le tableau de bord n'a pas de compteur de lectures         | La maquette en montre un. Il suppose un backend ; sans compte ni serveur, l'afficher serait mentir.                                                                    |
 | Le format ne gère qu'une langue                            | Aucune demande de traduction pour l'instant. Le jour venu : `blocks[].text` devient une carte langue → texte, avec migration `formatVersion`.                          |
 | Les parties sauvegardées ne survivent pas au passage en format 2 | Les récits, eux, sont migrés (`migrateStory`). Mais l'historique d'une partie est passé de `choiceId` à `linkId` : le traduire demanderait de rejouer chaque partie contre l'ancien graphe pour retrouver le lien correspondant. Pour des sauvegardes locales de quelques minutes de lecture, le coût dépassait le service rendu. |

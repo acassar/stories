@@ -18,8 +18,9 @@ import type { SceneFlowNode } from '../lib/graph';
  * rows inside the node, they are neighboring nodes.
  */
 export function SceneNode({ data, selected }: NodeProps<SceneFlowNode>) {
-  const { scene, isStart, issues, awaitsChoice } = data;
+  const { scene, isStart, issues, awaitsChoice, focus, match, dead } = data;
   const hasError = issues.some((issue) => issue.severity === 'error');
+  const hasWarning = !hasError && issues.length > 0;
   const palette = kinds[scene.kind];
   const preview = sceneMessages(scene)
     .map((block) => block.text)
@@ -28,9 +29,12 @@ export function SceneNode({ data, selected }: NodeProps<SceneFlowNode>) {
   const classes = [
     'scene-node',
     `scene-node--${scene.kind}`,
+    `scene-node--focus-${focus}`,
     scene.ending && 'scene-node--ending',
     selected && 'scene-node--selected',
     hasError && 'scene-node--invalid',
+    match && 'scene-node--match',
+    dead && 'scene-node--dead',
   ]
     .filter(Boolean)
     .join(' ');
@@ -71,11 +75,33 @@ export function SceneNode({ data, selected }: NodeProps<SceneFlowNode>) {
       */}
       {!scene.ending && (
         <div className="scene-node__flow">
-          {awaitsChoice
-            ? `${scene.next.length} choix proposé${scene.next.length > 1 ? 's' : ''}`
-            : scene.next.length > 0
-              ? 'enchaîne'
-              : 'sans suite'}
+          <span>
+            {awaitsChoice
+              ? `${scene.next.length} choix proposé${scene.next.length > 1 ? 's' : ''}`
+              : scene.next.length > 0
+                ? 'enchaîne'
+                : 'sans suite'}
+          </span>
+          {/*
+            The validation ring says something is wrong; this says what family
+            of wrong, without opening the panel — and reads without color.
+          */}
+          {hasError && (
+            <span className="scene-node__alert" title="Erreur bloquante">
+              ⨯ erreur
+            </span>
+          )}
+          {hasWarning && (
+            <span className="scene-node__alert scene-node__alert--warn" title="Avertissement">
+              ◦ à revoir
+            </span>
+          )}
+        </div>
+      )}
+
+      {dead && (
+        <div className="scene-node__dead" title="Aucune partie ne peut atteindre ce nœud">
+          chemin mort
         </div>
       )}
 

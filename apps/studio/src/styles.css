@@ -18,7 +18,11 @@
   --st-muted: #9a8f7d;
   --st-chip: #efe7d8;
   --st-selected: #7b53d4;
+  --st-selected-soft: #f0e9fc;
+  --st-upstream: #b69ae0;
   --st-linking: #6aa3ff;
+  --st-match: #e0a11c;
+  --st-match-soft: #fdf3dc;
   --st-ending: #fbf3e6;
   --st-ending-border: #e9c98a;
   --st-ending-badge: #f3d9a3;
@@ -30,6 +34,9 @@
   --st-success-soft: #e3f5ec;
   --st-warn: #9a8350;
   --st-warn-soft: #f6eed9;
+
+  /* How far a node fades out when it has nothing to do with the selection. */
+  --st-dim: 0.17;
 }
 
 body {
@@ -39,24 +46,31 @@ body {
 
 /* ------------------------------------------------------------------ shell */
 
+/*
+ * The editor is a workbench, not a document: it takes the height of the window
+ * and the canvas takes what the toolbars leave. Anything else means editing a
+ * fifty-node graph through a 400 px window.
+ */
 .app {
-  min-height: 100vh;
-  padding: 32px 40px 56px;
+  height: 100vh;
+  padding: 20px 26px 22px;
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 16px;
+  overflow: hidden;
 }
 
 .app__brand {
   display: flex;
   align-items: center;
   gap: 14px;
+  flex: none;
 }
 
 .app__mark {
-  width: 42px;
-  height: 42px;
-  border-radius: 13px;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
   background: linear-gradient(150deg, #22344f, #7c8fae);
   display: flex;
   align-items: center;
@@ -66,7 +80,7 @@ body {
 }
 
 .app__title {
-  font: italic 600 30px var(--emb-font-prose);
+  font: italic 600 26px var(--emb-font-prose);
   color: #2a2115;
   letter-spacing: -0.01em;
 }
@@ -81,6 +95,7 @@ body {
 
 .app__spacer {
   flex: 1;
+  min-width: 0;
 }
 
 .panel {
@@ -90,7 +105,13 @@ body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  flex: 1;
   min-height: 0;
+}
+
+/* Inside an overlay the panel is a card, not a workbench: it keeps its size. */
+.drawer .panel {
+  flex: none;
 }
 
 .section-label {
@@ -110,8 +131,8 @@ body {
 
 .btn {
   font: 600 13px var(--emb-font-ui);
-  padding: 9px 15px;
-  border-radius: 11px;
+  padding: 8px 13px;
+  border-radius: 10px;
   cursor: pointer;
   border: 1.5px solid var(--st-field-border);
   background: var(--st-surface);
@@ -119,13 +140,16 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition: background 0.12s ease;
+  white-space: nowrap;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease;
 }
 .btn:hover:not(:disabled) {
   background: #f7f2e9;
 }
 .btn:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 .btn:focus-visible {
@@ -157,11 +181,22 @@ body {
   color: var(--st-success);
 }
 
+/* A toggle that is currently on — same button, lit. */
+.btn--on {
+  border-color: var(--st-selected);
+  background: var(--st-selected-soft);
+  color: #4c2f8f;
+}
+.btn--on:hover:not(:disabled) {
+  background: #e8ddfa;
+}
+
 .btn--icon {
   width: 32px;
   height: 32px;
   padding: 0;
   justify-content: center;
+  flex: none;
 }
 
 .btn--small {
@@ -197,6 +232,7 @@ body {
 
 .kind-picker__option {
   flex: 1;
+  min-width: 0;
   font: 600 12px var(--emb-font-ui);
   padding: 7px 6px;
   border: 1.5px solid var(--st-field-border);
@@ -226,7 +262,7 @@ body {
 }
 
 .dash__title {
-  font: 800 22px var(--emb-font-ui);
+  font: 800 20px var(--emb-font-ui);
   letter-spacing: -0.02em;
 }
 
@@ -249,12 +285,16 @@ body {
   background: transparent;
   outline: none;
   width: 100%;
+  min-width: 0;
   font: 400 13px var(--emb-font-ui);
   color: var(--st-ink);
 }
 
 .dash__body {
   padding: 10px 16px 18px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .row {
@@ -340,44 +380,55 @@ body {
 
 /* ----------------------------------------------------------------- editor */
 
-.editor {
-  flex: 1;
-  min-height: 0;
+/*
+ * Two rows: what the story is, then what the author does to it. Each row wraps
+ * on its own, so a narrow window never mixes the two vocabularies.
+ */
+.toolbar {
+  flex: none;
+  border-bottom: 1px solid var(--st-border);
 }
 
-.toolbar {
+.toolbar__row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--st-border);
+  gap: 10px;
+  padding: 10px 16px;
   flex-wrap: wrap;
 }
 
-.toolbar__lights {
-  display: flex;
-  gap: 7px;
-}
-.toolbar__lights span {
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
+.toolbar__row--tools {
+  border-top: 1px solid var(--st-border);
+  background: var(--st-canvas);
+  padding: 8px 16px;
 }
 
-.toolbar__title {
-  font: 600 14px var(--emb-font-ui);
-  margin-left: 6px;
+.toolbar__group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.toolbar__sep {
+  width: 1px;
+  height: 22px;
+  background: var(--st-border);
+  flex: none;
 }
 
 .toolbar__story {
-  font: italic 500 14px var(--emb-font-prose);
-  color: var(--st-muted);
+  font: italic 500 15px var(--emb-font-prose);
+  color: var(--st-sub);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 34ch;
 }
 
 .editor__body {
   display: flex;
-  height: min(64vh, 640px);
-  min-height: 420px;
+  flex: 1;
+  min-height: 0;
 }
 
 .canvas {
@@ -387,6 +438,179 @@ body {
   background: var(--st-canvas);
 }
 
+/* --------------------------------------------------------------- search */
+
+.search {
+  position: relative;
+  flex: none;
+}
+
+.search__field {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--st-surface);
+  border: 1.5px solid var(--st-field-border);
+  border-radius: 10px;
+  padding: 6px 10px;
+  width: 250px;
+  color: var(--st-muted);
+}
+.search__field:focus-within {
+  border-color: var(--st-linking);
+}
+.search__field input {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  min-width: 0;
+  font: 400 13px var(--emb-font-ui);
+  color: var(--st-ink);
+}
+
+.search__clear {
+  border: none;
+  background: transparent;
+  color: var(--st-muted);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0 2px;
+}
+
+.search__results {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 330px;
+  max-height: 320px;
+  overflow-y: auto;
+  background: var(--st-surface);
+  border: 1px solid var(--st-border);
+  border-radius: 12px;
+  box-shadow: 0 18px 40px -18px rgba(40, 30, 20, 0.5);
+  z-index: 20;
+  padding: 6px;
+}
+
+.search__hit {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  border-radius: 9px;
+  padding: 7px 9px;
+  cursor: pointer;
+}
+.search__hit:hover {
+  background: var(--st-canvas);
+}
+
+.search__hit-name {
+  font: 600 13px var(--emb-font-ui);
+  color: var(--st-ink);
+}
+
+.search__hit-meta {
+  font: 500 10px var(--emb-font-ui);
+  color: var(--st-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.search__hit-excerpt {
+  font: 400 12px/1.4 var(--emb-font-prose);
+  color: var(--st-sub);
+}
+
+.search__empty {
+  font: 400 12px var(--emb-font-ui);
+  color: var(--st-muted);
+  padding: 8px 9px;
+}
+
+/* --------------------------------------------------------------- legend */
+
+.legend {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--st-border);
+  border-radius: 12px;
+  padding: 8px 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 340px;
+  backdrop-filter: blur(3px);
+}
+
+.legend__kinds {
+  display: flex;
+  gap: 12px;
+}
+
+.legend__kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font: 600 11px var(--emb-font-ui);
+  color: var(--st-sub);
+}
+
+.legend__swatch {
+  width: 13px;
+  height: 13px;
+  border-radius: 4px;
+  border: 1.5px solid;
+  flex: none;
+}
+
+.legend__line {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  font: 400 11px var(--emb-font-ui);
+  color: var(--st-muted);
+}
+
+.legend__dash {
+  width: 18px;
+  height: 0;
+  border-top: 2.5px solid;
+  flex: none;
+}
+.legend__dash--up {
+  color: var(--st-upstream);
+}
+.legend__dash--down {
+  color: var(--st-selected);
+}
+
+/* Bulk actions, floating over the canvas when several nodes are selected. */
+.bulk {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--st-ink);
+  color: #f6efe2;
+  border-radius: 12px;
+  padding: 7px 10px 7px 14px;
+  font: 600 12px var(--emb-font-ui);
+  box-shadow: 0 14px 30px -14px rgba(30, 25, 15, 0.7);
+}
+.bulk .btn--small {
+  background: rgba(255, 255, 255, 0.14);
+  color: #f6efe2;
+}
+.bulk .btn--small:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.24);
+}
+.bulk .btn--danger {
+  color: #f5b7ab;
+}
+
 /* ------------------------------------------------------------- scene node */
 
 .scene-node {
@@ -394,9 +618,17 @@ body {
   background: var(--st-surface);
   border: 2px solid var(--st-border);
   border-radius: 14px;
-  padding: 11px 12px;
+  padding: 10px 12px;
   box-shadow: 0 6px 16px -8px rgba(40, 30, 20, 0.4);
   font-family: var(--emb-font-ui);
+  transition:
+    opacity 0.18s ease,
+    box-shadow 0.18s ease,
+    filter 0.18s ease;
+}
+
+.scene-node:hover {
+  box-shadow: 0 10px 22px -8px rgba(40, 30, 20, 0.5);
 }
 
 .scene-node--ending {
@@ -414,9 +646,41 @@ body {
   box-shadow: 0 0 0 3px rgba(217, 98, 76, 0.16);
 }
 
+/*
+ * Focus. Reading a story is following a path, so the graph answers "what leads
+ * here" and "what follows" rather than merely "what is selected". Everything
+ * off that path fades instead of disappearing: the shape of the story must stay
+ * legible even while one branch is being looked at.
+ */
+.scene-node--focus-unrelated {
+  opacity: var(--st-dim);
+}
+.scene-node--focus-downstream {
+  box-shadow:
+    0 6px 16px -8px rgba(40, 30, 20, 0.4),
+    inset 3px 0 0 var(--st-selected);
+}
+.scene-node--focus-upstream {
+  box-shadow:
+    0 6px 16px -8px rgba(40, 30, 20, 0.4),
+    inset -3px 0 0 var(--st-upstream);
+}
+
+/* A search hit stays lit whatever the focus says. */
+.scene-node--match {
+  opacity: 1;
+  border-color: var(--st-match);
+  box-shadow: 0 0 0 3px rgba(224, 161, 28, 0.24);
+}
+
+/* A node no run can reach: struck through with a hatch, not just greyed. */
+.scene-node--dead {
+  filter: grayscale(0.75);
+  border-style: dashed;
+}
+
 .scene-node__head {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
@@ -427,6 +691,7 @@ body {
   color: inherit;
   line-height: 1.2;
   flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -474,6 +739,9 @@ body {
 
 /* What happens next: awaiting a decision, or chaining on. */
 .scene-node__flow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin-top: 7px;
   font: 500 10px var(--emb-font-ui);
   color: var(--st-muted);
@@ -483,30 +751,78 @@ body {
 }
 
 .scene-node__alert {
-  margin-top: 7px;
-  font: 500 10px var(--emb-font-ui);
+  margin-left: auto;
+  font-weight: 700;
   color: var(--st-danger);
 }
+.scene-node__alert--warn {
+  color: var(--st-warn);
+}
 
+.scene-node__dead {
+  margin-top: 6px;
+  font: 700 9px var(--emb-font-ui);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--st-sub);
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(0, 0, 0, 0.05),
+    rgba(0, 0, 0, 0.05) 4px,
+    transparent 4px,
+    transparent 8px
+  );
+  border-radius: 6px;
+  padding: 3px 6px;
+  text-align: center;
+}
+
+/* Handles: big enough to grab without zooming, discreet until hovered. */
 .react-flow__handle {
-  width: 9px;
-  height: 9px;
+  width: 11px;
+  height: 11px;
   background: var(--st-muted);
   border: 2px solid var(--st-surface);
+  transition:
+    background 0.12s ease,
+    transform 0.12s ease;
 }
-.react-flow__handle-right {
-  right: -5px;
+.scene-node:hover .react-flow__handle {
+  background: var(--st-selected);
+  transform: scale(1.18);
 }
 
 /* -------------------------------------------------------------- inspector */
 
 .inspector {
-  width: 340px;
+  width: clamp(320px, 26vw, 400px);
   flex: none;
   border-left: 1px solid var(--st-border);
   background: var(--st-canvas);
-  padding: 18px;
+  padding: 16px 18px 28px;
   overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Fold the panel away when the graph needs the room. */
+.inspector__handle {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 1px solid var(--st-border);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--st-sub);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  z-index: 6;
+}
+.inspector__handle:hover {
+  background: #fff;
+  color: var(--st-ink);
 }
 
 .inspector__label {
@@ -516,9 +832,41 @@ body {
   text-transform: uppercase;
 }
 
+/* Segmented control: two views of the same document, not two actions. */
+.tabs {
+  display: flex;
+  gap: 3px;
+  background: var(--st-chip);
+  border-radius: 11px;
+  padding: 3px;
+  margin-bottom: 14px;
+}
+
+.tabs__tab {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  border-radius: 9px;
+  padding: 7px 8px;
+  font: 600 12px var(--emb-font-ui);
+  color: var(--st-sub);
+  cursor: pointer;
+}
+.tabs__tab--on {
+  background: var(--st-surface);
+  color: var(--st-ink);
+  box-shadow: 0 2px 6px -3px rgba(40, 30, 20, 0.5);
+}
+.tabs__tab:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .field {
   display: block;
   margin-top: 14px;
+  min-width: 0;
 }
 
 .field__label {
@@ -529,18 +877,38 @@ body {
 }
 
 .field__hint {
-  font: 400 11px var(--emb-font-ui);
+  font: 400 11px/1.45 var(--emb-font-ui);
   color: var(--st-muted);
   margin-top: 4px;
+}
+
+/* A titled block, ruled off from what precedes it. */
+.section {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 2px solid var(--st-border);
+  min-width: 0;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.grid-2 > .field {
+  margin-top: 14px;
+  min-width: 0;
 }
 
 .input,
 .textarea,
 .select {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   border: 1.5px solid var(--st-field-border);
-  border-radius: 11px;
-  padding: 10px 12px;
+  border-radius: 10px;
+  padding: 9px 11px;
   font: 500 14px var(--emb-font-ui);
   color: var(--st-ink);
   background: var(--st-surface);
@@ -555,11 +923,19 @@ body {
 .textarea {
   font: 400 14px/1.5 var(--emb-font-prose);
   resize: vertical;
-  min-height: 68px;
+  min-height: 62px;
 }
 
 .select {
   cursor: pointer;
+  /* A long node name must not push the panel wider than it is. */
+  text-overflow: ellipsis;
+}
+
+.select--compact {
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .input--mono {
@@ -575,22 +951,21 @@ body {
   border: 1px solid #e7ddcc;
   border-radius: 12px;
   padding: 10px;
-}
-
-.card + .card {
-  margin-top: 10px;
+  min-width: 0;
 }
 
 .card__head {
   display: flex;
   align-items: center;
   gap: 7px;
+  min-width: 0;
 }
 
 .stack {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-width: 0;
 }
 
 .row-between {
@@ -598,13 +973,27 @@ body {
   justify-content: space-between;
   align-items: center;
   gap: 8px;
-  margin: 20px 0 8px;
+  margin: 0 0 8px;
+  min-width: 0;
+}
+.row-between .select {
+  width: auto;
+  max-width: 60%;
 }
 
 .inline {
   display: flex;
   align-items: center;
   gap: 7px;
+  min-width: 0;
+}
+/*
+  Flex children default to `min-width: auto`, which for an input means "as wide
+  as twenty characters" — that is what pushed the panel into horizontal
+  overflow as soon as a row held two fields.
+*/
+.inline > * {
+  min-width: 0;
 }
 
 .toggle {
@@ -621,19 +1010,41 @@ body {
 /* ------------------------------------------------------------- validation */
 
 .issues {
+  flex: none;
   border-top: 1px solid var(--st-border);
   background: var(--st-surface);
-  padding: 12px 18px 14px;
-  max-height: 190px;
-  overflow-y: auto;
 }
 
 .issues__head {
   display: flex;
   align-items: center;
   gap: 10px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 10px 18px;
+  cursor: pointer;
   font: 600 12px var(--emb-font-ui);
   color: var(--st-sub);
+  text-align: left;
+}
+.issues__head:disabled {
+  cursor: default;
+}
+.issues__head:hover:not(:disabled) {
+  background: #faf6ee;
+}
+
+.issues__chevron {
+  color: var(--st-muted);
+  font-size: 10px;
+  width: 10px;
+}
+
+.issues__list {
+  max-height: 168px;
+  overflow-y: auto;
+  padding: 0 18px 12px;
 }
 
 .issue {
@@ -644,7 +1055,7 @@ body {
   text-align: left;
   border: none;
   background: transparent;
-  padding: 6px 0;
+  padding: 6px 8px;
   cursor: pointer;
   font: 400 13px var(--emb-font-ui);
   color: var(--st-sub);
@@ -652,6 +1063,10 @@ body {
 }
 .issue:hover {
   background: #f7f2e9;
+}
+.issue:disabled {
+  cursor: default;
+  opacity: 0.7;
 }
 
 .issue__dot {
@@ -672,6 +1087,7 @@ body {
   font: 600 11px var(--emb-font-ui);
   border-radius: 20px;
   padding: 4px 10px;
+  white-space: nowrap;
 }
 .pill--error {
   color: var(--st-danger);
@@ -685,8 +1101,30 @@ body {
   color: var(--st-success);
   background: var(--st-success-soft);
 }
+/* Same pill, but you can press it. */
+.pill--button {
+  border: none;
+  cursor: pointer;
+  font-family: var(--emb-font-ui);
+}
+.pill--button:hover {
+  filter: brightness(0.96);
+}
+.pill--button:focus-visible {
+  outline: 2px solid var(--st-linking);
+  outline-offset: 2px;
+}
 
-/* --------------------------------------------------------------- playtest */
+/* Same pill, wrapped over several lines: a message, not a badge. */
+.pill--block {
+  display: block;
+  white-space: normal;
+  line-height: 1.45;
+  border-radius: 10px;
+  padding: 7px 10px;
+}
+
+/* --------------------------------------------------------------- overlays */
 
 .drawer {
   position: fixed;
@@ -737,6 +1175,119 @@ body {
   margin: 0 0 16px;
 }
 
+/* A full sheet laid over the editor: the variables table. */
+.sheet {
+  background: var(--st-surface);
+  border-radius: 18px;
+  width: min(920px, 100%);
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 30px 70px -30px rgba(20, 15, 10, 0.8);
+}
+
+.sheet__head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--st-border);
+  flex: none;
+}
+
+.sheet__body {
+  overflow-y: auto;
+  padding: 6px 22px 24px;
+}
+
+.usage {
+  margin-top: 18px;
+}
+
+.usage__caption {
+  font: 700 11px var(--emb-font-ui);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--st-muted);
+  margin: 0 0 6px;
+}
+
+.usage__row {
+  display: grid;
+  grid-template-columns: 1.1fr 0.5fr 1.6fr 1.6fr;
+  gap: 12px;
+  align-items: start;
+  padding: 10px 12px;
+  border-radius: 12px;
+}
+.usage__row:nth-child(odd) {
+  background: var(--st-canvas);
+}
+
+.usage__row--head {
+  font: 600 11px var(--emb-font-ui);
+  color: #a89d8a;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: none !important;
+  padding-bottom: 4px;
+}
+
+.usage__name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.usage__name code {
+  font:
+    600 13px ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  color: var(--st-ink);
+  word-break: break-all;
+}
+
+.usage__initial {
+  font: 500 13px var(--emb-font-ui);
+  color: var(--st-sub);
+}
+
+.usage__sites {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.usage__site {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--st-border);
+  background: var(--st-surface);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font: 500 12px var(--emb-font-ui);
+  color: var(--st-sub);
+  cursor: pointer;
+  max-width: 100%;
+}
+.usage__site:hover {
+  border-color: var(--st-selected);
+  color: var(--st-ink);
+}
+
+.usage__op {
+  font-size: 10px;
+  color: var(--st-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -747,4 +1298,17 @@ body {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* -------------------------------------------------------- reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .scene-node,
+  .react-flow__handle {
+    transition: none;
+  }
+  .react-flow__edge-path {
+    animation: none !important;
+  }
 }

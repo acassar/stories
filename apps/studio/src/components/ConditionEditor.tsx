@@ -231,14 +231,6 @@ function LeafRow({ leaf, knownVariables, sceneIds, onChange, onRemove }: LeafPro
           ))}
         </select>
       )}
-
-      {knownVariables.length > 0 && (
-        <datalist id="emb-known-variables">
-          {knownVariables.map((name) => (
-            <option key={name} value={name} />
-          ))}
-        </datalist>
-      )}
     </div>
   );
 }

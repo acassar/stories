@@ -13,8 +13,8 @@ apps/
   studio/          Author tool — visual graph editor (React Flow). Desktop / tablet.
   reader/          Reader — mobile-first, reading as a conversation.
 packages/
-  story-format/    Schema, types and validation of the story format (JSON).
-  story-engine/    Story engine. Pure TypeScript.
+  story-format/    Schema, types, validation and analysis of the story format (JSON).
+  story-engine/    Story engine and reachability analysis. Pure TypeScript.
   design-tokens/   Palette, typography, radii — the skin of both apps.
 ```
 
@@ -56,7 +56,7 @@ The reader is mobile-first: open it in your browser inspector in phone mode, or 
 
 ```bash
 pnpm verify        # lint + typecheck + tests
-pnpm test          # 167 tests
+pnpm test          # 254 tests
 pnpm lint
 pnpm typecheck
 pnpm format
@@ -199,15 +199,45 @@ On the canvas, **the color of a node is its kind** — cold ink for the correspo
 
 An edge on the canvas is exactly a `Link` of the story — nothing is hidden in the source node. Dragging an edge creates a link to any node already written, which is the whole "reach a distant node" gesture. A connection that would mix choices and chaining is refused as it is drawn, rather than reported afterwards.
 
-Three buttons create the three kinds, colored like what they produce. From a selected node, they create the continuation: the node **and** its link, so never a dangling target.
+Three buttons create the three kinds, colored like what they produce. From a selected node, they create the continuation: the node **and** its link, so never a dangling target. They obey the same rule as the drag, and go out when the kind they produce could not be linked — a toolbar that offers what the canvas will refuse teaches the wrong thing about the format.
+
+The badge next to the title carries the state of health of the story, in three states because there are three: **injouable** (blocking errors), **jouable, à revoir** (warnings only — a draft is allowed to be halfway), **cohérent**. Pressing it unfolds the list of what is left. Only the first state blocks the playtest.
 
 The right-hand panel edits the kind, the text (block by block) and the outgoing links. On a `choice` node it also shows the condition and the effects of its incoming link — for the author, "this button only appears if…" is a property of the button, even though the data lives on the edge.
 
 Conditions are built row by row for the common case — a list of tests joined by AND or OR. A nested condition, hand-written in an imported JSON, falls back to a JSON field validated by the schema: an austere field beats a rewrite that would lose information.
 
-The **playtest** runs the current story through `story-engine`, without leaving the editor, with the same engine as the reader. Choices whose condition does not hold are greyed out rather than hidden — this is a proofreading tool, not a run.
+The **playtest** runs the current story through `story-engine`, without leaving the editor, with the same engine as the reader. Choices whose condition does not hold are greyed out rather than hidden — this is a proofreading tool, not a run. It can start from the selected node instead of the beginning, and says so: the run then begins with the initial state of the story, not with what the path there would have set.
 
 Work in progress is stored in `localStorage` (deferred write of 400 ms, flushed before the tab closes).
+
+### Reading the graph
+
+A story is read as a path, so the canvas answers "what leads here" and "what follows" rather than merely "what is selected". Selecting a node lights its whole upstream in one tint and its whole downstream in another, and fades the rest — faded, not hidden: the shape of the story must stay legible while one branch is being looked at. The **Focus** button turns it off.
+
+Every edge is arrowed. A conditional link is dashed and animated; a broken one turns red; and when the dead-path analysis is on, a link no run can follow goes grey and still.
+
+**Chemins morts** answers a question the graph cannot: `findUnreachableScenes` looks for an arrow leading to a node, `exploreReachable` looks for a *run*. A choice conditioned on a variable no effect ever sets is an arrow that is never followed, and the scene behind it is an orphan only a state-space search reveals. That search is bounded — beyond its budget it says it could not conclude rather than passing a partial answer off as a verdict.
+
+**Ranger** lays the graph out in layers: rank by longest path, order by barycentric sweeps, then coordinates. Written in `lib/layout` rather than pulled from `dagre` or `elk` — a story graph is small and almost a tree, and the studio would gain a dependency for a hundred lines it can own and test.
+
+### Editing gestures
+
+Undo and redo hold whole documents rather than inverse operations: `lib/storyDoc` is pure and immutable, so a version of the story is a reference to keep. Granularity is the only subtlety — consecutive changes of the same nature and close in time merge into one, so undoing a title is undoing the title and not one letter of it, and a drag is one step whatever its length.
+
+| Geste                 | Raccourci                        |
+| --------------------- | -------------------------------- |
+| Annuler / rétablir    | `Ctrl+Z` / `Ctrl+Maj+Z`, `Ctrl+Y` |
+| Copier / coller       | `Ctrl+C` / `Ctrl+V`               |
+| Dupliquer la sélection | `Ctrl+D`                         |
+| Supprimer             | `Suppr` / `Retour arrière`        |
+| Sélection multiple    | `Maj` + tracé, `Ctrl` + clic      |
+
+They all stand down while the author is typing: a text field has its own undo, and stealing `Ctrl+Z` from it would be worse than not offering the shortcut.
+
+A copied fragment keeps its internal wiring *and* stays plugged into the rest of the story: a link inside the fragment follows the copy, a link pointing outside it is kept as long as its target still exists, and anything else is dropped — never a dangling target.
+
+The **variables table** answers what scattering conditions and effects across the links makes hard to see: who writes `prudent`, and does anyone still read it. Variables and items sit side by side, every row leads back to the node it comes from, and a variable nobody reads is flagged without being called an error — a draft is allowed to be halfway.
 
 ---
 
@@ -232,17 +262,17 @@ The reader revalidates the document and flatly refuses an inconsistent story.
 
 ## Tests
 
-167 tests, all green.
+254 tests, all green.
 
 | Suite          | What it covers                                                                   |
 | -------------- | -------------------------------------------------------------------------------- |
-| `story-format` | schema, graph coherence, migration 1 → 2, JSON round-trip, error cases            |
-| `story-engine` | progression, automatic chaining, conditions, effects, going back, serialization, events, seeded walks of the long sample story down to each of its endings |
-| `studio`       | editing operations, projection to React Flow, persistence, import                 |
+| `story-format` | schema, graph coherence, migration 1 → 2, JSON round-trip, error cases, inventory of the variables and items a story reads and writes |
+| `story-engine` | progression, automatic chaining, conditions, effects, going back, serialization, events, condition-aware reachability, seeded walks of the long sample story down to each of its endings |
+| `studio`       | editing operations, copy / paste of a fragment, undo granularity, automatic layout, full-text search, projection to React Flow, persistence, import, and the editor itself end to end |
 | `reader`       | full run to an ending, conditional choice, resume, conversation                   |
 
 ---
 
 ## What is not here
 
-See [BACKLOG.md](BACKLOG.md). In short: no Tauri (the apps are standalone web apps and Tauri-ready, the integration comes later), no media, no accounts, no undo in the studio.
+See [BACKLOG.md](BACKLOG.md). In short: no Tauri (the apps are standalone web apps and Tauri-ready, the integration comes later), no media, no accounts, and no variable interpolation in the text.

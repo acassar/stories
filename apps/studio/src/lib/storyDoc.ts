@@ -78,6 +78,11 @@ export function removeScene(story: Story, sceneId: SceneId): Story {
   return { ...story, scenes, startSceneId };
 }
 
+/** Deletes several nodes at once — one operation, therefore one undo step. */
+export function removeScenes(story: Story, sceneIds: readonly SceneId[]): Story {
+  return sceneIds.reduce(removeScene, story);
+}
+
 /** Duplicates a node next to the original, without carrying incoming links. */
 export function duplicateScene(story: Story, sceneId: SceneId): { story: Story; sceneId: SceneId } {
   const source = story.scenes[sceneId];
@@ -91,6 +96,72 @@ export function duplicateScene(story: Story, sceneId: SceneId): { story: Story; 
     next: source.next.map((link) => ({ ...link, id: createId('lien') })),
   };
   return { story: { ...story, scenes: { ...story.scenes, [newId]: copy } }, sceneId: newId };
+}
+
+// ---------------------------------------------------------------------------
+// Copy / paste of a fragment
+// ---------------------------------------------------------------------------
+
+/**
+ * A slice of story, detached from the document it came from.
+ *
+ * It holds whole scenes rather than ids: the clipboard must survive the
+ * deletion of what was copied, and pasting into another story must work.
+ */
+export interface SceneClipboard {
+  scenes: Scene[];
+}
+
+export function copyScenes(story: Story, sceneIds: readonly SceneId[]): SceneClipboard | null {
+  const scenes = sceneIds
+    .map((id) => story.scenes[id])
+    .filter((scene): scene is Scene => Boolean(scene))
+    .map((scene) => structuredClone(scene));
+  return scenes.length > 0 ? { scenes } : null;
+}
+
+/**
+ * Pastes a fragment, giving every node a free id.
+ *
+ * Links are rewritten according to what the copy actually contains: a link
+ * inside the fragment follows the copy, a link pointing outside it is kept as
+ * long as its target still exists, and anything else is dropped. Copying a
+ * branch therefore reproduces the branch *and* keeps it plugged into the rest
+ * of the story, without ever creating a dangling target.
+ */
+export function pasteScenes(
+  story: Story,
+  clipboard: SceneClipboard,
+  offset: { x: number; y: number } = { x: 40, y: 40 },
+): { story: Story; sceneIds: SceneId[] } {
+  const scenes = { ...story.scenes };
+  const renamed = new Map<SceneId, SceneId>();
+
+  // Every id is reserved first: a link inside the fragment must find its
+  // target's new name, whatever the order the nodes are copied in.
+  let claimed: Story = story;
+  for (const scene of clipboard.scenes) {
+    const id = uniqueSceneId(claimed, scene.id);
+    renamed.set(scene.id, id);
+    claimed = { ...claimed, scenes: { ...claimed.scenes, [id]: scene } };
+  }
+
+  const created: SceneId[] = [];
+  for (const scene of clipboard.scenes) {
+    const id = renamed.get(scene.id) as SceneId;
+    const copy = structuredClone(scene);
+    created.push(id);
+    scenes[id] = {
+      ...copy,
+      id,
+      position: { x: copy.position.x + offset.x, y: copy.position.y + offset.y },
+      next: copy.next
+        .filter((link) => renamed.has(link.to) || Boolean(story.scenes[link.to]))
+        .map((link) => ({ ...link, id: createId('lien'), to: renamed.get(link.to) ?? link.to })),
+    };
+  }
+
+  return { story: { ...story, scenes }, sceneIds: created };
 }
 
 export function setStartScene(story: Story, sceneId: SceneId): Story {
@@ -137,6 +208,35 @@ export function toggleEnding(story: Story, sceneId: SceneId): Story {
 // Links
 // ---------------------------------------------------------------------------
 
+/**
+ * Can a node of this kind be chained after `sceneId`?
+ *
+ * **The rule**: a node never mixes links to choices with chaining links, or the
+ * reader would not know whether to wait for the player. It is checked here, in
+ * one place, so that every way of creating a link obeys it — dragging an edge
+ * and pressing a creation button must not disagree on what the format allows.
+ */
+export function canChainTo(story: Story, sceneId: SceneId, kind: SceneKind): boolean {
+  const scene = story.scenes[sceneId];
+  if (!scene) return false;
+
+  const targets = scene.next
+    .map((link) => story.scenes[link.to])
+    .filter((target): target is Scene => Boolean(target));
+  if (targets.length === 0) return true;
+  return targets.every((target) => (target.kind === 'choice') === (kind === 'choice'));
+}
+
+/** Can a link be drawn from one node to another? */
+export function canLink(story: Story, fromId: SceneId, toId: SceneId): boolean {
+  const from = story.scenes[fromId];
+  const to = story.scenes[toId];
+  if (!from || !to) return false;
+  // The same link twice would add nothing and clutter the canvas.
+  if (from.next.some((link) => link.to === toId)) return false;
+  return canChainTo(story, fromId, to.kind);
+}
+
 export function addLink(story: Story, sceneId: SceneId, to: SceneId): Story {
   const scene = story.scenes[sceneId];
   if (!scene || !story.scenes[to]) return story;
@@ -160,7 +260,10 @@ export function updateLink(
 
 export function removeLink(story: Story, sceneId: SceneId, linkId: string): Story {
   const scene = story.scenes[sceneId];
-  if (!scene) return story;
+  // Returning the same document when there is nothing to remove matters: the
+  // caller uses identity to decide whether to record an undo step, and deleting
+  // a node already takes its links with it.
+  if (!scene || !scene.next.some((link) => link.id === linkId)) return story;
   return updateScene(story, sceneId, {
     next: scene.next.filter((link) => link.id !== linkId),
   });
