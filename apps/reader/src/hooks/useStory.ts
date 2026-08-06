@@ -20,7 +20,11 @@ export interface UseStoryResult {
   state: GameState;
   scene: ResolvedScene;
   canGoBack: boolean;
-  choose: (choiceId: string) => void;
+  /** Choix effectivement faits — sans compter les enchainements automatiques. */
+  decisions: number;
+  choose: (linkId: string) => void;
+  /** Poursuit d'un noeud quand le recit enchaine seul. Faux s'il n'y a rien a faire. */
+  advance: () => boolean;
   goBack: () => void;
   restart: () => void;
 }
@@ -59,7 +63,8 @@ export function useStory({ story, initialState, onStateChange }: UseStoryOptions
     engine.getSnapshot,
   );
 
-  const choose = useCallback((choiceId: string) => engine.choose(choiceId), [engine]);
+  const choose = useCallback((linkId: string) => engine.choose(linkId), [engine]);
+  const advance = useCallback(() => engine.advance(), [engine]);
   const goBack = useCallback(() => {
     if (engine.canGoBack()) engine.goBack();
   }, [engine]);
@@ -70,7 +75,9 @@ export function useStory({ story, initialState, onStateChange }: UseStoryOptions
     state: snapshot.state,
     scene: snapshot.scene,
     canGoBack: snapshot.canGoBack,
+    decisions: snapshot.decisions,
     choose,
+    advance,
     goBack,
     restart,
   };

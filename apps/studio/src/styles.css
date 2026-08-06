@@ -177,6 +177,43 @@ body {
   background: transparent;
 }
 
+/*
+  Bouton de creation d'un noeud : il emprunte la couleur du type qu'il cree,
+  posee en style inline depuis les tokens. Le lien entre la commande et ce
+  qu'elle produit sur le canvas se voit sans avoir a le lire.
+*/
+.btn--kind {
+  font-size: 12px;
+  padding: 6px 11px;
+  border-width: 1.5px;
+}
+
+/* Le choix du type, dans l'inspecteur : trois pastilles, une seule allumee. */
+.kind-picker {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.kind-picker__option {
+  flex: 1;
+  font: 600 12px var(--emb-font-ui);
+  padding: 7px 6px;
+  border: 1.5px solid var(--st-field-border);
+  border-radius: 9px;
+  background: var(--st-surface);
+  color: var(--st-sub);
+  cursor: pointer;
+}
+
+.kind-picker__option:hover {
+  border-color: var(--st-muted);
+}
+
+.kind-picker__option--on {
+  font-weight: 700;
+}
+
 /* --------------------------------------------------------- tableau de bord */
 
 .dash__head {
@@ -381,12 +418,13 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .scene-node__title {
   font: 600 13px var(--emb-font-ui);
-  color: var(--st-ink);
+  color: inherit;
   line-height: 1.2;
   flex: 1;
   overflow: hidden;
@@ -413,37 +451,35 @@ body {
 
 .scene-node__preview {
   font: 400 11px/1.35 var(--emb-font-prose);
-  color: #7d7464;
+  color: inherit;
+  opacity: 0.75;
   margin-top: 5px;
   max-height: 30px;
   overflow: hidden;
 }
 
-.scene-node__choices {
-  margin-top: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+/*
+  L'etiquette de type. La couleur du noeud la porte deja de loin ; ce texte est
+  la pour lever le doute de pres, et pour ceux qui ne distinguent pas les
+  teintes — la couleur ne doit jamais etre le seul porteur de l'information.
+*/
+.scene-node__kind {
+  font: 700 9px var(--emb-font-ui);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 20px;
+  padding: 2px 7px;
+  flex: none;
 }
 
-.scene-node__choice {
-  position: relative;
+/* Ce qui se passe apres : attente d'une decision, ou enchainement. */
+.scene-node__flow {
+  margin-top: 7px;
   font: 500 10px var(--emb-font-ui);
-  color: var(--st-sub);
-  background: #f7f3ea;
-  border-radius: 6px;
-  padding: 4px 16px 4px 7px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.scene-node__choice--conditional {
-  color: #6a4fa3;
-  background: #f2edfb;
-}
-.scene-node__choice--broken {
-  color: var(--st-danger);
-  background: var(--st-danger-soft);
+  color: var(--st-muted);
+  border-top: 1px dashed currentColor;
+  padding-top: 5px;
+  opacity: 0.85;
 }
 
 .scene-node__alert {

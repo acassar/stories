@@ -8,10 +8,10 @@
  */
 
 /** Version du format lui-meme, pour la migration future des fichiers. */
-export const STORY_FORMAT_VERSION = 1;
+export const STORY_FORMAT_VERSION = 2;
 
 export type SceneId = string;
-export type ChoiceId = string;
+export type LinkId = string;
 export type VariableName = string;
 export type ItemId = string;
 
@@ -71,23 +71,45 @@ export type Effect =
 /**
  * Un bloc de texte d'une scene. Le lecteur les rend en correspondance : un
  * bloc = un message qui arrive, avec un temps de frappe avant apparition.
+ *
+ * Le bloc ne dit pas qui parle : c'est le `kind` du noeud qui le porte, et lui
+ * seul. Le format 1 avait un `speaker` par message ; deux sources de verite
+ * pour la meme question finissent toujours par se contredire, et c'etait le
+ * cas. Un changement de locuteur au milieu d'une scene se dit desormais avec
+ * ce que le format sait faire : un second noeud, enchaine.
  */
 export interface TextBlock {
   text: string;
-  /**
-   * Qui parle. `narrator` par defaut ; `player` permet d'ecrire une replique
-   * imposee du joueur au milieu d'une scene.
-   */
-  speaker?: 'narrator' | 'player';
 }
 
-export interface Choice {
-  id: ChoiceId;
-  /** Libelle affiche au joueur — c'est aussi sa replique dans la correspondance. */
-  label: string;
-  /** Scene atteinte si le choix est retenu. */
-  target: SceneId;
-  /** Si presente et non satisfaite, le choix n'est pas propose. */
+/**
+ * Type d'un noeud — c'est lui qui porte toute la semantique du graphe.
+ *
+ * - `npc`    : l'interlocuteur parle.
+ * - `player` : le joueur parle, sans rien decider. Le recit enchaine seul.
+ * - `choice` : le joueur decide. Seul type qui arrete la lecture.
+ *
+ * Consequence : une scene n'a plus a declarer si elle propose des choix. Il
+ * suffit de regarder le type de ce qu'elle vise — si ce sont des `choice`, ce
+ * sont des boutons ; sinon, on enchaine.
+ */
+export type SceneKind = 'npc' | 'player' | 'choice';
+
+/**
+ * Une transition, devenue un objet a part entiere.
+ *
+ * C'est le lien — pas la scene d'arrivee — qui porte `condition` et `effects` :
+ * une meme scene pouvant desormais etre atteinte par plusieurs chemins, ranger
+ * les consequences sur la scene les appliquerait quel que soit le chemin suivi.
+ */
+export interface Link {
+  id: LinkId;
+  /** Scene atteinte en empruntant ce lien. */
+  to: SceneId;
+  /**
+   * Si presente et non satisfaite, le lien est impraticable : le bouton n'est
+   * pas propose, ou l'enchainement automatique passe au lien suivant.
+   */
   condition?: Condition;
   /** Appliques dans l'ordre, avant l'arrivee sur la scene cible. */
   effects?: Effect[];
@@ -121,11 +143,19 @@ export interface SceneMedia {
 
 export interface Scene {
   id: SceneId;
+  kind: SceneKind;
   /** Titre de travail — affiche dans le studio, jamais au joueur. */
   title: string;
+  /**
+   * Libelle du bouton, pour un noeud `choice` uniquement. Distinct de `blocks` :
+   * le bouton peut annoncer « Mentir » quand la replique envoyee est tout autre.
+   * A defaut de `blocks`, c'est le libelle qui part dans la correspondance.
+   */
+  label?: string;
   /** Corps de la scene, decoupe en messages. */
   blocks: TextBlock[];
-  choices: Choice[];
+  /** Liens sortants, dans l'ordre — c'est l'ordre d'affichage des boutons. */
+  next: Link[];
   /** Position du noeud sur le canvas du studio ; persistee dans le format. */
   position: { x: number; y: number };
   ending?: SceneEnding;
@@ -173,12 +203,10 @@ export interface Story extends StoryMeta {
 // Etat de jeu
 // ---------------------------------------------------------------------------
 
-/** Une etape franchie : la scene quittee et le choix qui en a fait sortir. */
+/** Une etape franchie : la scene quittee et le lien qui en a fait sortir. */
 export interface HistoryEntry {
   sceneId: SceneId;
-  choiceId: ChoiceId;
-  /** Libelle du choix au moment ou il a ete fait — fige la correspondance. */
-  label: string;
+  linkId: LinkId;
 }
 
 export interface GameState {
@@ -206,15 +234,23 @@ export type IssueCode =
   | 'schema'
   | 'missing-start-scene'
   | 'scene-id-mismatch'
-  | 'dangling-choice-target'
-  | 'duplicate-choice-id'
+  | 'dangling-link-target'
+  | 'duplicate-link-id'
   | 'self-loop'
   | 'orphan-scene'
-  | 'ending-with-choices'
+  | 'ending-with-links'
   | 'dead-end'
   | 'unknown-variable'
   | 'empty-scene'
-  | 'no-ending';
+  | 'no-ending'
+  /** Un noeud `choice` sans libelle : le bouton serait vide. */
+  | 'choice-without-label'
+  /** Un noeud melange des liens vers des choix et vers des enchainements. */
+  | 'mixed-links'
+  /** Enchainement automatique dont tous les liens sont conditionnels. */
+  | 'no-default-link'
+  /** Boucle d'enchainements automatiques : la lecture ne s'arreterait jamais. */
+  | 'auto-loop';
 
 export interface ValidationIssue {
   severity: IssueSeverity;
@@ -222,7 +258,7 @@ export interface ValidationIssue {
   message: string;
   /** Scene concernee, quand l'anomalie est localisable. */
   sceneId?: SceneId;
-  choiceId?: ChoiceId;
+  linkId?: LinkId;
   /** Chemin dans le document, pour les erreurs de schema. */
   path?: string;
 }

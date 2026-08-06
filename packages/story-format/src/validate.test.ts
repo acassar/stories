@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { clairiereStory, exampleStories } from './examples.js';
+import { cimesStory, clairiereStory, exampleStories } from './examples.js';
 import { createEmptyStory, createScene, slugify } from './factories.js';
 import {
   StoryFormatError,
@@ -41,14 +41,21 @@ describe('validateStoryShape', () => {
 
   it('rejette un identifiant de scene contenant des caracteres interdits', () => {
     const story = clone(clairiereStory);
-    story.scenes['scene invalide'] = createScene({ id: 'scene invalide' });
+    story.scenes['scene invalide'] = createScene({ id: 'scene invalide', kind: 'npc' });
+    expect(validateStoryShape(story).valid).toBe(false);
+  });
+
+  it('rejette un type de noeud hors vocabulaire', () => {
+    const story = clone(clairiereStory);
+    // @ts-expect-error — on injecte volontairement un type inconnu
+    story.scenes.start.kind = 'narrateur';
     expect(validateStoryShape(story).valid).toBe(false);
   });
 
   it('rejette une condition dont l’operateur est inconnu', () => {
     const story = clone(clairiereStory);
     // @ts-expect-error — on injecte volontairement un operateur hors vocabulaire
-    story.scenes.start.choices[0].condition = { op: 'eval', code: 'process.exit()' };
+    story.scenes.start.next[0].condition = { op: 'eval', code: 'process.exit()' };
     expect(validateStoryShape(story).valid).toBe(false);
   });
 });
@@ -75,37 +82,80 @@ describe('validateStory — coherence du graphe', () => {
     expect(result.issues.some((i) => i.code === 'missing-start-scene')).toBe(true);
   });
 
-  it('signale un choix vers une scene inexistante', () => {
+  it('signale un lien vers une scene inexistante', () => {
     const story = clone(clairiereStory);
-    story.scenes.start!.choices[0]!.target = 'fantome';
+    story.scenes.start!.next[0]!.to = 'fantome';
     const result = validateStory(story);
     expect(result.valid).toBe(false);
-    const issue = result.issues.find((i) => i.code === 'dangling-choice-target');
+    const issue = result.issues.find((i) => i.code === 'dangling-link-target');
     expect(issue?.sceneId).toBe('start');
-    expect(issue?.choiceId).toBe('vers-lucioles');
+    expect(issue?.linkId).toBe('vers-lucioles');
   });
 
   it('signale une cle de dictionnaire qui ne correspond pas a l’id de la scene', () => {
     const story = clone(clairiereStory);
-    story.scenes.egaree = createScene({ id: 'autre-id' });
+    story.scenes.egaree = createScene({ id: 'autre-id', kind: 'npc' });
     const result = validateStory(story);
     expect(result.valid).toBe(false);
     expect(result.issues.some((i) => i.code === 'scene-id-mismatch')).toBe(true);
   });
 
-  it('signale deux choix partageant le meme identifiant', () => {
+  it('signale deux liens partageant le meme identifiant', () => {
     const story = clone(clairiereStory);
     const scene = story.scenes.start!;
-    scene.choices.push({ ...scene.choices[0]!, target: 'arbre' });
+    scene.next.push({ ...scene.next[0]!, to: 'c-arbre' });
     const result = validateStory(story);
     expect(result.valid).toBe(false);
-    expect(result.issues.some((i) => i.code === 'duplicate-choice-id')).toBe(true);
+    expect(result.issues.some((i) => i.code === 'duplicate-link-id')).toBe(true);
+  });
+
+  it('signale un noeud de choix sans libelle : le bouton serait vide', () => {
+    const story = clone(clairiereStory);
+    delete story.scenes['c-lucioles']!.label;
+    const result = validateStory(story);
+    expect(result.valid).toBe(false);
+    expect(result.issues.some((i) => i.code === 'choice-without-label')).toBe(true);
+  });
+
+  it('refuse un noeud qui melange choix et enchainement', () => {
+    const story = clone(clairiereStory);
+    // `start` propose deja deux choix ; on y ajoute un lien direct vers un npc.
+    story.scenes.start!.next.push({ id: 'raccourci', to: 'arbre' });
+    const result = validateStory(story);
+    expect(result.valid).toBe(false);
+    const issue = result.issues.find((i) => i.code === 'mixed-links');
+    expect(issue?.sceneId).toBe('start');
+  });
+
+  it('refuse une boucle d’enchainements que le joueur ne pourrait pas rompre', () => {
+    const story = clone(clairiereStory);
+    // `prudence` enchaine deja seul ; on le fait boucler sur lui-meme.
+    story.scenes.prudence!.next = [{ id: 'boucle', to: 'prudence' }];
+    const result = validateStory(story);
+    expect(result.valid).toBe(false);
+    expect(result.issues.some((i) => i.code === 'auto-loop' && i.sceneId === 'prudence')).toBe(
+      true,
+    );
+  });
+
+  it('accepte une boucle qui repasse par un choix — le joueur peut en sortir', () => {
+    // `c-repartir` ramene a `sommet`, deja visite : c'est legitime.
+    expect(validateStory(cimesStory).issues.some((i) => i.code === 'auto-loop')).toBe(false);
+  });
+
+  it('avertit quand tous les liens d’un enchainement sont conditionnels', () => {
+    const story = clone(clairiereStory);
+    story.scenes.prudence!.next[0]!.condition = { op: 'eq', variable: 'prudent', value: true };
+    const issue = validateStory(story).issues.find((i) => i.code === 'no-default-link');
+    expect(issue?.severity).toBe('warning');
+    expect(issue?.sceneId).toBe('prudence');
   });
 
   it('avertit — sans bloquer — sur une scene orpheline', () => {
     const story = clone(clairiereStory);
     story.scenes.oubliee = createScene({
       id: 'oubliee',
+      kind: 'npc',
       blocks: [{ text: 'Personne ne vient jamais ici.' }],
       ending: { type: 'Fin', name: 'Oubli', blurb: 'Fin.' },
     });
@@ -116,7 +166,7 @@ describe('validateStory — coherence du graphe', () => {
     expect(issue?.sceneId).toBe('oubliee');
   });
 
-  it('avertit sur un cul-de-sac : ni choix ni fin', () => {
+  it('avertit sur un cul-de-sac : ni suite ni fin', () => {
     const story = clone(clairiereStory);
     delete story.scenes.portail!.ending;
     const result = validateStory(story);
@@ -124,16 +174,16 @@ describe('validateStory — coherence du graphe', () => {
     expect(result.issues.some((i) => i.code === 'dead-end' && i.sceneId === 'portail')).toBe(true);
   });
 
-  it('avertit sur une fin qui propose encore des choix', () => {
+  it('avertit sur une fin qui garde des liens sortants', () => {
     const story = clone(clairiereStory);
-    story.scenes.portail!.choices.push({ id: 'apres-la-fin', label: 'Encore ?', target: 'start' });
+    story.scenes.portail!.next.push({ id: 'apres-la-fin', to: 'start' });
     const result = validateStory(story);
-    expect(result.issues.some((i) => i.code === 'ending-with-choices')).toBe(true);
+    expect(result.issues.some((i) => i.code === 'ending-with-links')).toBe(true);
   });
 
-  it('avertit sur un choix qui boucle sur sa propre scene', () => {
+  it('avertit sur un lien qui boucle sur son propre noeud', () => {
     const story = clone(clairiereStory);
-    story.scenes.start!.choices[0]!.target = 'start';
+    story.scenes.prudence!.next[0]!.to = 'prudence';
     expect(validateStory(story).issues.some((i) => i.code === 'self-loop')).toBe(true);
   });
 
@@ -145,7 +195,7 @@ describe('validateStory — coherence du graphe', () => {
 
   it('avertit sur une condition lisant une variable jamais ecrite', () => {
     const story = clone(clairiereStory);
-    story.scenes.start!.choices[0]!.condition = { op: 'gt', variable: 'karma', value: 3 };
+    story.scenes.start!.next[0]!.condition = { op: 'gt', variable: 'karma', value: 3 };
     const issue = validateStory(story).issues.find((i) => i.code === 'unknown-variable');
     expect(issue?.severity).toBe('warning');
     expect(issue?.message).toContain('karma');
@@ -208,7 +258,7 @@ describe('utilitaires', () => {
 
   it('issuesForScene filtre par scene', () => {
     const story = clone(clairiereStory);
-    story.scenes.start!.choices[0]!.target = 'fantome';
+    story.scenes.start!.next[0]!.to = 'fantome';
     const result = validateStory(story);
     expect(issuesForScene(result, 'start')).toHaveLength(1);
     expect(issuesForScene(result, 'arbre')).toHaveLength(0);

@@ -140,6 +140,57 @@ export const studio = {
   warnSoft: '#f6eed9',
 } as const;
 
+/**
+ * Couleurs des types de noeuds du studio.
+ *
+ * Le type d'un noeud est l'information la plus structurante du graphe : il
+ * decide de qui parle et de si le joueur doit agir. Il doit donc se lire d'un
+ * coup d'oeil sur le canvas, sans avoir a ouvrir l'inspecteur — d'ou une
+ * couleur par type plutot qu'une etiquette.
+ *
+ * Trois familles nettement distinctes a distance : encre froide pour
+ * l'interlocuteur, vert pour la voix du joueur, prune pour la decision. La
+ * teinte `ink` sert au texte pose dessus et reste lisible sur `surface`.
+ */
+export interface KindTokens {
+  /** Fond de la carte. */
+  surface: string;
+  /** Filet de la carte, et couleur de l'arete entrante. */
+  border: string;
+  /** Encre du titre et de l'etiquette de type. */
+  ink: string;
+  /** Pastille de l'etiquette de type. */
+  badge: string;
+  /** Libelle affiche a l'auteur. */
+  label: string;
+}
+
+export type SceneKindName = 'npc' | 'player' | 'choice';
+
+export const kinds: Record<SceneKindName, KindTokens> = {
+  npc: {
+    surface: '#eef3fa',
+    border: '#bccee4',
+    ink: '#2c4a6b',
+    badge: '#d9e6f6',
+    label: 'Personnage',
+  },
+  player: {
+    surface: '#ecf4ef',
+    border: '#bcd8c6',
+    ink: '#2b5a42',
+    badge: '#d7eadf',
+    label: 'Joueur',
+  },
+  choice: {
+    surface: '#f3eefb',
+    border: '#cfc0ee',
+    ink: '#563a8f',
+    badge: '#e6dcf8',
+    label: 'Choix',
+  },
+};
+
 export const typography = {
   /** Interface : titres, boutons, etiquettes. */
   ui: "'Bricolage Grotesque', system-ui, -apple-system, sans-serif",

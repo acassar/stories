@@ -1,20 +1,33 @@
 import { Handle, Position } from '@xyflow/react';
 import type { NodeProps } from '@xyflow/react';
 
+import { kinds } from '@embranche/design-tokens';
+import { sceneMessages } from '@embranche/story-format';
+
 import type { SceneFlowNode } from '../lib/graph';
 
 /**
- * Noeud de scene : titre, badge, apercu du texte, et une poignee de sortie par
- * choix. Tirer la poignee d'un choix rebranche *ce* choix — c'est ce qui rend
- * l'edition des liens directe sur le canvas.
+ * Noeud du canvas.
+ *
+ * Sa couleur *est* son type : encre froide pour l'interlocuteur, vert pour la
+ * voix du joueur, prune pour une decision. C'est la seule information qu'on
+ * doit pouvoir lire sans zoomer, parce que c'est elle qui dit si la lecture
+ * s'arrete la ou si elle continue toute seule.
+ *
+ * Un noeud n'a plus qu'une poignee d'entree et une de sortie : les choix ne
+ * sont plus des lignes a l'interieur du noeud, ce sont des noeuds voisins.
  */
 export function SceneNode({ data, selected }: NodeProps<SceneFlowNode>) {
-  const { scene, isStart, issues } = data;
+  const { scene, isStart, issues, awaitsChoice } = data;
   const hasError = issues.some((issue) => issue.severity === 'error');
-  const preview = scene.blocks.map((block) => block.text).join(' ') || '—';
+  const palette = kinds[scene.kind];
+  const preview = sceneMessages(scene)
+    .map((block) => block.text)
+    .join(' ');
 
   const classes = [
     'scene-node',
+    `scene-node--${scene.kind}`,
     scene.ending && 'scene-node--ending',
     selected && 'scene-node--selected',
     hasError && 'scene-node--invalid',
@@ -23,53 +36,50 @@ export function SceneNode({ data, selected }: NodeProps<SceneFlowNode>) {
     .join(' ');
 
   return (
-    <div className={classes} data-testid={`scene-node-${scene.id}`}>
+    <div
+      className={classes}
+      data-testid={`scene-node-${scene.id}`}
+      style={
+        scene.ending
+          ? undefined
+          : { background: palette.surface, borderColor: palette.border, color: palette.ink }
+      }
+    >
       <Handle type="target" position={Position.Top} />
 
       <div className="scene-node__head">
+        <span
+          className="scene-node__kind"
+          style={{ background: palette.badge, color: palette.ink }}
+          title={`Nœud ${palette.label.toLowerCase()}`}
+        >
+          {palette.label}
+        </span>
         <div className="scene-node__title" title={scene.title}>
-          {scene.title || scene.id}
+          {scene.kind === 'choice' ? scene.label || scene.title : scene.title || scene.id}
         </div>
         {isStart && <span className="scene-node__badge scene-node__badge--start">DÉPART</span>}
-        <span className={`scene-node__badge${scene.ending ? ' scene-node__badge--ending' : ''}`}>
-          {scene.ending ? 'FIN' : `${scene.choices.length} choix`}
-        </span>
+        {scene.ending && <span className="scene-node__badge scene-node__badge--ending">FIN</span>}
       </div>
 
-      <div className="scene-node__preview">{preview}</div>
+      <div className="scene-node__preview">{preview || '—'}</div>
 
-      {scene.choices.length > 0 && (
-        <div className="scene-node__choices">
-          {scene.choices.map((choice) => {
-            const broken = issues.some((issue) => issue.choiceId === choice.id);
-            const classNames = [
-              'scene-node__choice',
-              choice.condition && 'scene-node__choice--conditional',
-              broken && 'scene-node__choice--broken',
-            ]
-              .filter(Boolean)
-              .join(' ');
-            return (
-              <div key={choice.id} className={classNames} title={choice.label}>
-                {choice.condition ? '◇ ' : '→ '}
-                {choice.label}
-                <Handle
-                  type="source"
-                  position={Position.Right}
-                  id={choice.id}
-                  // Chaque poignee est calee sur sa ligne de choix.
-                  style={{ top: '50%', right: -14 }}
-                />
-              </div>
-            );
-          })}
+      {/*
+        Ce qui se passe apres. Un noeud qui attend une decision se distingue
+        d'un noeud qui enchaine seul — c'est toute la difference entre les deux
+        moities du format, autant l'ecrire.
+      */}
+      {!scene.ending && (
+        <div className="scene-node__flow">
+          {awaitsChoice
+            ? `${scene.next.length} choix proposé${scene.next.length > 1 ? 's' : ''}`
+            : scene.next.length > 0
+              ? 'enchaîne'
+              : 'sans suite'}
         </div>
       )}
 
-      {/* Poignee generique : tirer depuis le bas cree un nouveau choix. */}
-      <Handle type="source" position={Position.Bottom} id="__new" />
-
-      {hasError && <div className="scene-node__alert">⚠ {issues[0]?.message}</div>}
+      <Handle type="source" position={Position.Bottom} />
     </div>
   );
 }

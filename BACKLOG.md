@@ -23,8 +23,8 @@ La définition de « terminé » du cahier des charges est atteinte : on crée u
 | ENG-2    | Conditions et effets déclaratifs, sans `eval`                               | M      |
 | ENG-3    | Émetteur d'événements typé + instantané stable pour `useSyncExternalStore`  | M      |
 | ENG-4    | Suite de tests complète (80 tests)                                          | M      |
-| STU-1    | Canvas React Flow, nœud personnalisé, poignée par choix                     | L      |
-| STU-2    | Panneau d'édition : texte, choix, conditions, effets, fin, scène de départ  | L      |
+| STU-1    | Canvas React Flow, nœud personnalisé coloré par type, liens tirables        | L      |
+| STU-2    | Panneau d'édition : type, texte, liens, conditions, effets, fin, départ     | L      |
 | STU-3    | Validation en direct : anneau sur les nœuds + barre d'anomalies cliquable   | M      |
 | STU-4    | Playtest intégré sur le vrai moteur                                         | M      |
 | STU-5    | Import / export JSON + tableau de bord CRUD                                 | M      |
@@ -61,8 +61,7 @@ Une fois qu'on écrit vraiment, ce sont ces manques-là qui font mal.
 | FMT-4 | Média : image de fond, ambiance sonore    | P1       | L      | Les champs sont **déjà déclarés** dans le type `SceneMedia`. Reste : upload / référencement des fichiers, rendu dans le lecteur, préchargement. |
 | FMT-5 | Interpolation de variables dans le texte  | P1       | M      | `Bonjour {{ nom }}`. Attention : à faire par substitution de jetons déclarés, jamais par exécution — la règle « pas d'`eval` » ne bouge pas.  |
 | FMT-6 | Blocs typés autres que le texte           | P2       | M      | Pause, changement d'interlocuteur, didascalie. Le type `TextBlock` devient une union discriminée.                                            |
-| FMT-7 | Migration de format (`formatVersion`)     | P1       | M      | Le champ existe et est vérifié. Il manque la chaîne de migrations quand la v2 arrivera.                                                      |
-| ENG-5 | Effets sur l'entrée d'une scène           | P2       | M      | Aujourd'hui les effets sont portés par les choix. Une scène doit pouvoir en appliquer à l'arrivée.                                            |
+| ENG-5 | Effets sur l'entrée d'un nœud             | P2       | M      | Les effets sont portés par les liens — c'est le chemin qui a des conséquences. Reste le cas « quel que soit le chemin », qui appartient au nœud. |
 | ENG-6 | Aléatoire déterministe                    | P3       | M      | Générateur à graine, rangé dans l'état, pour que le rejeu de `goBack` reste exact.                                                            |
 | ENG-7 | Sauvegardes multiples par récit           | P2       | S      | L'état est déjà entièrement sérialisable ; c'est une affaire de clés côté app.                                                                |
 
@@ -105,3 +104,4 @@ Ce n'est pas de l'oubli, ce sont des choix.
 | Pas d'annulation dans le studio                            | STU-7. Les opérations d'édition sont déjà pures et immuables, exprès pour que la pile d'historique soit une addition, pas une réécriture.                              |
 | Le tableau de bord n'a pas de compteur de lectures         | La maquette en montre un. Il suppose un backend ; sans compte ni serveur, l'afficher serait mentir.                                                                    |
 | Le format ne gère qu'une langue                            | Aucune demande de traduction pour l'instant. Le jour venu : `blocks[].text` devient une carte langue → texte, avec migration `formatVersion`.                          |
+| Les parties sauvegardées ne survivent pas au passage en format 2 | Les récits, eux, sont migrés (`migrateStory`). Mais l'historique d'une partie est passé de `choiceId` à `linkId` : le traduire demanderait de rejouer chaque partie contre l'ancien graphe pour retrouver le lien correspondant. Pour des sauvegardes locales de quelques minutes de lecture, le coût dépassait le service rendu. |

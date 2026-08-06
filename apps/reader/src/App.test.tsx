@@ -45,13 +45,15 @@ describe('Lecteur Embranche', () => {
 
     await user.click(screen.getByRole('button', { name: 'Suivre les lucioles' }));
     expect(await screen.findByText(/porte de lumière/)).toBeInTheDocument();
-    // La replique du joueur reste dans le fil.
-    expect(screen.getByText('Suivre les lucioles')).toBeInTheDocument();
+    // Le noeud de choix a envoye sa replique, distincte du libelle du bouton,
+    // puis le recit a enchaine seul jusqu'aux lucioles.
+    expect(screen.getByText('Je les suis.')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Franchir le portail' }));
     expect(await screen.findByRole('heading', { name: 'Le Royaume Lumière' })).toBeInTheDocument();
     expect(screen.getByText('Fin lumineuse')).toBeInTheDocument();
-    expect(screen.getByText('2')).toBeInTheDocument(); // choix faits
+    // Deux boutons pressés : les nœuds traversés seuls ne comptent pas.
+    expect(screen.getByText('2')).toBeInTheDocument();
   });
 
   it('n’affiche le choix conditionnel qu’une fois sa condition remplie', async () => {

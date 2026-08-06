@@ -1,18 +1,20 @@
 import { useState } from 'react';
 
-import { STORY_THEMES, themeLabels } from '@embranche/design-tokens';
+import { STORY_THEMES, kinds, themeLabels } from '@embranche/design-tokens';
 import type { StoryTheme } from '@embranche/design-tokens';
 import { collectStoryVariables } from '@embranche/story-format';
-import type { Scene, SceneId, Story, ValidationIssue } from '@embranche/story-format';
+import type { Scene, SceneId, SceneKind, Story, ValidationIssue } from '@embranche/story-format';
 
 import {
-  addChoice,
+  addLink,
   duplicateScene,
-  removeChoice,
+  removeLink,
   removeScene,
+  setKind,
   setStartScene,
+  soleIncomingLink,
   toggleEnding,
-  updateChoice,
+  updateLink,
   updateScene,
   updateStory,
 } from '../lib/storyDoc';
@@ -211,19 +213,66 @@ function ScenePanel({ story, scene, issues, onChange, onSelect }: ScenePanelProp
   const knownVariables = [...collectStoryVariables(story)].sort();
   const sceneIds = Object.keys(story.scenes);
   const isStart = story.startSceneId === scene.id;
+  const palette = kinds[scene.kind];
 
   const set = (patch: Partial<Scene>) => onChange(updateScene(story, scene.id, patch));
 
   return (
     <>
       <div className="inline">
-        <span className="inspector__label">Scène sélectionnée</span>
+        <span className="inspector__label">Nœud sélectionné</span>
         <span className="app__spacer" />
         {isStart && <span className="pill pill--ok">Départ</span>}
       </div>
 
+      {/*
+        Le type en premier : c'est lui qui commande tout le reste du panneau,
+        du libelle au comportement de la lecture.
+      */}
+      <div className="field">
+        <span className="field__label">Type de nœud</span>
+        <div className="kind-picker">
+          {(['npc', 'player', 'choice'] as const).map((kind) => (
+            <button
+              key={kind}
+              type="button"
+              className={`kind-picker__option${scene.kind === kind ? ' kind-picker__option--on' : ''}`}
+              style={
+                scene.kind === kind
+                  ? {
+                      background: kinds[kind].surface,
+                      borderColor: kinds[kind].border,
+                      color: kinds[kind].ink,
+                    }
+                  : undefined
+              }
+              onClick={() => onChange(setKind(story, scene.id, kind))}
+            >
+              {kinds[kind].label}
+            </button>
+          ))}
+        </div>
+        <span className="field__hint">{kindHelp[scene.kind]}</span>
+      </div>
+
+      {scene.kind === 'choice' && (
+        <label className="field">
+          <span className="field__label">Libellé du bouton</span>
+          <input
+            className="input"
+            value={scene.label ?? ''}
+            placeholder="Mentir"
+            onChange={(event) => set({ label: event.target.value })}
+          />
+          <span className="field__hint">
+            Ce que le joueur lit sur le bouton. Le message envoyé, lui, s’écrit ci-dessous —
+            laisse-le vide pour envoyer le libellé tel quel.
+          </span>
+        </label>
+      )}
+
       <label className="field">
-        <span className="field__label">Titre</span>
+        <span className="field__label">Titre de travail</span>
         <input
           className="input"
           value={scene.title}
@@ -232,10 +281,20 @@ function ScenePanel({ story, scene, issues, onChange, onSelect }: ScenePanelProp
         <span className="field__hint">Identifiant : {scene.id}</span>
       </label>
 
-      <div className="field">
+      {scene.kind === 'choice' && (
+        <IncomingLinkPanel
+          story={story}
+          scene={scene}
+          knownVariables={knownVariables}
+          sceneIds={sceneIds}
+          onChange={onChange}
+        />
+      )}
+
+      <div className="field" style={{ borderTop: `2px solid ${palette.border}`, paddingTop: 12 }}>
         <div className="inline">
           <span className="field__label" style={{ margin: 0 }}>
-            Texte de la scène
+            {scene.kind === 'npc' ? 'Messages envoyés' : 'Ce que dit le joueur'}
           </span>
           <span className="app__spacer" />
           <button
@@ -253,7 +312,11 @@ function ScenePanel({ story, scene, issues, onChange, onSelect }: ScenePanelProp
                 className="textarea"
                 rows={2}
                 value={block.text}
-                placeholder="Ce qui arrive au joueur, en un message."
+                placeholder={
+                  scene.kind === 'npc'
+                    ? 'Ce qui arrive au joueur, en un message.'
+                    : 'Ce que le joueur envoie, en un message.'
+                }
                 onChange={(event) =>
                   set({
                     blocks: scene.blocks.map((current, i) =>
@@ -264,24 +327,6 @@ function ScenePanel({ story, scene, issues, onChange, onSelect }: ScenePanelProp
                 aria-label={`Message ${index + 1}`}
               />
               <div className="inline" style={{ marginTop: 6 }}>
-                <select
-                  className="select"
-                  style={{ padding: '5px 8px', fontSize: 12, width: 'auto' }}
-                  value={block.speaker ?? 'narrator'}
-                  onChange={(event) =>
-                    set({
-                      blocks: scene.blocks.map((current, i) =>
-                        i === index
-                          ? { ...current, speaker: event.target.value as 'narrator' | 'player' }
-                          : current,
-                      ),
-                    })
-                  }
-                  aria-label="Qui parle"
-                >
-                  <option value="narrator">Interlocuteur</option>
-                  <option value="player">Joueur</option>
-                </select>
                 <span className="app__spacer" />
                 <button
                   type="button"
@@ -295,7 +340,11 @@ function ScenePanel({ story, scene, issues, onChange, onSelect }: ScenePanelProp
             </div>
           ))}
           {scene.blocks.length === 0 && (
-            <div className="field__hint">Aucun texte : la scène s’affichera vide.</div>
+            <div className="field__hint">
+              {scene.kind === 'choice'
+                ? 'Sans message, c’est le libellé du bouton qui part dans la conversation.'
+                : 'Aucun texte : le nœud passera sans rien afficher.'}
+            </div>
           )}
         </div>
       </div>
@@ -305,7 +354,7 @@ function ScenePanel({ story, scene, issues, onChange, onSelect }: ScenePanelProp
         className={`btn toggle${scene.ending ? ' toggle--on' : ''}`}
         onClick={() => onChange(toggleEnding(story, scene.id))}
       >
-        {scene.ending ? '✓ Scène de fin' : 'Marquer comme fin'}
+        {scene.ending ? '✓ Nœud de fin' : 'Marquer comme fin'}
       </button>
 
       {scene.ending && (
@@ -343,85 +392,106 @@ function ScenePanel({ story, scene, issues, onChange, onSelect }: ScenePanelProp
         <>
           <div className="row-between">
             <span className="field__label" style={{ margin: 0 }}>
-              Choix ({scene.choices.length})
+              Suites ({scene.next.length})
             </span>
-            <button
-              type="button"
-              className="btn btn--small"
-              onClick={() => onChange(addChoice(story, scene.id))}
+            <select
+              className="select"
+              style={{ width: 'auto', padding: '5px 8px', fontSize: 12 }}
+              value=""
+              onChange={(event) => {
+                if (event.target.value) onChange(addLink(story, scene.id, event.target.value));
+              }}
+              aria-label="Relier à un nœud existant"
             >
-              ＋ Ajouter
-            </button>
+              <option value="">＋ Relier à…</option>
+              {sceneIds
+                .filter((id) => !scene.next.some((link) => link.to === id))
+                .map((id) => (
+                  <option key={id} value={id}>
+                    {kinds[story.scenes[id]!.kind].label} · {nodeName(story, id)}
+                  </option>
+                ))}
+            </select>
+          </div>
+
+          <div className="field__hint" style={{ marginTop: -4 }}>
+            {describeFlow(story, scene)}
           </div>
 
           <div className="stack">
-            {scene.choices.map((choice) => (
-              <div className="card" key={choice.id}>
-                <input
-                  className="input"
-                  style={{
-                    border: 'none',
-                    borderBottom: '1.5px solid #eee3d2',
-                    borderRadius: 0,
-                    padding: '3px 0 7px',
-                    fontFamily: 'var(--emb-font-prose)',
-                  }}
-                  value={choice.label}
-                  onChange={(event) =>
-                    onChange(
-                      updateChoice(story, scene.id, choice.id, { label: event.target.value }),
-                    )
-                  }
-                  aria-label="Libellé du choix"
-                />
-                <div className="inline" style={{ marginTop: 8 }}>
-                  <span className="field__hint" style={{ flex: 'none', margin: 0 }}>
-                    ↳ vers
-                  </span>
-                  <select
-                    className="select"
-                    style={{ flex: 1, minWidth: 0, padding: '7px 9px', fontSize: 12 }}
-                    value={choice.target}
-                    onChange={(event) =>
-                      onChange(
-                        updateChoice(story, scene.id, choice.id, { target: event.target.value }),
-                      )
-                    }
-                    aria-label="Scène cible"
-                  >
-                    {sceneIds.map((id) => (
-                      <option key={id} value={id}>
-                        {story.scenes[id]?.title || id}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    className="btn btn--icon btn--danger"
-                    onClick={() => onChange(removeChoice(story, scene.id, choice.id))}
-                    aria-label={`Supprimer le choix ${choice.label}`}
-                  >
-                    ✕
-                  </button>
-                </div>
+            {scene.next.map((link) => {
+              const target = story.scenes[link.to];
+              return (
+                <div className="card" key={link.id}>
+                  <div className="inline">
+                    <span className="field__hint" style={{ flex: 'none', margin: 0 }}>
+                      ↳ vers
+                    </span>
+                    <select
+                      className="select"
+                      style={{ flex: 1, minWidth: 0, padding: '7px 9px', fontSize: 12 }}
+                      value={link.to}
+                      onChange={(event) =>
+                        onChange(updateLink(story, scene.id, link.id, { to: event.target.value }))
+                      }
+                      aria-label="Nœud cible"
+                    >
+                      {sceneIds.map((id) => (
+                        <option key={id} value={id}>
+                          {kinds[story.scenes[id]!.kind].label} · {nodeName(story, id)}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      className="btn btn--icon btn--danger"
+                      onClick={() => onChange(removeLink(story, scene.id, link.id))}
+                      aria-label={`Supprimer le lien vers ${nodeName(story, link.to)}`}
+                    >
+                      ✕
+                    </button>
+                  </div>
 
-                <ConditionEditor
-                  value={choice.condition}
-                  knownVariables={knownVariables}
-                  sceneIds={sceneIds}
-                  onChange={(condition) =>
-                    onChange(updateChoice(story, scene.id, choice.id, { condition }))
-                  }
-                />
-                <EffectEditor
-                  value={choice.effects}
-                  knownVariables={knownVariables}
-                  onChange={(effects) =>
-                    onChange(updateChoice(story, scene.id, choice.id, { effects }))
-                  }
-                />
+                  {target && (
+                    <button
+                      type="button"
+                      className="btn btn--small"
+                      style={{ marginTop: 6 }}
+                      onClick={() => onSelect(target.id)}
+                    >
+                      Ouvrir « {nodeName(story, target.id)} »
+                    </button>
+                  )}
+
+                  {/*
+                    Sur un lien vers un choix, condition et effets s'editent
+                    aussi depuis le noeud de choix lui-meme — c'est le meme
+                    objet, vu de ses deux bouts.
+                  */}
+                  <ConditionEditor
+                    value={link.condition}
+                    knownVariables={knownVariables}
+                    sceneIds={sceneIds}
+                    onChange={(condition) =>
+                      onChange(updateLink(story, scene.id, link.id, { condition }))
+                    }
+                  />
+                  <EffectEditor
+                    value={link.effects}
+                    knownVariables={knownVariables}
+                    onChange={(effects) =>
+                      onChange(updateLink(story, scene.id, link.id, { effects }))
+                    }
+                  />
+                </div>
+              );
+            })}
+            {scene.next.length === 0 && (
+              <div className="field__hint">
+                Aucune suite. Tire une arête depuis le nœud, ou relie-le ci-dessus à un nœud
+                existant.
               </div>
-            ))}
+            )}
           </div>
         </>
       )}
@@ -464,9 +534,93 @@ function ScenePanel({ story, scene, issues, onChange, onSelect }: ScenePanelProp
             onSelect(null);
           }}
         >
-          Supprimer cette scène
+          Supprimer ce nœud
         </button>
       </div>
     </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+
+const kindHelp: Record<SceneKind, string> = {
+  npc: 'L’interlocuteur parle. La lecture enchaîne toute seule vers la suite.',
+  player: 'Le joueur parle, sans rien décider. La lecture enchaîne toute seule.',
+  choice: 'Le joueur décide. C’est le seul type de nœud qui arrête la lecture.',
+};
+
+function nodeName(story: Story, id: SceneId): string {
+  const scene = story.scenes[id];
+  if (!scene) return id;
+  return (scene.kind === 'choice' ? scene.label || scene.title : scene.title) || id;
+}
+
+/** Dit en clair ce que le format deduit du type des cibles. */
+function describeFlow(story: Story, scene: Scene): string {
+  const targets = scene.next
+    .map((link) => story.scenes[link.to])
+    .filter((target): target is Scene => Boolean(target));
+  if (targets.length === 0) return 'Le récit s’arrête ici.';
+  if (targets.some((target) => target.kind === 'choice')) {
+    return `Le joueur choisit entre ${targets.length} réponse(s).`;
+  }
+  return targets.length > 1
+    ? 'Enchaînement automatique : le premier lien dont la condition est remplie l’emporte.'
+    : 'Enchaînement automatique : la suite arrive sans que le joueur agisse.';
+}
+
+/**
+ * Condition et effets du lien qui *mene* a ce choix.
+ *
+ * Ils vivent sur l'arete — c'est le chemin emprunte qui a des consequences, pas
+ * le noeud d'arrivee, qui peut etre atteint par plusieurs routes. Mais pour
+ * l'auteur, « ce bouton n'apparait que si… » est une propriete du bouton : on
+ * les lui montre donc ici, sur le noeud, tant que l'entree est unique.
+ */
+function IncomingLinkPanel({
+  story,
+  scene,
+  knownVariables,
+  sceneIds,
+  onChange,
+}: {
+  story: Story;
+  scene: Scene;
+  knownVariables: string[];
+  sceneIds: SceneId[];
+  onChange: (story: Story) => void;
+}) {
+  const incoming = soleIncomingLink(story, scene.id);
+  if (!incoming) {
+    return (
+      <div className="field__hint">
+        Ce choix est atteint par plusieurs chemins : ouvre le nœud de départ concerné pour régler sa
+        condition et ses effets.
+      </div>
+    );
+  }
+
+  return (
+    <div className="field">
+      <span className="field__label">Quand ce bouton apparaît</span>
+      <ConditionEditor
+        value={incoming.link.condition}
+        knownVariables={knownVariables}
+        sceneIds={sceneIds}
+        onChange={(condition) =>
+          onChange(updateLink(story, incoming.sceneId, incoming.link.id, { condition }))
+        }
+      />
+      <span className="field__label" style={{ marginTop: 10 }}>
+        Ce que l’appuyer déclenche
+      </span>
+      <EffectEditor
+        value={incoming.link.effects}
+        knownVariables={knownVariables}
+        onChange={(effects) =>
+          onChange(updateLink(story, incoming.sceneId, incoming.link.id, { effects }))
+        }
+      />
+    </div>
   );
 }

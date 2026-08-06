@@ -6,11 +6,14 @@
  * fichier pour refuser net un document mal forme.
  */
 
+import { migrateStory } from './migrate.js';
+import { findAutoLoops } from './scenes.js';
 import { gameStateSchema, storySchema } from './schema.js';
 import type {
   Condition,
   Effect,
   GameState,
+  Link,
   Scene,
   SceneId,
   Story,
@@ -60,10 +63,12 @@ export function validateStory(input: unknown): ValidationResult {
 
 /**
  * Valide et renvoie l'histoire typee. Leve `StoryFormatError` si le document
- * est inutilisable — c'est la porte d'entree des JSON venus de l'exterieur.
+ * est inutilisable — c'est la porte d'entree des JSON venus de l'exterieur, et
+ * donc l'endroit ou un document d'une version anterieure est migre.
  */
 export function parseStory(input: unknown): Story {
-  const result = validateStory(input);
+  const migrated = migrateStory(input);
+  const result = validateStory(migrated);
   if (!result.valid) {
     const first = result.issues.find((i) => i.severity === 'error');
     throw new StoryFormatError(
@@ -71,7 +76,7 @@ export function parseStory(input: unknown): Story {
       result.issues,
     );
   }
-  return input as Story;
+  return migrated as Story;
 }
 
 /** Meme contrat que `parseStory`, mais depuis du texte JSON. */
@@ -127,7 +132,7 @@ function checkGraph(story: Story): ValidationIssue[] {
       });
     }
 
-    if (scene.blocks.length === 0) {
+    if (scene.blocks.length === 0 && !(scene.kind === 'choice' && scene.label)) {
       issues.push({
         severity: 'warning',
         code: 'empty-scene',
@@ -136,57 +141,35 @@ function checkGraph(story: Story): ValidationIssue[] {
       });
     }
 
-    if (scene.ending && scene.choices.length > 0) {
+    if (scene.kind === 'choice' && !scene.label) {
       issues.push({
-        severity: 'warning',
-        code: 'ending-with-choices',
+        severity: 'error',
+        code: 'choice-without-label',
         sceneId: scene.id,
-        message: `« ${scene.title || scene.id} » est une fin mais propose encore des choix : ils ne seront jamais affiches.`,
+        message: `« ${scene.title || scene.id} » est un choix sans libelle : le bouton serait vide.`,
       });
     }
 
-    if (!scene.ending && scene.choices.length === 0) {
+    if (scene.ending && scene.next.length > 0) {
+      issues.push({
+        severity: 'warning',
+        code: 'ending-with-links',
+        sceneId: scene.id,
+        message: `« ${scene.title || scene.id} » est une fin mais garde des liens sortants : ils ne seront jamais suivis.`,
+      });
+    }
+
+    if (!scene.ending && scene.next.length === 0) {
       issues.push({
         severity: 'warning',
         code: 'dead-end',
         sceneId: scene.id,
-        message: `« ${scene.title || scene.id} » n'a ni choix ni fin : le joueur s'y retrouve bloque.`,
+        message: `« ${scene.title || scene.id} » n'a ni suite ni fin : le joueur s'y retrouve bloque.`,
       });
     }
 
-    const seenChoiceIds = new Set<string>();
-    for (const choice of scene.choices) {
-      if (seenChoiceIds.has(choice.id)) {
-        issues.push({
-          severity: 'error',
-          code: 'duplicate-choice-id',
-          sceneId: scene.id,
-          choiceId: choice.id,
-          message: `Deux choix de « ${scene.title || scene.id} » portent l'identifiant « ${choice.id} ».`,
-        });
-      }
-      seenChoiceIds.add(choice.id);
-
-      if (!sceneIds.has(choice.target)) {
-        issues.push({
-          severity: 'error',
-          code: 'dangling-choice-target',
-          sceneId: scene.id,
-          choiceId: choice.id,
-          message: `Le choix « ${choice.label} » pointe vers une scene inexistante (« ${choice.target} »).`,
-        });
-      }
-
-      if (choice.target === scene.id) {
-        issues.push({
-          severity: 'warning',
-          code: 'self-loop',
-          sceneId: scene.id,
-          choiceId: choice.id,
-          message: `Le choix « ${choice.label} » ramene a sa propre scene.`,
-        });
-      }
-    }
+    issues.push(...checkLinkShape(scene, sceneIds));
+    issues.push(...checkLinkKinds(story, scene));
   }
 
   for (const id of findUnreachableScenes(story)) {
@@ -199,11 +182,103 @@ function checkGraph(story: Story): ValidationIssue[] {
     });
   }
 
+  for (const id of findAutoLoops(story)) {
+    const scene = story.scenes[id];
+    issues.push({
+      severity: 'error',
+      code: 'auto-loop',
+      sceneId: id,
+      message: `« ${scene?.title || id} » boucle sur elle-meme sans jamais proposer de choix : la lecture n'en sortirait pas.`,
+    });
+  }
+
   if (!Object.values(story.scenes).some((scene) => scene.ending)) {
     issues.push({
       severity: 'warning',
       code: 'no-ending',
       message: "Aucune scene n'est marquee comme fin : le recit ne peut pas se conclure.",
+    });
+  }
+
+  return issues;
+}
+
+/** Identifiants dupliques, cibles pendantes, retours sur soi. */
+function checkLinkShape(scene: Scene, sceneIds: Set<SceneId>): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+  const seen = new Set<string>();
+  const name = scene.title || scene.id;
+
+  for (const link of scene.next) {
+    if (seen.has(link.id)) {
+      issues.push({
+        severity: 'error',
+        code: 'duplicate-link-id',
+        sceneId: scene.id,
+        linkId: link.id,
+        message: `Deux liens de « ${name} » portent l'identifiant « ${link.id} ».`,
+      });
+    }
+    seen.add(link.id);
+
+    if (!sceneIds.has(link.to)) {
+      issues.push({
+        severity: 'error',
+        code: 'dangling-link-target',
+        sceneId: scene.id,
+        linkId: link.id,
+        message: `Un lien de « ${name} » pointe vers une scene inexistante (« ${link.to} »).`,
+      });
+    }
+
+    if (link.to === scene.id) {
+      issues.push({
+        severity: 'warning',
+        code: 'self-loop',
+        sceneId: scene.id,
+        linkId: link.id,
+        message: `Un lien de « ${name} » ramene a sa propre scene.`,
+      });
+    }
+  }
+  return issues;
+}
+
+/**
+ * Coherence des types en sortie d'un noeud.
+ *
+ * Deux regles, et c'est tout ce qui separe un embranchement d'un enchainement :
+ * on ne melange pas des liens vers des choix et des liens vers autre chose (le
+ * lecteur ne saurait pas s'il doit attendre le joueur), et un enchainement
+ * automatique doit avoir une issue inconditionnelle.
+ */
+function checkLinkKinds(story: Story, scene: Scene): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+  const known = scene.next.filter((link) => story.scenes[link.to]);
+  if (known.length === 0) return issues;
+
+  const name = scene.title || scene.id;
+  const toChoice = known.filter((link) => story.scenes[link.to]?.kind === 'choice');
+
+  if (toChoice.length > 0 && toChoice.length < known.length) {
+    const stray = known.find((link) => story.scenes[link.to]?.kind !== 'choice');
+    issues.push({
+      severity: 'error',
+      code: 'mixed-links',
+      sceneId: scene.id,
+      ...(stray ? { linkId: stray.id } : {}),
+      message: `« ${name} » melange des liens vers des choix et des liens d'enchainement : il faut trancher entre laisser le joueur decider et poursuivre seul.`,
+    });
+  }
+
+  // Un enchainement automatique entierement conditionnel peut n'avoir aucune
+  // issue au moment ou on l'emprunte : le recit s'arreterait sans fin.
+  if (toChoice.length === 0 && !scene.ending && known.every((link) => link.condition)) {
+    issues.push({
+      severity: 'warning',
+      code: 'no-default-link',
+      sceneId: scene.id,
+      message: `Tous les liens de « ${name} » sont conditionnels : si aucune condition n'est remplie, la lecture s'arrete la.`,
     });
   }
 
@@ -222,10 +297,10 @@ export function findReachableScenes(story: Story): Set<SceneId> {
     const current = queue.shift() as SceneId;
     const scene = story.scenes[current];
     if (!scene) continue;
-    for (const choice of scene.choices) {
-      if (!reachable.has(choice.target) && story.scenes[choice.target]) {
-        reachable.add(choice.target);
-        queue.push(choice.target);
+    for (const link of scene.next) {
+      if (!reachable.has(link.to) && story.scenes[link.to]) {
+        reachable.add(link.to);
+        queue.push(link.to);
       }
     }
   }
@@ -243,32 +318,35 @@ export function findUnreachableScenes(story: Story): SceneId[] {
 
 function checkVariables(story: Story): ValidationIssue[] {
   const declared = new Set<VariableName>(Object.keys(story.variables ?? {}));
-  for (const scene of Object.values(story.scenes)) {
-    for (const choice of scene.choices) {
-      for (const effect of choice.effects ?? []) {
-        if ('variable' in effect) declared.add(effect.variable);
-      }
+  for (const { link } of allLinks(story)) {
+    for (const effect of link.effects ?? []) {
+      if ('variable' in effect) declared.add(effect.variable);
     }
   }
 
   const issues: ValidationIssue[] = [];
-  for (const scene of Object.values(story.scenes)) {
-    for (const choice of scene.choices) {
-      if (!choice.condition) continue;
-      for (const name of collectConditionVariables(choice.condition)) {
-        if (!declared.has(name)) {
-          issues.push({
-            severity: 'warning',
-            code: 'unknown-variable',
-            sceneId: scene.id,
-            choiceId: choice.id,
-            message: `La condition du choix « ${choice.label} » lit « ${name} », qui n'est jamais initialisee ni ecrite.`,
-          });
-        }
+  for (const { scene, link } of allLinks(story)) {
+    if (!link.condition) continue;
+    for (const name of collectConditionVariables(link.condition)) {
+      if (!declared.has(name)) {
+        issues.push({
+          severity: 'warning',
+          code: 'unknown-variable',
+          sceneId: scene.id,
+          linkId: link.id,
+          message: `La condition d'un lien de « ${scene.title || scene.id} » lit « ${name} », qui n'est jamais initialisee ni ecrite.`,
+        });
       }
     }
   }
   return issues;
+}
+
+/** Tous les liens du recit, avec la scene d'ou ils partent. */
+export function allLinks(story: Story): { scene: Scene; link: Link }[] {
+  return Object.values(story.scenes).flatMap((scene) =>
+    scene.next.map((link) => ({ scene, link })),
+  );
 }
 
 /** Variables lues par une condition, en descendant les operateurs composites. */
@@ -309,13 +387,11 @@ export function collectEffectVariables(effects: readonly Effect[]): Set<Variable
 /** Toutes les variables citees par le recit, lues comme ecrites. */
 export function collectStoryVariables(story: Story): Set<VariableName> {
   const found = new Set<VariableName>(Object.keys(story.variables ?? {}));
-  for (const scene of Object.values(story.scenes)) {
-    for (const choice of scene.choices) {
-      if (choice.condition) {
-        for (const name of collectConditionVariables(choice.condition)) found.add(name);
-      }
-      for (const name of collectEffectVariables(choice.effects ?? [])) found.add(name);
+  for (const { link } of allLinks(story)) {
+    if (link.condition) {
+      for (const name of collectConditionVariables(link.condition)) found.add(name);
     }
+    for (const name of collectEffectVariables(link.effects ?? [])) found.add(name);
   }
   return found;
 }

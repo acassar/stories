@@ -5,7 +5,12 @@
  * ignore tout de la persistance, on la lui injecte.
  */
 
-import { exampleStories, parseGameState, validateStory } from '@embranche/story-format';
+import {
+  exampleStories,
+  migrateStory,
+  parseGameState,
+  validateStory,
+} from '@embranche/story-format';
 import type { GameState, Story } from '@embranche/story-format';
 
 const IMPORTED_KEY = 'embranche.reader.stories.v1';
@@ -27,9 +32,11 @@ function read<T>(storage: Storage, key: string, fallback: T): T {
  * JSON produit par le studio. Un import remplace l'exemple de meme identifiant.
  */
 export function loadLibrary(storage: Storage = window.localStorage): Story[] {
-  const imported = read<unknown[]>(storage, IMPORTED_KEY, []).filter(
-    (candidate): candidate is Story => validateStory(candidate).valid,
-  );
+  // Un fichier importe avant un changement de format reste jouable : on le
+  // migre a la lecture plutot que de le laisser disparaitre de la bibliotheque.
+  const imported = read<unknown[]>(storage, IMPORTED_KEY, [])
+    .map(migrateStory)
+    .filter((candidate): candidate is Story => validateStory(candidate).valid);
   const byId = new Map<string, Story>();
   for (const story of exampleStories) byId.set(story.id, story);
   for (const story of imported) byId.set(story.id, story);

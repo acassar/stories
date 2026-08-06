@@ -74,13 +74,13 @@ export const effectSchema: z.ZodType<Effect> = z.discriminatedUnion('op', [
 
 export const textBlockSchema = z.object({
   text: z.string(),
-  speaker: z.enum(['narrator', 'player']).optional(),
 });
 
-export const choiceSchema = z.object({
+export const sceneKindSchema = z.enum(['npc', 'player', 'choice']);
+
+export const linkSchema = z.object({
   id: identifier,
-  label: z.string().min(1, 'un choix sans libelle ne peut pas etre propose'),
-  target: identifier,
+  to: identifier,
   condition: conditionSchema.optional(),
   effects: z.array(effectSchema).optional(),
 });
@@ -99,11 +99,19 @@ export const sceneMediaSchema = z.object({
 
 export const positionSchema = z.object({ x: z.number(), y: z.number() });
 
+/**
+ * Le libelle n'est pas rendu obligatoire pour les noeuds `choice` ici : un
+ * bouton sans texte est une incoherence de recit, pas une malformation de
+ * document, et le studio doit pouvoir enregistrer un choix qu'on vient tout
+ * juste de creer. `validate.ts` s'en charge.
+ */
 export const sceneSchema = z.object({
   id: identifier,
+  kind: sceneKindSchema,
   title: z.string(),
+  label: z.string().optional(),
   blocks: z.array(textBlockSchema),
-  choices: z.array(choiceSchema),
+  next: z.array(linkSchema),
   position: positionSchema,
   ending: sceneEndingSchema.optional(),
   media: sceneMediaSchema.optional(),
@@ -116,7 +124,9 @@ export const narratorSchema = z.object({
 });
 
 export const storySchema = z.object({
-  formatVersion: z.number().int().min(1).max(STORY_FORMAT_VERSION),
+  // Un document plus ancien n'est pas rejete : il est migre avant d'arriver
+  // ici (`migrateStory`), et c'est toujours la forme courante qu'on valide.
+  formatVersion: z.number().int().min(STORY_FORMAT_VERSION).max(STORY_FORMAT_VERSION),
   id: identifier,
   title: z.string().min(1),
   version: z.string().min(1),
@@ -135,8 +145,7 @@ export const storySchema = z.object({
 
 export const historyEntrySchema = z.object({
   sceneId: identifier,
-  choiceId: identifier,
-  label: z.string(),
+  linkId: identifier,
 });
 
 export const gameStateSchema = z.object({

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'reac
 import { resolveShell, tokensToCssVars } from '@embranche/design-tokens';
 import type { ColorMode, StoryTheme } from '@embranche/design-tokens';
 import { StoryEngine } from '@embranche/story-engine';
-import { validateStory } from '@embranche/story-format';
+import { sceneMessages, speakerOf, validateStory } from '@embranche/story-format';
 import type { GameState, Story } from '@embranche/story-format';
 
 interface Props {
@@ -116,6 +116,14 @@ function PlaytestSession({ story, fromSceneId, mode, onToggleMode }: SessionProp
 
   const snapshot = useSyncExternalStore(engine.subscribe, engine.getSnapshot, engine.getSnapshot);
   const { scene, state } = snapshot;
+
+  // Le playtest n'a pas de mise en scene : les enchainements automatiques se
+  // deroulent d'un trait jusqu'au prochain choix. La borne n'est qu'un garde-fou
+  // — une boucle sans choix est une erreur bloquante, et le playtest refuse de
+  // s'ouvrir sur un recit qui en contient.
+  useEffect(() => {
+    for (let steps = 0; steps < 200 && engine.advance(); steps += 1);
+  }, [engine, snapshot]);
   const tokens = resolveShell((story.theme ?? 'night') as StoryTheme, mode);
   const scroller = useRef<HTMLDivElement>(null);
 
@@ -293,22 +301,23 @@ interface TranscriptMessage {
 }
 
 /**
- * Reconstitue la correspondance depuis l'historique : pour chaque etape, les
- * messages de la scene quittee puis la replique du joueur, et enfin les
- * messages de la scene courante.
+ * Reconstitue la correspondance depuis l'historique : les messages de chaque
+ * noeud traverse, puis ceux du noeud courant.
+ *
+ * Le type du noeud suffit a savoir de quel cote afficher la bulle — plus besoin
+ * de conserver le libelle du choix dans l'historique, puisque le choix est
+ * lui-meme un noeud traverse.
  */
 function buildTranscript(story: Story, state: GameState): TranscriptMessage[] {
   const messages: TranscriptMessage[] = [];
-  for (const entry of state.history) {
-    const scene = story.scenes[entry.sceneId];
-    for (const block of scene?.blocks ?? []) {
-      messages.push({ text: block.text, fromPlayer: block.speaker === 'player' });
-    }
-    messages.push({ text: entry.label, fromPlayer: true });
-  }
-  const current = story.scenes[state.currentSceneId];
-  for (const block of current?.blocks ?? []) {
-    messages.push({ text: block.text, fromPlayer: block.speaker === 'player' });
-  }
+  const push = (sceneId: string): void => {
+    const scene = story.scenes[sceneId];
+    if (!scene) return;
+    const fromPlayer = speakerOf(scene) === 'player';
+    for (const block of sceneMessages(scene)) messages.push({ text: block.text, fromPlayer });
+  };
+
+  for (const entry of state.history) push(entry.sceneId);
+  push(state.currentSceneId);
   return messages;
 }

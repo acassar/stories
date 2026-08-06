@@ -6,7 +6,7 @@
  * ne demanderait de toucher a rien d'autre.
  */
 
-import { exampleStories, validateStory } from '@embranche/story-format';
+import { exampleStories, migrateStory, validateStory } from '@embranche/story-format';
 import type { Story } from '@embranche/story-format';
 
 const STORAGE_KEY = 'embranche.studio.stories.v1';
@@ -25,8 +25,9 @@ function readAll(storage: Storage): Story[] {
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
     // On garde tout ce qui est structurellement lisible : un recit en cours
-    // d'ecriture peut etre incoherent sans etre irrecuperable.
-    return parsed.filter((item): item is Story => isStoryLike(item));
+    // d'ecriture peut etre incoherent sans etre irrecuperable. Un brouillon
+    // ecrit sous un format anterieur est migre au passage, pas jete.
+    return parsed.map(migrateStory).filter((item): item is Story => isStoryLike(item));
   } catch {
     return [];
   }
@@ -106,7 +107,7 @@ function readFileText(file: File): Promise<string> {
 export async function importStoryFile(file: File): Promise<ImportResult> {
   let data: unknown;
   try {
-    data = JSON.parse(await readFileText(file));
+    data = migrateStory(JSON.parse(await readFileText(file)));
   } catch {
     return { error: 'Ce fichier n’est pas du JSON valide.' };
   }

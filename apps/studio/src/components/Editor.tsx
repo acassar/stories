@@ -10,13 +10,13 @@ import {
 import type { Connection, EdgeChange, NodeChange, NodeTypes } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
-import { studio } from '@embranche/design-tokens';
-import { createChoice, validateStory } from '@embranche/story-format';
-import type { SceneId, Story } from '@embranche/story-format';
+import { kinds, studio } from '@embranche/design-tokens';
+import { validateStory } from '@embranche/story-format';
+import type { SceneId, SceneKind, Story } from '@embranche/story-format';
 
-import { nextScenePosition, parseEdgeId, toEdges, toNodes } from '../lib/graph';
+import { childPosition, nextScenePosition, parseEdgeId, toEdges, toNodes } from '../lib/graph';
 import type { SceneFlowNode } from '../lib/graph';
-import { addScene, moveScene, removeChoice, updateChoice, updateScene } from '../lib/storyDoc';
+import { addChild, addLink, addScene, moveScene, removeLink } from '../lib/storyDoc';
 import { downloadStoryJson } from '../lib/storage';
 import { Inspector } from './Inspector';
 import { IssuesBar } from './IssuesBar';
@@ -74,7 +74,7 @@ function EditorCanvas({ story, onChange, onBack }: Props) {
       for (const change of changes) {
         if (change.type !== 'remove') continue;
         const parsed = parseEdgeId(change.id);
-        if (parsed) next = removeChoice(next, parsed.sceneId, parsed.choiceId);
+        if (parsed) next = removeLink(next, parsed.sceneId, parsed.linkId);
       }
       if (next !== story) onChange(next);
     },
@@ -82,31 +82,48 @@ function EditorCanvas({ story, onChange, onBack }: Props) {
   );
 
   /**
-   * Relier deux noeuds. Depuis la poignee d'un choix, on rebranche ce choix ;
-   * depuis la poignee du bas, on cree un nouveau choix vers la cible.
+   * Tirer une arete cree un lien. C'est tout le geste « rejoindre un noeud
+   * lointain » : rien n'oblige a passer par un choix, et la cible peut etre
+   * n'importe quel noeud deja ecrit.
    */
   const onConnect = useCallback(
     (connection: Connection) => {
-      const { source, target, sourceHandle } = connection;
-      if (!source || !target || !story.scenes[source] || !story.scenes[target]) return;
-
-      if (sourceHandle && sourceHandle !== '__new') {
-        onChange(updateChoice(story, source, sourceHandle, { target }));
-        return;
-      }
-      const scene = story.scenes[source];
-      if (!scene) return;
-      const choice = createChoice({
-        target,
-        label: story.scenes[target]?.title ?? 'Nouveau choix',
-      });
-      onChange(updateScene(story, source, { choices: [...scene.choices, choice] }));
+      const { source, target } = connection;
+      if (!source || !target) return;
+      const next = addLink(story, source, target);
+      if (next !== story) onChange(next);
     },
     [story, onChange],
   );
 
-  const handleAddScene = () => {
-    const result = addScene(story, nextScenePosition(story));
+  /**
+   * On refuse la connexion plutot que de la laisser creer une incoherence :
+   * melanger, sous un meme noeud, des liens vers des choix et des liens
+   * d'enchainement ne veut rien dire — le lecteur ne saurait pas s'il doit
+   * attendre le joueur.
+   */
+  const isValidConnection = useCallback(
+    (connection: Connection | { source: string; target: string }) => {
+      const source = story.scenes[connection.source];
+      const target = story.scenes[connection.target];
+      if (!source || !target) return false;
+      if (source.next.some((link) => link.to === target.id)) return false;
+
+      const existing = source.next
+        .map((link) => story.scenes[link.to])
+        .filter((scene): scene is NonNullable<typeof scene> => Boolean(scene));
+      if (existing.length === 0) return true;
+      return existing.every((scene) => (scene.kind === 'choice') === (target.kind === 'choice'));
+    },
+    [story],
+  );
+
+  const handleAddScene = (kind: SceneKind) => {
+    const parent = selectedId ? story.scenes[selectedId] : undefined;
+    // Depuis un noeud selectionne, on cree la suite : le noeud *et* son lien.
+    const result = parent
+      ? addChild(story, parent.id, kind, childPosition(parent, parent.next.length + 1))
+      : addScene(story, kind, nextScenePosition(story));
     onChange(result.story);
     setSelectedId(result.sceneId);
   };
@@ -131,9 +148,30 @@ function EditorCanvas({ story, onChange, onBack }: Props) {
           <span className={`pill pill--${errorCount > 0 ? 'error' : 'ok'}`}>
             {errorCount > 0 ? `${errorCount} erreur(s)` : 'Récit cohérent'}
           </span>
-          <button type="button" className="btn btn--primary" onClick={handleAddScene}>
-            ＋ Scène
-          </button>
+          {/*
+            Un bouton par type, colore comme le noeud qu'il cree : le
+            vocabulaire du format doit s'apprendre en s'en servant.
+          */}
+          {(['npc', 'player', 'choice'] as const).map((kind) => (
+            <button
+              key={kind}
+              type="button"
+              className="btn btn--kind"
+              style={{
+                background: kinds[kind].surface,
+                borderColor: kinds[kind].border,
+                color: kinds[kind].ink,
+              }}
+              onClick={() => handleAddScene(kind)}
+              title={
+                selectedId
+                  ? `Ajouter un nœud ${kinds[kind].label.toLowerCase()} à la suite du nœud sélectionné`
+                  : `Ajouter un nœud ${kinds[kind].label.toLowerCase()}`
+              }
+            >
+              ＋ {kinds[kind].label}
+            </button>
+          ))}
           <button
             type="button"
             className="btn"
@@ -157,6 +195,7 @@ function EditorCanvas({ story, onChange, onBack }: Props) {
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
+              isValidConnection={isValidConnection}
               onPaneClick={() => setSelectedId(null)}
               fitView
               minZoom={0.2}
@@ -174,9 +213,11 @@ function EditorCanvas({ story, onChange, onBack }: Props) {
               <MiniMap
                 pannable
                 zoomable
-                nodeColor={(node) =>
-                  (node as SceneFlowNode).data?.scene.ending ? studio.endingBadge : studio.chip
-                }
+                nodeColor={(node) => {
+                  const scene = (node as SceneFlowNode).data?.scene;
+                  if (!scene) return studio.chip;
+                  return scene.ending ? studio.endingBadge : kinds[scene.kind].border;
+                }}
                 maskColor="rgba(250,247,241,.7)"
               />
             </ReactFlow>

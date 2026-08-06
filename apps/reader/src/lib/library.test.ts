@@ -28,6 +28,12 @@ function memoryStorage(): Storage {
   };
 }
 
+/** Un tour complet : le joueur appuie, puis le recit deroule jusqu'a l'arret. */
+function play(engine: StoryEngine, linkId: string): void {
+  engine.choose(linkId);
+  for (let steps = 0; steps < 50 && engine.advance(); steps += 1);
+}
+
 let storage: Storage;
 
 beforeEach(() => {
@@ -84,15 +90,15 @@ describe('sauvegardes', () => {
 
   it('permet de reprendre exactement ou on s’etait arrete', () => {
     const engine = new StoryEngine(clairiereStory);
-    engine.choose('vers-arbre');
-    engine.choose('redescendre');
+    play(engine, 'vers-arbre');
+    play(engine, 'vers-redescendre');
     writeSave(engine.state, storage);
 
     const saved = loadSave('clairiere-lucioles', storage);
     const resumed = new StoryEngine(clairiereStory, { state: saved! });
     expect(resumed.getCurrentScene().id).toBe('lucioles');
     // Le choix conditionnel obtenu par le detour est toujours la.
-    expect(resumed.getAvailableChoices().map((c) => c.id)).toContain('demander-elara');
+    expect(resumed.getAvailableChoices().map((c) => c.id)).toContain('vers-elara');
   });
 
   it('ignore une sauvegarde illisible plutot que de bloquer le recit', () => {

@@ -6,8 +6,8 @@
  * rend l'annulation et la persistance triviales.
  */
 
-import { createChoice, createId, createScene, slugify } from '@embranche/story-format';
-import type { Choice, Scene, SceneId, Story, TextBlock } from '@embranche/story-format';
+import { createId, createLink, createScene, slugify } from '@embranche/story-format';
+import type { Link, Scene, SceneId, SceneKind, Story, TextBlock } from '@embranche/story-format';
 
 export function updateStory(story: Story, patch: Partial<Story>): Story {
   return { ...story, ...patch };
@@ -27,30 +27,50 @@ export function moveScene(
   return updateScene(story, sceneId, { position });
 }
 
-/** Ajoute une scene vierge et renvoie le document ainsi que son identifiant. */
+/** Ajoute un noeud vierge et renvoie le document ainsi que son identifiant. */
 export function addScene(
   story: Story,
+  kind: SceneKind,
   position: { x: number; y: number },
 ): { story: Story; sceneId: SceneId } {
-  const sceneId = uniqueSceneId(story, 'scene');
-  const scene = createScene({
-    id: sceneId,
-    title: 'Nouvelle scène',
-    blocks: [{ text: '' }],
-    position,
-  });
+  const sceneId = uniqueSceneId(story, kind === 'choice' ? 'choix' : kind);
+  const scene = createScene({ id: sceneId, kind, position });
   return { story: { ...story, scenes: { ...story.scenes, [sceneId]: scene } }, sceneId };
 }
 
 /**
- * Supprime une scene *et* tous les choix qui y menaient — laisser des cibles
+ * Cree un noeud enfant *et* le lien qui y mene, en une seule operation.
+ *
+ * C'est le geste courant de l'auteur — « et ensuite ? » —, et le seul moyen
+ * d'obtenir un graphe coherent du premier coup : le lien nait avec sa cible,
+ * donc jamais pendant.
+ */
+export function addChild(
+  story: Story,
+  parentId: SceneId,
+  kind: SceneKind,
+  position: { x: number; y: number },
+): { story: Story; sceneId: SceneId } {
+  const parent = story.scenes[parentId];
+  if (!parent) return { story, sceneId: parentId };
+
+  const created = addScene(story, kind, position);
+  const link = createLink({ to: created.sceneId });
+  return {
+    story: updateScene(created.story, parentId, { next: [...parent.next, link] }),
+    sceneId: created.sceneId,
+  };
+}
+
+/**
+ * Supprime un noeud *et* tous les liens qui y menaient — laisser des cibles
  * pendantes derriere soi transformerait une suppression en erreur de validation.
  */
 export function removeScene(story: Story, sceneId: SceneId): Story {
   const scenes: Record<SceneId, Scene> = {};
   for (const [id, scene] of Object.entries(story.scenes)) {
     if (id === sceneId) continue;
-    scenes[id] = { ...scene, choices: scene.choices.filter((c) => c.target !== sceneId) };
+    scenes[id] = { ...scene, next: scene.next.filter((link) => link.to !== sceneId) };
   }
   const remaining = Object.keys(scenes);
   const startSceneId =
@@ -58,7 +78,7 @@ export function removeScene(story: Story, sceneId: SceneId): Story {
   return { ...story, scenes, startSceneId };
 }
 
-/** Duplique une scene a cote de l'originale, sans reprendre ses choix entrants. */
+/** Duplique un noeud a cote de l'original, sans reprendre les liens entrants. */
 export function duplicateScene(story: Story, sceneId: SceneId): { story: Story; sceneId: SceneId } {
   const source = story.scenes[sceneId];
   if (!source) return { story, sceneId };
@@ -68,7 +88,7 @@ export function duplicateScene(story: Story, sceneId: SceneId): { story: Story; 
     id: newId,
     title: `${source.title} (copie)`,
     position: { x: source.position.x + 40, y: source.position.y + 60 },
-    choices: source.choices.map((choice) => ({ ...choice, id: createId('choice') })),
+    next: source.next.map((link) => ({ ...link, id: createId('lien') })),
   };
   return { story: { ...story, scenes: { ...story.scenes, [newId]: copy } }, sceneId: newId };
 }
@@ -82,7 +102,22 @@ export function setBlocks(story: Story, sceneId: SceneId, blocks: TextBlock[]): 
 }
 
 /**
- * Bascule une scene en fin de recit. Les choix ne sont pas effaces : ils sont
+ * Change le type d'un noeud.
+ *
+ * Un noeud qui devient un choix a besoin d'un libelle — sans quoi le bouton
+ * serait vide et la validation le refuserait aussitot. On le derive du titre,
+ * charge a l'auteur de l'affiner.
+ */
+export function setKind(story: Story, sceneId: SceneId, kind: SceneKind): Story {
+  const scene = story.scenes[sceneId];
+  if (!scene || scene.kind === kind) return story;
+  const patch: Partial<Scene> = { kind };
+  if (kind === 'choice' && !scene.label) patch.label = scene.title || scene.blocks[0]?.text || '';
+  return updateScene(story, sceneId, patch);
+}
+
+/**
+ * Bascule un noeud en fin de recit. Les liens ne sont pas effaces : ils sont
  * simplement ignores par le moteur, et l'auteur les retrouve s'il revient en
  * arriere. Le validateur le signale par un avertissement.
  */
@@ -98,48 +133,70 @@ export function toggleEnding(story: Story, sceneId: SceneId): Story {
   });
 }
 
-export function addChoice(story: Story, sceneId: SceneId): Story {
+// ---------------------------------------------------------------------------
+// Liens
+// ---------------------------------------------------------------------------
+
+export function addLink(story: Story, sceneId: SceneId, to: SceneId): Story {
   const scene = story.scenes[sceneId];
-  if (!scene) return story;
-  // Par defaut, on vise une autre scene : un choix qui boucle sur lui-meme
-  // n'est presque jamais ce que l'auteur veut.
-  const other = Object.keys(story.scenes).find((id) => id !== sceneId);
-  const choice = createChoice({ target: other ?? sceneId });
-  return updateScene(story, sceneId, { choices: [...scene.choices, choice] });
+  if (!scene || !story.scenes[to]) return story;
+  // Un meme lien deux fois n'ajouterait rien et brouillerait le canvas.
+  if (scene.next.some((link) => link.to === to)) return story;
+  return updateScene(story, sceneId, { next: [...scene.next, createLink({ to })] });
 }
 
-export function updateChoice(
+export function updateLink(
   story: Story,
   sceneId: SceneId,
-  choiceId: string,
-  patch: Partial<Choice>,
+  linkId: string,
+  patch: Partial<Link>,
 ): Story {
   const scene = story.scenes[sceneId];
   if (!scene) return story;
   return updateScene(story, sceneId, {
-    choices: scene.choices.map((choice) =>
-      choice.id === choiceId ? cleanChoice({ ...choice, ...patch }) : choice,
-    ),
+    next: scene.next.map((link) => (link.id === linkId ? cleanLink({ ...link, ...patch }) : link)),
   });
 }
 
-export function removeChoice(story: Story, sceneId: SceneId, choiceId: string): Story {
+export function removeLink(story: Story, sceneId: SceneId, linkId: string): Story {
   const scene = story.scenes[sceneId];
   if (!scene) return story;
   return updateScene(story, sceneId, {
-    choices: scene.choices.filter((choice) => choice.id !== choiceId),
+    next: scene.next.filter((link) => link.id !== linkId),
   });
 }
 
 /** Retire les champs optionnels vides — le JSON exporte reste lisible. */
-function cleanChoice(choice: Choice): Choice {
-  const next: Choice = { ...choice };
+function cleanLink(link: Link): Link {
+  const next: Link = { ...link };
   if (next.effects && next.effects.length === 0) delete next.effects;
   if (next.condition === undefined) delete next.condition;
   return next;
 }
 
-/** Identifiant de scene libre, derive d'une base lisible. */
+/**
+ * Le lien qui mene a ce noeud, s'il est unique.
+ *
+ * L'inspecteur s'en sert pour montrer condition et effets « sur le bouton »
+ * quand on selectionne un noeud de choix, alors qu'ils sont ranges sur l'arete.
+ * Ambigu des qu'il y a plusieurs entrees : on ne devine pas laquelle editer.
+ */
+export function soleIncomingLink(
+  story: Story,
+  sceneId: SceneId,
+): { sceneId: SceneId; link: Link } | null {
+  const found: { sceneId: SceneId; link: Link }[] = [];
+  for (const scene of Object.values(story.scenes)) {
+    for (const link of scene.next) {
+      if (link.to === sceneId) found.push({ sceneId: scene.id, link });
+    }
+  }
+  return found.length === 1 ? (found[0] ?? null) : null;
+}
+
+// ---------------------------------------------------------------------------
+
+/** Identifiant de noeud libre, derive d'une base lisible. */
 export function uniqueSceneId(story: Story, base: string): SceneId {
   const root = slugify(base, 'scene');
   if (!story.scenes[root]) return root;
@@ -150,7 +207,7 @@ export function uniqueSceneId(story: Story, base: string): SceneId {
   return createId(root);
 }
 
-/** Renomme une scene en repointant tous les choix qui la visaient. */
+/** Renomme un noeud en repointant tous les liens qui le visaient. */
 export function renameSceneId(story: Story, from: SceneId, rawTo: string): Story {
   const scene = story.scenes[from];
   const to = slugify(rawTo, from);
@@ -160,9 +217,7 @@ export function renameSceneId(story: Story, from: SceneId, rawTo: string): Story
   for (const [id, current] of Object.entries(story.scenes)) {
     const retargeted: Scene = {
       ...current,
-      choices: current.choices.map((choice) =>
-        choice.target === from ? { ...choice, target: to } : choice,
-      ),
+      next: current.next.map((link) => (link.to === from ? { ...link, to } : link)),
     };
     if (id === from) scenes[to] = { ...retargeted, id: to };
     else scenes[id] = retargeted;
