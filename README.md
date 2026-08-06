@@ -56,7 +56,7 @@ The reader is mobile-first: open it in your browser inspector in phone mode, or 
 
 ```bash
 pnpm verify        # lint + typecheck + tests
-pnpm test          # 166 tests
+pnpm test          # 167 tests
 pnpm lint
 pnpm typecheck
 pnpm format
@@ -147,6 +147,12 @@ The first link inherits the condition and the effects of the choice — it is th
 
 A scene that alternated speakers message by message (`speaker`) is **split into as many nodes as there are voice changes**, chained automatically — the rendering is identical. `migrateStory` also repairs a document already in v2 that still carries that field; the operation is idempotent and leaves untouched whatever needs no fixing.
 
+### The shipped library
+
+`exampleStories` holds the five stories both apps start with — the studio seeds them into its dashboard, the reader into its library. Four are short and each isolates one shape of the graph.
+
+The fifth, **« La Fréquence Kerlaven »**, is the long one: 229 nodes, 9 endings, five acts, in [`stories/kerlaven.ts`](packages/story-format/src/stories/kerlaven.ts). It lives in its own module because of its size, and it is what the format is stress-tested against — item gates (`hasItem` / `lacksItem` on the links that open a button), chaining switches that pick a node from the state, hub nodes several acts fall back into, and an ending gated on a `visited` scene. A seeded walk in the `story-engine` suite reaches each of its nine endings and asserts no run ever stalls.
+
 ### Validation
 
 `validateStory` returns a list of typed issues, split into two levels:
@@ -226,12 +232,12 @@ The reader revalidates the document and flatly refuses an inconsistent story.
 
 ## Tests
 
-166 tests, all green.
+167 tests, all green.
 
 | Suite          | What it covers                                                                   |
 | -------------- | -------------------------------------------------------------------------------- |
 | `story-format` | schema, graph coherence, migration 1 → 2, JSON round-trip, error cases            |
-| `story-engine` | progression, automatic chaining, conditions, effects, going back, serialization, events |
+| `story-engine` | progression, automatic chaining, conditions, effects, going back, serialization, events, seeded walks of the long sample story down to each of its endings |
 | `studio`       | editing operations, projection to React Flow, persistence, import                 |
 | `reader`       | full run to an ending, conditional choice, resume, conversation                   |
 

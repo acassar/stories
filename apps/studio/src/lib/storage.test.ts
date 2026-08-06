@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { clairiereStory, createEmptyStory } from '@embranche/story-format';
+import { clairiereStory, createEmptyStory, exampleStories } from '@embranche/story-format';
 
 import { createLocalRepository, importStoryFile, seedIfEmpty } from './storage';
 
@@ -63,9 +63,9 @@ describe('createLocalRepository', () => {
 
   it('seeds the library on first launch, then leaves it alone', () => {
     const repository = createLocalRepository(storage);
-    expect(seedIfEmpty(repository)).toHaveLength(4);
+    expect(seedIfEmpty(repository)).toHaveLength(exampleStories.length);
     repository.remove(clairiereStory.id);
-    expect(seedIfEmpty(repository)).toHaveLength(3);
+    expect(seedIfEmpty(repository)).toHaveLength(exampleStories.length - 1);
   });
 });
 

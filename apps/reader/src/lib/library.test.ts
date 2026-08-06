@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { StoryEngine } from '@embranche/story-engine';
-import { clairiereStory, createEmptyStory } from '@embranche/story-format';
+import { clairiereStory, createEmptyStory, exampleStories } from '@embranche/story-format';
 
 import {
   clearSave,
@@ -47,6 +47,7 @@ describe('library', () => {
       'dossier-verlaine',
       'appel-des-cimes',
       'numero-inconnu',
+      'frequence-kerlaven',
     ]);
   });
 
@@ -57,13 +58,13 @@ describe('library', () => {
     );
     const titles = loadLibrary(storage).map((story) => story.title);
     expect(titles).toContain('Venue du studio');
-    expect(titles).toHaveLength(5);
+    expect(titles).toHaveLength(exampleStories.length + 1);
   });
 
   it('an import replaces the sample sharing its id rather than duplicating it', () => {
     saveImportedStory({ ...structuredClone(clairiereStory), title: 'Version révisée' }, storage);
     const library = loadLibrary(storage);
-    expect(library).toHaveLength(4);
+    expect(library).toHaveLength(exampleStories.length);
     expect(library.find((story) => story.id === 'clairiere-lucioles')?.title).toBe(
       'Version révisée',
     );
@@ -71,7 +72,7 @@ describe('library', () => {
 
   it('ignores a stored story that has become invalid', () => {
     storage.setItem('embranche.reader.stories.v1', JSON.stringify([{ id: 'cassee' }]));
-    expect(loadLibrary(storage)).toHaveLength(4);
+    expect(loadLibrary(storage)).toHaveLength(exampleStories.length);
   });
 });
 

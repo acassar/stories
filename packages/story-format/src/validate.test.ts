@@ -61,7 +61,7 @@ describe('validateStoryShape', () => {
 });
 
 describe('validateStory — graph coherence', () => {
-  it('validates the four sample stories without error', () => {
+  it('validates the sample stories without error', () => {
     for (const story of exampleStories) {
       const result = validateStory(story);
       const errors = result.issues.filter((i) => i.severity === 'error');

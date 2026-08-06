@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { STORY_FORMAT_VERSION, clairiereStory } from '@embranche/story-format';
+import {
+  STORY_FORMAT_VERSION,
+  clairiereStory,
+  findEndings,
+  kerlavenStory,
+} from '@embranche/story-format';
 import type { Story } from '@embranche/story-format';
 
 import { StoryEngine } from './engine.js';
@@ -622,5 +627,44 @@ describe('StoryEngine — the core stays agnostic', () => {
     const e = engine();
     play(e, 'vers-arbre');
     expect(e.getCurrentScene().id).toBe('arbre');
+  });
+});
+
+/**
+ * The long sample story is the only one whose graph is too wide to be read by
+ * eye. It is therefore played instead: the walk exercises every conditional
+ * link and every convergence at once, and would catch a run that gets stuck on
+ * a node offering nothing, or an ending only reachable on paper.
+ */
+describe('StoryEngine — the long sample story', () => {
+  /** Seeded so a failure is reproducible; the walk must not depend on luck. */
+  function randomWalk(seed: number): string {
+    let state = seed;
+    const nextInt = (bound: number): number => {
+      state = (state * 1103515245 + 12345) % 2147483648;
+      return state % bound;
+    };
+
+    const e = new StoryEngine(kerlavenStory, { validate: false });
+    for (let steps = 0; steps < 500; steps += 1) {
+      const scene = e.getCurrentScene();
+      if (scene.isEnding) return scene.id;
+      if (scene.awaitsChoice) {
+        const open = scene.choices.filter((choice) => choice.available);
+        expect(open.length, `aucun choix ouvert sur « ${scene.id} »`).toBeGreaterThan(0);
+        e.choose(open[nextInt(open.length)]!.id);
+      } else {
+        expect(e.advance(), `lecture bloquee sur « ${scene.id} »`).toBe(true);
+      }
+    }
+    throw new Error('la lecture ne se termine pas');
+  }
+
+  it('reaches each of its endings, and never gets stuck', () => {
+    const reached = new Set<string>();
+    for (let seed = 1; seed <= 1000; seed += 1) reached.add(randomWalk(seed));
+
+    const declared = findEndings(kerlavenStory).map((scene) => scene.id);
+    expect(declared.filter((id) => !reached.has(id))).toEqual([]);
   });
 });
