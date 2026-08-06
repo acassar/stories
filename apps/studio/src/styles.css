@@ -2,8 +2,8 @@
 @import '@embranche/design-tokens/css';
 
 /*
- * Peau du studio. Toutes les couleurs viennent des tokens ci-dessous : elles
- * sont declarees une fois ici et consommees via `var(--st-*)`.
+ * Studio skin. Every color comes from the tokens below: they are declared once
+ * here and consumed through `var(--st-*)`.
  */
 
 :root {
@@ -37,7 +37,7 @@ body {
   color: var(--st-ink);
 }
 
-/* --------------------------------------------------------------- coquille */
+/* ------------------------------------------------------------------ shell */
 
 .app {
   min-height: 100vh;
@@ -106,7 +106,7 @@ body {
   margin-top: 8px;
 }
 
-/* --------------------------------------------------------------- boutons */
+/* ---------------------------------------------------------------- buttons */
 
 .btn {
   font: 600 13px var(--emb-font-ui);
@@ -178,9 +178,9 @@ body {
 }
 
 /*
-  Bouton de creation d'un noeud : il emprunte la couleur du type qu'il cree,
-  posee en style inline depuis les tokens. Le lien entre la commande et ce
-  qu'elle produit sur le canvas se voit sans avoir a le lire.
+  Node creation button: it borrows the color of the kind it creates, set inline
+  from the tokens. The link between the command and what it produces on the
+  canvas is visible without having to read it.
 */
 .btn--kind {
   font-size: 12px;
@@ -188,7 +188,7 @@ body {
   border-width: 1.5px;
 }
 
-/* Le choix du type, dans l'inspecteur : trois pastilles, une seule allumee. */
+/* Kind picker in the inspector: three pills, only one lit. */
 .kind-picker {
   display: flex;
   gap: 6px;
@@ -214,7 +214,7 @@ body {
   font-weight: 700;
 }
 
-/* --------------------------------------------------------- tableau de bord */
+/* -------------------------------------------------------------- dashboard */
 
 .dash__head {
   display: flex;
@@ -338,7 +338,7 @@ body {
   color: var(--st-muted);
 }
 
-/* --------------------------------------------------------------- editeur */
+/* ----------------------------------------------------------------- editor */
 
 .editor {
   flex: 1;
@@ -387,7 +387,7 @@ body {
   background: var(--st-canvas);
 }
 
-/* --------------------------------------------------------- noeud de scene */
+/* ------------------------------------------------------------- scene node */
 
 .scene-node {
   width: 190px;
@@ -459,9 +459,9 @@ body {
 }
 
 /*
-  L'etiquette de type. La couleur du noeud la porte deja de loin ; ce texte est
-  la pour lever le doute de pres, et pour ceux qui ne distinguent pas les
-  teintes — la couleur ne doit jamais etre le seul porteur de l'information.
+  The kind label. The node color already carries it from a distance; this text
+  removes the doubt up close, and serves those who cannot tell the tints apart —
+  color must never be the sole carrier of information.
 */
 .scene-node__kind {
   font: 700 9px var(--emb-font-ui);
@@ -472,7 +472,7 @@ body {
   flex: none;
 }
 
-/* Ce qui se passe apres : attente d'une decision, ou enchainement. */
+/* What happens next: awaiting a decision, or chaining on. */
 .scene-node__flow {
   margin-top: 7px;
   font: 500 10px var(--emb-font-ui);

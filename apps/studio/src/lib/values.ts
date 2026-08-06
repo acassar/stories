@@ -1,14 +1,14 @@
 /**
- * Saisie des valeurs de variables.
+ * Input of variable values.
  *
- * L'auteur tape du texte libre dans un champ ; le format, lui, distingue
- * chaines, nombres et booleens. Cette conversion est la seule interpretation
- * faite cote studio — le JSON produit reste strictement type.
+ * The author types free text in a field; the format distinguishes strings,
+ * numbers and booleans. This conversion is the only interpretation the studio
+ * performs — the JSON it produces stays strictly typed.
  */
 
 import type { Condition, VariableValue } from '@embranche/story-format';
 
-/** `true`/`false` → booleen, un nombre lisible → nombre, sinon chaine. */
+/** `true`/`false` → boolean, a readable number → number, otherwise string. */
 export function parseVariableValue(raw: string): VariableValue {
   const trimmed = raw.trim();
   if (trimmed === 'true') return true;
@@ -21,7 +21,7 @@ export function formatVariableValue(value: VariableValue): string {
   return String(value);
 }
 
-/** Conditions que l'editeur structure sait afficher ligne par ligne. */
+/** Conditions the structured editor can display line by line. */
 export type LeafCondition = Exclude<Condition, { op: 'and' } | { op: 'or' } | { op: 'not' }>;
 
 export function isLeafCondition(condition: Condition): condition is LeafCondition {
@@ -34,10 +34,10 @@ export interface FlatCondition {
 }
 
 /**
- * Aplatit une condition si elle tient dans le modele « une liste de tests
- * joints par ET ou OU ». Renvoie `null` pour toute forme plus riche (negation,
- * imbrication), que l'editeur presente alors en JSON brut plutot que de la
- * reecrire — mieux vaut un champ austere qu'une perte silencieuse.
+ * Flattens a condition when it fits the "a list of tests joined by AND or OR"
+ * model. Returns `null` for any richer shape (negation, nesting), which the
+ * editor then presents as raw JSON rather than rewriting it — an austere field
+ * beats a silent loss.
  */
 export function flattenCondition(condition: Condition): FlatCondition | null {
   if (isLeafCondition(condition)) return { join: 'and', leaves: [condition] };
@@ -52,7 +52,7 @@ export function unflattenCondition(flat: FlatCondition): Condition | undefined {
   return { op: flat.join, conditions: flat.leaves };
 }
 
-/** Ligne vierge proposee quand l'auteur ajoute un test. */
+/** Blank row offered when the author adds a test. */
 export function defaultLeaf(variable: string | undefined): LeafCondition {
   return { op: 'eq', variable: variable ?? 'variable', value: true };
 }

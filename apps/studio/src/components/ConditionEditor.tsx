@@ -16,18 +16,18 @@ import type { LeafCondition } from '../lib/values';
 interface Props {
   value: Condition | undefined;
   onChange: (condition: Condition | undefined) => void;
-  /** Variables deja citees par le recit — proposees en autocompletion. */
+  /** Variables already mentioned by the story — offered as autocompletion. */
   knownVariables: string[];
   sceneIds: SceneId[];
 }
 
 /**
- * Editeur de condition d'affichage.
+ * Editor for a display condition.
  *
- * Le cas courant (« une liste de tests joints par ET ou OU ») se manipule ligne
- * par ligne. Les formes plus riches, importees d'un JSON ecrit a la main,
- * basculent sur un champ JSON valide par le schema : on prefere un champ austere
- * a une reecriture qui perdrait de l'information.
+ * The common case ("a list of tests joined by AND or OR") is edited line by
+ * line. Richer shapes, imported from hand-written JSON, fall back to a JSON
+ * field validated by the schema: an austere field beats a rewrite that would
+ * lose information.
  */
 export function ConditionEditor({ value, onChange, knownVariables, sceneIds }: Props) {
   const flat = useMemo(() => (value ? flattenCondition(value) : null), [value]);
@@ -93,8 +93,8 @@ export function ConditionEditor({ value, onChange, knownVariables, sceneIds }: P
 
       {flat.leaves.map((leaf, index) => (
         <LeafRow
-          // L'index sert de cle : les lignes n'ont pas d'identite propre et
-          // l'ordre est le seul repere stable pour l'auteur.
+          // The index is the key: rows have no identity of their own, and order
+          // is the only stable landmark for the author.
           key={index}
           leaf={leaf}
           knownVariables={knownVariables}
@@ -243,7 +243,7 @@ function LeafRow({ leaf, knownVariables, sceneIds, onChange, onRemove }: LeafPro
   );
 }
 
-/** Repli pour les conditions imbriquees : JSON brut, valide par le schema. */
+/** Fallback for nested conditions: raw JSON, validated by the schema. */
 function RawConditionEditor({
   value,
   onChange,
@@ -264,7 +264,7 @@ function RawConditionEditor({
             const parsed = conditionSchema.safeParse(JSON.parse(event.target.value));
             if (parsed.success) onChange(parsed.data);
           } catch {
-            // Saisie transitoirement invalide : on garde la derniere valeur bonne.
+            // Transiently invalid input: the last good value is kept.
           }
         }}
         aria-label="Condition (JSON)"

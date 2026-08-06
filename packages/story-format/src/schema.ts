@@ -1,10 +1,9 @@
 /**
- * Schemas Zod du format d'histoire.
+ * Zod schemas for the story format.
  *
- * Ils portent la validation *structurelle* (formes, types, champs requis).
- * La coherence du graphe (cibles existantes, scene de depart, orphelines...)
- * est verifiee separement dans `validate.ts` : c'est une propriete du recit,
- * pas de la forme du document.
+ * They carry *structural* validation (shapes, types, required fields). Graph
+ * coherence (existing targets, start scene, orphans...) is checked separately
+ * in `validate.ts`: that is a property of the story, not of the document shape.
  */
 
 import { z } from 'zod';
@@ -25,8 +24,8 @@ export const storyStatusSchema = z.enum(['draft', 'published']);
 const comparisonOperatorSchema = z.enum(['eq', 'neq', 'gt', 'gte', 'lt', 'lte']);
 
 /**
- * Le type est annote a la main : Zod ne sait pas inferer un schema recursif,
- * et on veut que le schema et le type TypeScript restent verrouilles ensemble.
+ * The type is annotated by hand: Zod cannot infer a recursive schema, and the
+ * schema and the TypeScript type have to stay locked together.
  */
 export const conditionSchema: z.ZodType<Condition> = z.lazy(() =>
   z.discriminatedUnion('op', [
@@ -100,10 +99,9 @@ export const sceneMediaSchema = z.object({
 export const positionSchema = z.object({ x: z.number(), y: z.number() });
 
 /**
- * Le libelle n'est pas rendu obligatoire pour les noeuds `choice` ici : un
- * bouton sans texte est une incoherence de recit, pas une malformation de
- * document, et le studio doit pouvoir enregistrer un choix qu'on vient tout
- * juste de creer. `validate.ts` s'en charge.
+ * The label is not required for `choice` nodes here: a button without text is a
+ * story inconsistency, not a malformed document, and the studio must be able to
+ * save a choice that was just created. `validate.ts` handles it.
  */
 export const sceneSchema = z.object({
   id: identifier,
@@ -124,8 +122,8 @@ export const narratorSchema = z.object({
 });
 
 export const storySchema = z.object({
-  // Un document plus ancien n'est pas rejete : il est migre avant d'arriver
-  // ici (`migrateStory`), et c'est toujours la forme courante qu'on valide.
+  // Older documents are not rejected: they go through `migrateStory` before
+  // reaching this point, so validation always runs on the current shape.
   formatVersion: z.number().int().min(STORY_FORMAT_VERSION).max(STORY_FORMAT_VERSION),
   id: identifier,
   title: z.string().min(1),

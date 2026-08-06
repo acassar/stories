@@ -7,11 +7,11 @@ import type { GameState, Story } from '@embranche/story-format';
 export interface UseStoryOptions {
   story: Story;
   /**
-   * Sauvegarde a reprendre. Lue une seule fois, a la creation du moteur : le
-   * moteur est ensuite la source de verite, pas React.
+   * Save to resume. Read once, when the engine is created: the engine is the
+   * source of truth afterwards, not React.
    */
   initialState?: GameState | null;
-  /** Appele a chaque nouvel etat — c'est la que l'app branche sa persistance. */
+  /** Called on every new state — where the app plugs its persistence in. */
   onStateChange?: (state: GameState) => void;
 }
 
@@ -20,25 +20,26 @@ export interface UseStoryResult {
   state: GameState;
   scene: ResolvedScene;
   canGoBack: boolean;
-  /** Choix effectivement faits — sans compter les enchainements automatiques. */
+  /** Choices actually made — not counting automatic chaining. */
   decisions: number;
   choose: (linkId: string) => void;
-  /** Poursuit d'un noeud quand le recit enchaine seul. Faux s'il n'y a rien a faire. */
+  /** Moves on one node when the story chains by itself. False when there is nothing to do. */
   advance: () => boolean;
   goBack: () => void;
   restart: () => void;
 }
 
 /**
- * Pont entre le moteur agnostique et React.
+ * Bridge between the agnostic engine and React.
  *
- * `useSyncExternalStore` s'abonne directement au moteur : aucun etat de recit
- * n'est recopie dans React, donc rien a resynchroniser. Le moteur emet, React
- * relit l'instantane — dont la reference ne change que quand l'etat change.
+ * `useSyncExternalStore` subscribes directly to the engine: no story state is
+ * copied into React, so there is nothing to resynchronize. The engine emits,
+ * React reads the snapshot back — and that reference only changes when the
+ * state changes.
  */
 export function useStory({ story, initialState, onStateChange }: UseStoryOptions): UseStoryResult {
-  // Le moteur ne depend que du recit : reprendre une partie ne doit pas le
-  // recreer, sinon on perdrait les abonnements a chaque sauvegarde.
+  // The engine depends on the story alone: resuming a run must not recreate it,
+  // or subscriptions would be lost on every save.
   const resumeRef = useRef(initialState);
   const engine = useMemo(() => {
     const resume = resumeRef.current;

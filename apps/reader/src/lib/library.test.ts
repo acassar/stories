@@ -28,7 +28,7 @@ function memoryStorage(): Storage {
   };
 }
 
-/** Un tour complet : le joueur appuie, puis le recit deroule jusqu'a l'arret. */
+/** A full turn: the player presses, then the story unrolls until it stops. */
 function play(engine: StoryEngine, linkId: string): void {
   engine.choose(linkId);
   for (let steps = 0; steps < 50 && engine.advance(); steps += 1);
@@ -40,8 +40,8 @@ beforeEach(() => {
   storage = memoryStorage();
 });
 
-describe('bibliotheque', () => {
-  it('livre les recits d’exemple par defaut', () => {
+describe('library', () => {
+  it('ships the sample stories by default', () => {
     expect(loadLibrary(storage).map((story) => story.id)).toEqual([
       'clairiere-lucioles',
       'dossier-verlaine',
@@ -50,7 +50,7 @@ describe('bibliotheque', () => {
     ]);
   });
 
-  it('ajoute une histoire importee', () => {
+  it('adds an imported story', () => {
     saveImportedStory(
       createEmptyStory({ id: 'venue-du-studio', title: 'Venue du studio' }),
       storage,
@@ -60,7 +60,7 @@ describe('bibliotheque', () => {
     expect(titles).toHaveLength(5);
   });
 
-  it('un import remplace l’exemple de meme identifiant plutot que de le doubler', () => {
+  it('an import replaces the sample sharing its id rather than duplicating it', () => {
     saveImportedStory({ ...structuredClone(clairiereStory), title: 'Version révisée' }, storage);
     const library = loadLibrary(storage);
     expect(library).toHaveLength(4);
@@ -69,14 +69,14 @@ describe('bibliotheque', () => {
     );
   });
 
-  it('ignore une histoire stockee devenue invalide', () => {
+  it('ignores a stored story that has become invalid', () => {
     storage.setItem('embranche.reader.stories.v1', JSON.stringify([{ id: 'cassee' }]));
     expect(loadLibrary(storage)).toHaveLength(4);
   });
 });
 
-describe('sauvegardes', () => {
-  it('enregistre, relit et efface une partie', () => {
+describe('saves', () => {
+  it('saves, reads back and clears a run', () => {
     const engine = new StoryEngine(clairiereStory);
     engine.choose('vers-arbre');
 
@@ -88,7 +88,7 @@ describe('sauvegardes', () => {
     expect(loadSave('clairiere-lucioles', storage)).toBeNull();
   });
 
-  it('permet de reprendre exactement ou on s’etait arrete', () => {
+  it('resumes exactly where the run stopped', () => {
     const engine = new StoryEngine(clairiereStory);
     play(engine, 'vers-arbre');
     play(engine, 'vers-redescendre');
@@ -97,11 +97,11 @@ describe('sauvegardes', () => {
     const saved = loadSave('clairiere-lucioles', storage);
     const resumed = new StoryEngine(clairiereStory, { state: saved! });
     expect(resumed.getCurrentScene().id).toBe('lucioles');
-    // Le choix conditionnel obtenu par le detour est toujours la.
+    // The conditional choice earned by the detour is still there.
     expect(resumed.getAvailableChoices().map((c) => c.id)).toContain('vers-elara');
   });
 
-  it('ignore une sauvegarde illisible plutot que de bloquer le recit', () => {
+  it('ignores an unreadable save rather than blocking the story', () => {
     storage.setItem(
       'embranche.reader.saves.v1',
       JSON.stringify({ 'clairiere-lucioles': { nawak: true } }),
@@ -110,8 +110,8 @@ describe('sauvegardes', () => {
   });
 });
 
-describe('palmares', () => {
-  it('accumule les fins vues sans doublon', () => {
+describe('record', () => {
+  it('accumulates seen endings without duplicates', () => {
     recordEnding('clairiere-lucioles', 'portail', storage);
     recordEnding('clairiere-lucioles', 'portail', storage);
     const endings = recordEnding('clairiere-lucioles', 'attente', storage);
@@ -119,7 +119,7 @@ describe('palmares', () => {
     expect(loadEndings(storage)).toEqual(endings);
   });
 
-  it('compte les fins du recit', () => {
+  it('counts the endings of the story', () => {
     expect(countEndings(clairiereStory)).toBe(3);
   });
 });

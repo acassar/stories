@@ -1,10 +1,10 @@
 /**
- * Construction de la correspondance.
+ * Building the conversation.
  *
- * Le lecteur n'a qu'un seul format de lecture : chaque bloc de texte d'un noeud
- * traverse arrive comme un message. Depuis le format 2, la replique du joueur
- * n'est plus un cas special — c'est un noeud comme un autre, dont le type dit
- * de quel cote afficher la bulle. Fonction pure, donc directement testable.
+ * The reader has a single reading format: each text block of a node walked
+ * through arrives as a message. A player line is not a special case — it is a
+ * node like any other, whose kind says which side to display the bubble on.
+ * A pure function, so directly testable.
  */
 
 import { sceneMessages, speakerOf } from '@embranche/story-format';
@@ -12,7 +12,7 @@ import type { GameState, Story } from '@embranche/story-format';
 import type { ResolvedScene } from '@embranche/story-engine';
 
 export interface Message {
-  /** Cle stable : deux messages identiques a deux moments differents coexistent. */
+  /** Stable key: two identical messages at two different moments coexist. */
   key: string;
   text: string;
   fromPlayer: boolean;
@@ -20,8 +20,8 @@ export interface Message {
 
 export interface TranscriptOptions {
   /**
-   * Nombre de messages deja reveles pour la scene courante. Les precedents,
-   * eux, sont toujours affiches en entier.
+   * Number of messages already revealed for the current scene. Previous scenes
+   * are always displayed in full.
    */
   revealed: number;
 }
@@ -43,8 +43,8 @@ export function buildTranscript(
     });
   });
 
-  // Seul le noeud courant est soumis a la revelation progressive : les
-  // precedents sont deja arrives.
+  // Only the current node is subject to progressive reveal: previous ones have
+  // already arrived.
   scene.blocks.slice(0, revealed).forEach((block, index) => {
     messages.push({
       key: `now-${scene.id}-${index}`,

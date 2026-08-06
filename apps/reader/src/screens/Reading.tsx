@@ -12,7 +12,7 @@ import { Ending } from './Ending';
 
 interface Props {
   story: Story;
-  /** Sauvegarde a reprendre, ou `null` pour une partie neuve. */
+  /** Save to resume, or `null` for a fresh run. */
   initialState: GameState | null;
   endingsSeen: number;
   mode: ColorMode;
@@ -23,11 +23,11 @@ interface Props {
 }
 
 /**
- * Lecture en correspondance — l'unique format de lecture d'Embranche.
+ * Reading as a conversation — the one reading format of Embranche.
  *
- * L'ecran ne connait rien du recit : il lit l'instantane du moteur et affiche
- * ce qu'on lui donne. La seule logique locale est l'arrivee progressive des
- * messages, qui est un effet de mise en scene, pas une regle de jeu.
+ * The screen knows nothing of the story: it reads the engine snapshot and shows
+ * what it is given. The only local logic is the progressive arrival of the
+ * messages, which is staging, not a game rule.
  */
 export function Reading({
   story,
@@ -50,13 +50,13 @@ export function Reading({
   const thread = useRef<HTMLUListElement>(null);
 
   /**
-   * L'enchainement automatique.
+   * Automatic chaining.
    *
-   * Quand le noeud courant n'attend aucune decision, le recit poursuit seul —
-   * mais seulement une fois ses messages arrives, et apres le meme silence
-   * qu'entre deux messages. C'est ce qui fait qu'une replique imposee du joueur
-   * ou deux repliques d'affilee de l'interlocuteur se lisent comme une vraie
-   * conversation, et non comme un bloc qui tombe d'un coup.
+   * When the current node awaits no decision, the story carries on by itself —
+   * but only once its messages have arrived, and after the same silence as
+   * between two messages. That is what makes a forced player line, or two lines
+   * in a row from the correspondent, read as a real conversation rather than as
+   * a block dropping all at once.
    */
   useEffect(() => {
     if (!reveal.done || !scene.canAdvance) return;
@@ -64,7 +64,7 @@ export function Reading({
     return () => clearTimeout(timer);
   }, [reveal.done, scene.canAdvance, scene.id, advance, reduceMotion]);
 
-  // La conversation suit toujours son dernier message.
+  // The conversation always follows its latest message.
   useEffect(() => {
     thread.current?.scrollTo({
       top: thread.current.scrollHeight,
@@ -75,7 +75,7 @@ export function Reading({
   const reachedEnding = scene.isEnding && scene.ending;
   useEffect(() => {
     if (reachedEnding) onEndingReached(scene.id);
-    // `onEndingReached` est stable cote App ; on ne veut declencher que sur la scene.
+    // `onEndingReached` is stable on the App side; only the scene should trigger.
   }, [reachedEnding, scene.id, onEndingReached]);
 
   if (scene.isEnding && scene.ending && reveal.done) {
@@ -129,8 +129,8 @@ export function Reading({
         ref={thread}
         aria-live="polite"
         aria-label="Correspondance"
-        // Taper dans la conversation saute l'attente : personne ne doit
-        // attendre une animation pour lire la suite.
+        // Tapping the conversation skips the wait: nobody should have to wait
+        // for an animation to read on.
         onClick={reveal.skip}
       >
         {messages.map((message) => (
@@ -145,8 +145,8 @@ export function Reading({
         ))}
 
         {reveal.typing && (
-          // Le joueur aussi « écrit » : une réplique imposée arrive de son côté
-          // de la conversation, pas de celui de l'interlocuteur.
+          // The player "types" too: a forced line arrives on their side of the
+          // conversation, not on the correspondent's.
           <li className={`bubble-row${scene.speaker === 'player' ? ' bubble-row--player' : ''}`}>
             <div className="typing" aria-label="En train d’écrire">
               <span />
@@ -175,8 +175,8 @@ export function Reading({
         )}
 
         {/*
-          Vrai cul-de-sac : ni choix a proposer, ni enchainement a suivre, ni
-          fin declaree. Un noeud qui enchaine n'affiche rien — il repart.
+          A true dead end: no choice to offer, no chaining to follow, no
+          declared ending. A chaining node shows nothing — it moves on.
         */}
         {reveal.done && !scene.awaitsChoice && !scene.canAdvance && !scene.isEnding && (
           <div className="answers__label">

@@ -17,22 +17,22 @@ export default tseslint.config(
       '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
       '@typescript-eslint/no-unused-vars': [
         'error',
-        // `_` en prefixe = volontairement ignore, y compris pour retirer une
-        // cle par destructuration (`const { ending: _drop, ...rest } = scene`).
+        // A leading `_` means deliberately ignored, including when dropping a
+        // key by destructuring (`const { ending: _drop, ...rest } = scene`).
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_', ignoreRestSiblings: true },
       ],
     },
   },
 
   // ---------------------------------------------------------------------------
-  // Garde-fou d'architecture : le coeur reste agnostique du framework.
-  // `story-engine` et `story-format` ne doivent jamais importer React ni toucher
-  // au DOM. La regle fait echouer le lint a la moindre tentative.
+  // Architecture guard rail: the core stays framework-agnostic.
+  // `story-engine` and `story-format` must never import React nor touch the
+  // DOM. This rule fails the lint at the slightest attempt.
   // ---------------------------------------------------------------------------
   {
     files: ['packages/story-engine/**/*.ts', 'packages/story-format/**/*.ts'],
     languageOptions: {
-      globals: {}, // aucun global navigateur : `window`, `document`... sont des erreurs
+      globals: {}, // no browser global: `window`, `document`... are errors
     },
     rules: {
       'no-restricted-imports': [
@@ -42,17 +42,17 @@ export default tseslint.config(
             {
               group: ['react', 'react-*', 'react/*', '@xyflow/*', '*.css'],
               message:
-                'Le coeur doit rester agnostique du framework UI : pas de React ni de CSS dans story-engine / story-format.',
+                'The core must stay agnostic of the UI framework: no React and no CSS in story-engine / story-format.',
             },
           ],
         },
       ],
       'no-restricted-globals': [
         'error',
-        { name: 'window', message: 'Pas de DOM dans le coeur.' },
-        { name: 'document', message: 'Pas de DOM dans le coeur.' },
-        { name: 'localStorage', message: 'La persistance est injectee par l’appelant.' },
-        { name: 'fetch', message: 'Pas d’I/O dans le coeur.' },
+        { name: 'window', message: 'No DOM in the core.' },
+        { name: 'document', message: 'No DOM in the core.' },
+        { name: 'localStorage', message: 'Persistence is injected by the caller.' },
+        { name: 'fetch', message: 'No I/O in the core.' },
       ],
     },
   },
@@ -99,7 +99,7 @@ export default tseslint.config(
     },
   },
 
-  // Tests + fichiers de config
+  // Tests and config files
   {
     files: ['**/*.test.ts', '**/*.test.tsx', '**/*.config.{ts,js}', '**/vite.config.ts'],
     languageOptions: {

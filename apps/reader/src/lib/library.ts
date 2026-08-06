@@ -1,8 +1,8 @@
 /**
- * Bibliotheque et sauvegardes du lecteur.
+ * Reader library and saves.
  *
- * Comme cote studio, `localStorage` vit ici et nulle part ailleurs : le moteur
- * ignore tout de la persistance, on la lui injecte.
+ * As on the studio side, `localStorage` lives here and nowhere else: the engine
+ * knows nothing of persistence, it is injected into it.
  */
 
 import {
@@ -28,12 +28,12 @@ function read<T>(storage: Storage, key: string, fallback: T): T {
 }
 
 /**
- * Recits disponibles : ceux livres avec l'app, plus ceux importes depuis un
- * JSON produit par le studio. Un import remplace l'exemple de meme identifiant.
+ * Available stories: those shipped with the app, plus those imported from JSON
+ * produced by the studio. An import replaces the sample sharing its id.
  */
 export function loadLibrary(storage: Storage = window.localStorage): Story[] {
-  // Un fichier importe avant un changement de format reste jouable : on le
-  // migre a la lecture plutot que de le laisser disparaitre de la bibliotheque.
+  // A file imported under an older format stays playable: it is migrated on
+  // read rather than left to disappear from the library.
   const imported = read<unknown[]>(storage, IMPORTED_KEY, [])
     .map(migrateStory)
     .filter((candidate): candidate is Story => validateStory(candidate).valid);
@@ -48,7 +48,7 @@ export function saveImportedStory(story: Story, storage: Storage = window.localS
   storage.setItem(IMPORTED_KEY, JSON.stringify([...imported, story]));
 }
 
-// --------------------------------------------------------------- sauvegardes
+// --------------------------------------------------------------------- saves
 
 export function loadSave(
   storyId: string,
@@ -60,7 +60,7 @@ export function loadSave(
   try {
     return parseGameState(raw);
   } catch {
-    // Une sauvegarde d'un ancien format ne doit pas empecher de rejouer.
+    // A save from an older format must not prevent playing again.
     return null;
   }
 }
@@ -77,9 +77,9 @@ export function clearSave(storyId: string, storage: Storage = window.localStorag
   storage.setItem(SAVES_KEY, JSON.stringify(saves));
 }
 
-// ------------------------------------------------------------------- palmares
+// ------------------------------------------------------------------- record
 
-/** Fins deja vues, par recit — c'est le « x/y fins » de la bibliotheque. */
+/** Endings already seen, per story — the "x/y fins" of the library. */
 export function loadEndings(storage: Storage = window.localStorage): Record<string, string[]> {
   return read<Record<string, string[]>>(storage, ENDINGS_KEY, {});
 }
@@ -97,7 +97,7 @@ export function recordEnding(
   return endings;
 }
 
-/** Nombre de fins que le recit propose. */
+/** Number of endings the story offers. */
 export function countEndings(story: Story): number {
   return Object.values(story.scenes).filter((scene) => scene.ending).length;
 }

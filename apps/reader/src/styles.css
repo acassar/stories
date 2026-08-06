@@ -2,11 +2,11 @@
 @import '@embranche/design-tokens/css';
 
 /*
- * Peau du lecteur — pensee petit ecran d'abord.
+ * Reader skin — small screen first.
  *
- * Les couleurs ne sont jamais ecrites ici : l'app pose les variables
- * `--emb-*` sur la racine de l'ecran en fonction de la reliure du recit et du
- * mode jour/nuit, et cette feuille ne fait que les consommer.
+ * Colors are never written here: the app sets the `--emb-*` variables on the
+ * screen root from the binding of the story and the light/dark mode, and this
+ * sheet only consumes them.
  */
 
 html,
@@ -18,8 +18,8 @@ body,
 body {
   background: var(--emb-bg);
   color: var(--emb-ink);
-  /* Le texte doit rester lisible sans zoom, et le pouce ne doit pas
-     declencher de zoom accidentel sur double-tap. */
+  /* Text must stay readable without zooming, and a double-tap must not
+     trigger an accidental zoom. */
   font-size: 16px;
   touch-action: manipulation;
   overscroll-behavior-y: none;
@@ -32,7 +32,7 @@ body {
   background: var(--emb-bg);
   color: var(--emb-ink);
   transition: background 0.25s ease;
-  /* Encoches et barres systeme. */
+  /* Notches and system bars. */
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
     env(safe-area-inset-left);
 }
@@ -44,7 +44,7 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
-/* ---------------------------------------------------------------- boutons */
+/* ---------------------------------------------------------------- buttons */
 
 .icon-btn {
   width: 40px;
@@ -74,7 +74,7 @@ body {
   color: #fff;
 }
 
-/* Bouton principal : pleine largeur, atteignable au pouce. */
+/* Primary button: full width, reachable with the thumb. */
 .cta {
   width: 100%;
   min-height: 52px;
@@ -103,7 +103,7 @@ body {
   padding: 13px;
 }
 
-/* ------------------------------------------------------------ bibliotheque */
+/* ---------------------------------------------------------------- library */
 
 .topbar {
   display: flex;
@@ -230,7 +230,7 @@ body {
   padding: 3px 8px;
 }
 
-/* ------------------------------------------------------------------ detail */
+/* ----------------------------------------------------------------- detail */
 
 .detail__cover {
   height: 290px;
@@ -328,14 +328,14 @@ body {
   margin-top: 22px;
 }
 
-/* --------------------------------------------------------- correspondance */
+/* ----------------------------------------------------------- conversation */
 
 .reading {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  /* Reglure de papier, en fond de la conversation. */
+  /* Paper ruling behind the conversation. */
   background-image: repeating-linear-gradient(
     var(--emb-rule) 0,
     var(--emb-rule) 1px,
@@ -463,7 +463,7 @@ body {
   margin-bottom: 2px;
 }
 
-/* Cible tactile large : un choix se tape au pouce, sans viser. */
+/* Large touch target: a choice is tapped with the thumb, without aiming. */
 .answer {
   align-self: flex-end;
   max-width: 88%;
@@ -482,7 +482,7 @@ body {
   color: var(--emb-on-accent);
 }
 
-/* -------------------------------------------------------------------- fin */
+/* ---------------------------------------------------------------- ending */
 
 .ending {
   flex: 1;
@@ -546,7 +546,7 @@ body {
   gap: 10px;
 }
 
-/* ------------------------------------------------------------------ divers */
+/* --------------------------------------------------------------- assorted */
 
 .sr-only {
   position: absolute;
@@ -576,8 +576,8 @@ body {
 }
 
 /*
- * Montee en gamme : au-dela du telephone, la lecture est recentree en colonne
- * plutot qu'etiree — un texte large est un texte penible.
+ * Scaling up: beyond the phone, the reading is recentered as a column rather
+ * than stretched — wide text is painful text.
  */
 @media (min-width: 720px) {
   .screen {

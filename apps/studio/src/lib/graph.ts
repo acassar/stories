@@ -1,12 +1,11 @@
 /**
- * Traduction entre le format d'histoire et le graphe React Flow.
+ * Translation between the story format and the React Flow graph.
  *
- * Le format reste la source de verite : React Flow n'est qu'une projection.
- * Un seul endroit connait les deux vocabulaires — celui-ci.
+ * The format stays the source of truth: React Flow is only a projection. A
+ * single place knows both vocabularies — this one.
  *
- * Depuis le format 2, une arete du canvas est exactement un `Link` du recit :
- * plus rien n'est cache dans le noeud source. Ce qui se dessine est ce qui est
- * ecrit.
+ * An edge on the canvas is exactly a `Link` of the story: nothing is hidden in
+ * the source node. What is drawn is what is written.
  */
 
 import type { Edge, Node } from '@xyflow/react';
@@ -14,19 +13,19 @@ import type { Link, Scene, SceneId, Story, ValidationIssue } from '@embranche/st
 
 import { kinds, studio } from '@embranche/design-tokens';
 
-/** Donnees portees par un noeud de scene. */
+/** Data carried by a scene node. */
 export interface SceneNodeData extends Record<string, unknown> {
   scene: Scene;
   isStart: boolean;
-  /** Anomalies rattachees a cette scene, pour l'anneau d'alerte. */
+  /** Issues attached to this scene, for the alert ring. */
   issues: ValidationIssue[];
-  /** Vrai si ce noeud arrete la lecture en attendant une decision du joueur. */
+  /** True when this node stops the reading to wait for a player decision. */
   awaitsChoice: boolean;
 }
 
 export type SceneFlowNode = Node<SceneNodeData, 'scene'>;
 
-/** Identifiant d'arete : `scene:lien`, stable et directement decodable. */
+/** Edge id: `scene:link`, stable and directly decodable. */
 export function edgeId(sceneId: SceneId, linkId: string): string {
   return `${sceneId}:${linkId}`;
 }
@@ -57,20 +56,19 @@ export function toNodes(
 }
 
 /**
- * Une arete par lien.
+ * One edge per link.
  *
- * L'arete ne porte plus le texte du choix — celui-ci est desormais un noeud a
- * part entiere, qui l'affiche lui-meme. L'arete ne dit donc que ce que le
- * noeud ne peut pas dire : qu'elle est conditionnelle, et ce qu'elle modifie.
- * Sa couleur est celle du type qu'elle vise, pour qu'on lise la nature d'un
- * enchainement avant meme d'en atteindre le bout.
+ * The edge does not carry the choice text — a choice is a node of its own and
+ * displays it itself. The edge only says what the node cannot: that it is
+ * conditional, and what it changes. Its color is that of the kind it targets,
+ * so the nature of a transition reads before reaching its end.
  */
 export function toEdges(story: Story, issues: ValidationIssue[]): Edge[] {
   const edges: Edge[] = [];
   for (const scene of Object.values(story.scenes)) {
     for (const link of scene.next) {
       const target = story.scenes[link.to];
-      if (!target) continue; // cible pendante : signalee sur le noeud
+      if (!target) continue; // dangling target: reported on the node
       const broken = issues.some(
         (issue) =>
           issue.linkId === link.id && issue.sceneId === scene.id && issue.severity === 'error',
@@ -98,7 +96,7 @@ export function toEdges(story: Story, issues: ValidationIssue[]): Edge[] {
   return edges;
 }
 
-/** Ce qu'une arete a d'interessant a dire — rien, la plupart du temps. */
+/** What an edge has worth saying — nothing, most of the time. */
 function edgeLabel(link: Link): string | undefined {
   const marks: string[] = [];
   if (link.condition) marks.push('◇ si…');
@@ -107,8 +105,8 @@ function edgeLabel(link: Link): string | undefined {
 }
 
 /**
- * Place un nouveau noeud sous le dernier, plutot qu'a l'origine ou il
- * risquerait de se superposer a un existant.
+ * Places a new node below the lowest one, rather than at the origin where it
+ * would risk overlapping an existing node.
  */
 export function nextScenePosition(story: Story): { x: number; y: number } {
   const positions = Object.values(story.scenes).map((scene) => scene.position);
@@ -118,8 +116,8 @@ export function nextScenePosition(story: Story): { x: number; y: number } {
 }
 
 /**
- * Place un noeud enfant sous son parent, decale a droite selon le nombre de
- * freres — creer trois choix d'affilee ne doit pas les empiler.
+ * Places a child node below its parent, shifted right by the number of
+ * siblings — creating three choices in a row must not stack them.
  */
 export function childPosition(parent: Scene, siblings: number): { x: number; y: number } {
   return { x: parent.position.x + (siblings - 1) * 130, y: parent.position.y + 170 };

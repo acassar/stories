@@ -1,4 +1,4 @@
-/** Pictogrammes du lecteur, repris de la maquette Embranche. */
+/** Reader pictograms, taken from the Embranche mockup. */
 
 export function BackIcon() {
   return (

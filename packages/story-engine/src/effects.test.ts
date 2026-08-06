@@ -17,13 +17,13 @@ function base(): GameState {
 }
 
 describe('applyEffects', () => {
-  it('renvoie le meme objet quand il n’y a rien a appliquer', () => {
+  it('returns the same object when there is nothing to apply', () => {
     const state = base();
     expect(applyEffects(state, undefined)).toBe(state);
     expect(applyEffects(state, [])).toBe(state);
   });
 
-  it('ne mute jamais l’etat fourni', () => {
+  it('never mutates the state it is given', () => {
     const state = base();
     const next = applyEffects(state, [{ op: 'set', variable: 'karma', value: 99 }]);
     expect(state.variables.karma).toBe(2);
@@ -40,12 +40,12 @@ describe('applyEffects', () => {
     expect(next.variables).toMatchObject({ nom: 'Alex', karma: 4 });
   });
 
-  it('inc part de zero quand la variable n’existe pas', () => {
+  it('inc starts from zero when the variable does not exist', () => {
     const next = applyEffects(base(), [{ op: 'inc', variable: 'nouvelle', value: 2 }]);
     expect(next.variables.nouvelle).toBe(2);
   });
 
-  it('toggle inverse un booleen et pose true sur une variable absente', () => {
+  it('toggle flips a boolean and sets true on a missing variable', () => {
     const next = applyEffects(base(), [
       { op: 'toggle', variable: 'prudent' },
       { op: 'toggle', variable: 'jamais-vue' },
@@ -54,12 +54,12 @@ describe('applyEffects', () => {
     expect(next.variables['jamais-vue']).toBe(true);
   });
 
-  it('unset retire la variable', () => {
+  it('unset removes the variable', () => {
     const next = applyEffects(base(), [{ op: 'unset', variable: 'karma' }]);
     expect('karma' in next.variables).toBe(false);
   });
 
-  it('addItem cumule les quantites, defaut 1', () => {
+  it('addItem accumulates quantities, defaulting to 1', () => {
     const next = applyEffects(base(), [
       { op: 'addItem', item: 'piece', quantity: 2 },
       { op: 'addItem', item: 'lanterne' },
@@ -67,7 +67,7 @@ describe('applyEffects', () => {
     expect(next.inventory).toEqual({ piece: 5, lanterne: 1 });
   });
 
-  it('removeItem ne descend pas sous zero et retire l’objet epuise', () => {
+  it('removeItem does not go below zero and drops an exhausted item', () => {
     const next = applyEffects(base(), [{ op: 'removeItem', item: 'piece', quantity: 10 }]);
     expect('piece' in next.inventory).toBe(false);
 
@@ -75,7 +75,7 @@ describe('applyEffects', () => {
     expect(partial.inventory.piece).toBe(2);
   });
 
-  it('applique les effets dans l’ordre donne', () => {
+  it('applies effects in the given order', () => {
     const setPuisInc = applyEffects(base(), [
       { op: 'set', variable: 'karma', value: 0 },
       { op: 'inc', variable: 'karma', value: 5 },

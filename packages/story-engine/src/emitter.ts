@@ -1,19 +1,19 @@
 /**
- * Emetteur d'evenements minimal et type.
+ * Minimal typed event emitter.
  *
- * On n'utilise volontairement ni `EventTarget` ni `EventEmitter` : le premier
- * vient du DOM, le second de Node. Le moteur doit tourner a l'identique dans un
- * navigateur, dans Node, dans un worker ou dans un test — sans rien supposer de
- * son hote.
+ * Neither `EventTarget` nor `EventEmitter` is used, on purpose: the first comes
+ * from the DOM, the second from Node. The engine must run identically in a
+ * browser, in Node, in a worker or in a test — without assuming anything about
+ * its host.
  */
 
 export type Listener<T> = (payload: T) => void;
 export type Unsubscribe = () => void;
 
 /**
- * `EventMap` associe chaque nom d'evenement au type de sa charge utile.
- * La contrainte est `object` et non `Record<string, unknown>` : une `interface`
- * n'a pas de signature d'index implicite et serait autrement rejetee.
+ * `EventMap` maps each event name to the type of its payload. The constraint is
+ * `object` rather than `Record<string, unknown>`: an `interface` has no implicit
+ * index signature and would otherwise be rejected.
  */
 export class Emitter<EventMap extends object> {
   private readonly listeners = new Map<keyof EventMap, Set<Listener<never>>>();
@@ -28,7 +28,7 @@ export class Emitter<EventMap extends object> {
     return () => this.off(event, listener);
   }
 
-  /** S'abonne pour un seul declenchement. */
+  /** Subscribes for a single firing. */
   once<K extends keyof EventMap>(event: K, listener: Listener<EventMap[K]>): Unsubscribe {
     const unsubscribe = this.on(event, (payload) => {
       unsubscribe();
@@ -44,7 +44,7 @@ export class Emitter<EventMap extends object> {
   emit<K extends keyof EventMap>(event: K, payload: EventMap[K]): void {
     const set = this.listeners.get(event);
     if (!set) return;
-    // Copie : un abonne peut se desabonner (ou en abonner un autre) pendant l'emission.
+    // Copy: a listener may unsubscribe (or subscribe another) during emission.
     for (const listener of [...set]) {
       (listener as Listener<EventMap[K]>)(payload);
     }

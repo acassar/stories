@@ -5,8 +5,8 @@ import type { ColorMode } from '@embranche/design-tokens';
 const KEY = 'embranche.reader.mode';
 
 /**
- * Jour / nuit. On part de la preference du systeme, et le choix explicite du
- * lecteur la remplace ensuite — c'est le sien qui gagne, y compris au retour.
+ * Light / dark. It starts from the system preference, and an explicit choice by
+ * the reader then replaces it — theirs wins, including on the next visit.
  */
 export function useColorMode(): [ColorMode, () => void] {
   const [mode, setMode] = useState<ColorMode>(() => {
@@ -17,7 +17,7 @@ export function useColorMode(): [ColorMode, () => void] {
 
   useEffect(() => {
     window.localStorage.setItem(KEY, mode);
-    // Aligne la barre de navigation du telephone sur le mode courant.
+    // Aligns the phone navigation bar with the current mode.
     document
       .querySelector('meta[name="theme-color"]')
       ?.setAttribute('content', mode === 'dark' ? '#1b212d' : '#f6f2ea');
@@ -30,7 +30,7 @@ export function useColorMode(): [ColorMode, () => void] {
   return [mode, toggle];
 }
 
-/** Vrai si le systeme demande a limiter les animations. */
+/** True when the system asks for reduced motion. */
 export function usePrefersReducedMotion(): boolean {
   const [reduced, setReduced] = useState(
     () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,

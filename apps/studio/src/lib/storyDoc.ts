@@ -1,9 +1,9 @@
 /**
- * Operations d'edition sur un document d'histoire.
+ * Editing operations on a story document.
  *
- * Toutes pures et immuables : elles prennent une `Story` et en renvoient une
- * nouvelle. L'app se contente d'enchainer `setStory(op(story, ...))`, ce qui
- * rend l'annulation et la persistance triviales.
+ * All pure and immutable: they take a `Story` and return a new one. The app
+ * only ever chains `setStory(op(story, ...))`, which makes undo and persistence
+ * trivial.
  */
 
 import { createId, createLink, createScene, slugify } from '@embranche/story-format';
@@ -27,7 +27,7 @@ export function moveScene(
   return updateScene(story, sceneId, { position });
 }
 
-/** Ajoute un noeud vierge et renvoie le document ainsi que son identifiant. */
+/** Adds a blank node and returns the document along with its id. */
 export function addScene(
   story: Story,
   kind: SceneKind,
@@ -39,11 +39,11 @@ export function addScene(
 }
 
 /**
- * Cree un noeud enfant *et* le lien qui y mene, en une seule operation.
+ * Creates a child node *and* the link that leads to it, in one operation.
  *
- * C'est le geste courant de l'auteur — « et ensuite ? » —, et le seul moyen
- * d'obtenir un graphe coherent du premier coup : le lien nait avec sa cible,
- * donc jamais pendant.
+ * This is the author's common gesture — "and then?" — and the only way to get a
+ * coherent graph on the first try: the link is born with its target, so it is
+ * never dangling.
  */
 export function addChild(
   story: Story,
@@ -63,8 +63,8 @@ export function addChild(
 }
 
 /**
- * Supprime un noeud *et* tous les liens qui y menaient — laisser des cibles
- * pendantes derriere soi transformerait une suppression en erreur de validation.
+ * Deletes a node *and* every link that led to it — leaving dangling targets
+ * behind would turn a deletion into a validation error.
  */
 export function removeScene(story: Story, sceneId: SceneId): Story {
   const scenes: Record<SceneId, Scene> = {};
@@ -78,7 +78,7 @@ export function removeScene(story: Story, sceneId: SceneId): Story {
   return { ...story, scenes, startSceneId };
 }
 
-/** Duplique un noeud a cote de l'original, sans reprendre les liens entrants. */
+/** Duplicates a node next to the original, without carrying incoming links. */
 export function duplicateScene(story: Story, sceneId: SceneId): { story: Story; sceneId: SceneId } {
   const source = story.scenes[sceneId];
   if (!source) return { story, sceneId };
@@ -102,11 +102,11 @@ export function setBlocks(story: Story, sceneId: SceneId, blocks: TextBlock[]): 
 }
 
 /**
- * Change le type d'un noeud.
+ * Changes the kind of a node.
  *
- * Un noeud qui devient un choix a besoin d'un libelle — sans quoi le bouton
- * serait vide et la validation le refuserait aussitot. On le derive du titre,
- * charge a l'auteur de l'affiner.
+ * A node becoming a choice needs a label — without one the button would be
+ * empty and validation would refuse it immediately. It is derived from the
+ * title, and the author refines it.
  */
 export function setKind(story: Story, sceneId: SceneId, kind: SceneKind): Story {
   const scene = story.scenes[sceneId];
@@ -117,9 +117,9 @@ export function setKind(story: Story, sceneId: SceneId, kind: SceneKind): Story 
 }
 
 /**
- * Bascule un noeud en fin de recit. Les liens ne sont pas effaces : ils sont
- * simplement ignores par le moteur, et l'auteur les retrouve s'il revient en
- * arriere. Le validateur le signale par un avertissement.
+ * Toggles a node as an ending. Links are not erased: the engine simply ignores
+ * them, and the author finds them again when toggling back. The validator
+ * reports it with a warning.
  */
 export function toggleEnding(story: Story, sceneId: SceneId): Story {
   const scene = story.scenes[sceneId];
@@ -134,13 +134,13 @@ export function toggleEnding(story: Story, sceneId: SceneId): Story {
 }
 
 // ---------------------------------------------------------------------------
-// Liens
+// Links
 // ---------------------------------------------------------------------------
 
 export function addLink(story: Story, sceneId: SceneId, to: SceneId): Story {
   const scene = story.scenes[sceneId];
   if (!scene || !story.scenes[to]) return story;
-  // Un meme lien deux fois n'ajouterait rien et brouillerait le canvas.
+  // The same link twice would add nothing and clutter the canvas.
   if (scene.next.some((link) => link.to === to)) return story;
   return updateScene(story, sceneId, { next: [...scene.next, createLink({ to })] });
 }
@@ -166,7 +166,7 @@ export function removeLink(story: Story, sceneId: SceneId, linkId: string): Stor
   });
 }
 
-/** Retire les champs optionnels vides — le JSON exporte reste lisible. */
+/** Drops empty optional fields — the exported JSON stays readable. */
 function cleanLink(link: Link): Link {
   const next: Link = { ...link };
   if (next.effects && next.effects.length === 0) delete next.effects;
@@ -175,11 +175,12 @@ function cleanLink(link: Link): Link {
 }
 
 /**
- * Le lien qui mene a ce noeud, s'il est unique.
+ * The link leading to this node, when there is exactly one.
  *
- * L'inspecteur s'en sert pour montrer condition et effets « sur le bouton »
- * quand on selectionne un noeud de choix, alors qu'ils sont ranges sur l'arete.
- * Ambigu des qu'il y a plusieurs entrees : on ne devine pas laquelle editer.
+ * The inspector uses it to show condition and effects "on the button" when a
+ * choice node is selected, even though they live on the edge. It is ambiguous
+ * as soon as there are several incoming links: which one to edit is not a guess
+ * worth making.
  */
 export function soleIncomingLink(
   story: Story,
@@ -196,7 +197,7 @@ export function soleIncomingLink(
 
 // ---------------------------------------------------------------------------
 
-/** Identifiant de noeud libre, derive d'une base lisible. */
+/** A free node id, derived from a readable base. */
 export function uniqueSceneId(story: Story, base: string): SceneId {
   const root = slugify(base, 'scene');
   if (!story.scenes[root]) return root;
@@ -207,7 +208,7 @@ export function uniqueSceneId(story: Story, base: string): SceneId {
   return createId(root);
 }
 
-/** Renomme un noeud en repointant tous les liens qui le visaient. */
+/** Renames a node, repointing every link that targeted it. */
 export function renameSceneId(story: Story, from: SceneId, rawTo: string): Story {
   const scene = story.scenes[from];
   const to = slugify(rawTo, from);
@@ -229,7 +230,7 @@ export function renameSceneId(story: Story, from: SceneId, rawTo: string): Story
   };
 }
 
-/** Compte des fins du recit — repris tel quel par le tableau de bord. */
+/** Number of endings in the story — used as-is by the dashboard. */
 export function countEndings(story: Story): number {
   return Object.values(story.scenes).filter((scene) => scene.ending).length;
 }

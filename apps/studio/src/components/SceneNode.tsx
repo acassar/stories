@@ -7,15 +7,15 @@ import { sceneMessages } from '@embranche/story-format';
 import type { SceneFlowNode } from '../lib/graph';
 
 /**
- * Noeud du canvas.
+ * Canvas node.
  *
- * Sa couleur *est* son type : encre froide pour l'interlocuteur, vert pour la
- * voix du joueur, prune pour une decision. C'est la seule information qu'on
- * doit pouvoir lire sans zoomer, parce que c'est elle qui dit si la lecture
- * s'arrete la ou si elle continue toute seule.
+ * Its color *is* its kind: cold ink for the correspondent, green for the
+ * player's voice, plum for a decision. That is the one piece of information
+ * that must read without zooming, because it says whether the reading stops
+ * there or carries on by itself.
  *
- * Un noeud n'a plus qu'une poignee d'entree et une de sortie : les choix ne
- * sont plus des lignes a l'interieur du noeud, ce sont des noeuds voisins.
+ * A node has a single input handle and a single output handle: choices are not
+ * rows inside the node, they are neighboring nodes.
  */
 export function SceneNode({ data, selected }: NodeProps<SceneFlowNode>) {
   const { scene, isStart, issues, awaitsChoice } = data;
@@ -65,9 +65,9 @@ export function SceneNode({ data, selected }: NodeProps<SceneFlowNode>) {
       <div className="scene-node__preview">{preview || '—'}</div>
 
       {/*
-        Ce qui se passe apres. Un noeud qui attend une decision se distingue
-        d'un noeud qui enchaine seul — c'est toute la difference entre les deux
-        moities du format, autant l'ecrire.
+        What happens next. A node awaiting a decision reads differently from a
+        node that chains on its own — that is the whole difference between the
+        two halves of the format, so it is spelled out.
       */}
       {!scene.ending && (
         <div className="scene-node__flow">

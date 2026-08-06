@@ -1,7 +1,7 @@
 export type EngineErrorCode =
   | 'unknown-scene'
   | 'unknown-choice'
-  /** Le lien vise un noeud qui n'est pas un choix : on n'y « repond » pas. */
+  /** The link targets a node that is not a choice: there is nothing to answer. */
   | 'not-a-choice'
   | 'choice-unavailable'
   | 'story-mismatch'

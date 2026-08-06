@@ -1,52 +1,52 @@
 /**
- * Design tokens « Embranche » — source unique de la peau des deux apps.
+ * Embranche design tokens — the single source of the skin of both apps.
  *
- * Tout est ici : re-skinner l'app, c'est modifier ce fichier (et `tokens.css`
- * qui en est le miroir pour les regles statiques). Aucune valeur de couleur ne
- * doit etre ecrite en dur ailleurs.
+ * Everything lives here: re-skinning the app means editing this file (and
+ * `tokens.css`, its mirror for the static rules). No color value is ever
+ * hard-coded elsewhere.
  *
- * Zero dependance : ce paquet est du TypeScript pur.
+ * Zero dependencies: this package is pure TypeScript.
  */
 
 export type ColorMode = 'light' | 'dark';
 
-/** Teinte de reliure d'un recit. */
+/** Binding tint of a story. */
 export type StoryTheme = 'fantasy' | 'mystery' | 'adventure' | 'night';
 
 export const STORY_THEMES: readonly StoryTheme[] = ['fantasy', 'mystery', 'adventure', 'night'];
 
 export interface PaperTokens {
-  /** Fond de page. */
+  /** Page background. */
   bg: string;
-  /** Fond des surfaces posees sur la page (cartes, bulles). */
+  /** Background of surfaces laid on the page (cards, bubbles). */
   panel: string;
-  /** Filets et separateurs. */
+  /** Rules and separators. */
   line: string;
-  /** Reglure de papier en fond de lecture. */
+  /** Paper ruling behind the reading surface. */
   ruleLine: string;
-  /** Texte principal. */
+  /** Primary text. */
   ink: string;
-  /** Texte secondaire. */
+  /** Secondary text. */
   sub: string;
 }
 
 export interface AccentTokens {
-  /** Accent en mode jour. */
+  /** Accent in light mode. */
   light: string;
-  /** Accent en mode nuit. */
+  /** Accent in dark mode. */
   dark: string;
-  /** Degrade de couverture / reliure. */
+  /** Cover / binding gradient. */
   grad: string;
 }
 
 export interface ResolvedTokens extends PaperTokens {
-  /** Accent resolu pour le mode courant. */
+  /** Accent resolved for the current mode. */
   accent: string;
-  /** Accent « jour » quel que soit le mode — pour les surfaces claires. */
+  /** Light-mode accent whatever the mode — for light surfaces. */
   accentOnPaper: string;
-  /** Degrade de couverture. */
+  /** Cover gradient. */
   grad: string;
-  /** Encre lisible posee sur l'accent. */
+  /** Readable ink laid on top of the accent. */
   onAccent: string;
 }
 
@@ -76,7 +76,7 @@ export const accents: Record<StoryTheme, AccentTokens> = {
   night: { light: '#22344f', dark: '#8fa8d1', grad: 'linear-gradient(160deg,#16202f,#3a4f6e)' },
 };
 
-/** Teinte de reliure lisible en toutes lettres (etiquettes d'UI). */
+/** Binding tint spelled out in words (UI labels). */
 export const themeLabels: Record<StoryTheme, string> = {
   fantasy: 'Prune',
   mystery: 'Sapin',
@@ -85,8 +85,8 @@ export const themeLabels: Record<StoryTheme, string> = {
 };
 
 /**
- * Resout la palette complete pour une reliure et un mode donnes.
- * C'est la seule fonction dont l'UI a besoin pour se peindre.
+ * Resolves the full palette for a given binding and mode. This is the only
+ * function the UI needs to paint itself.
  */
 export function resolveTokens(theme: StoryTheme, mode: ColorMode): ResolvedTokens {
   const sheet = paper[mode];
@@ -101,8 +101,8 @@ export function resolveTokens(theme: StoryTheme, mode: ColorMode): ResolvedToken
 }
 
 /**
- * Coquille du lecteur : legerement plus claire que le papier de la
- * bibliotheque en mode jour, pour que la couverture ressorte.
+ * Reader shell: slightly lighter than the library paper in light mode, so the
+ * cover stands out.
  */
 export function resolveShell(theme: StoryTheme, mode: ColorMode): ResolvedTokens {
   const base = resolveTokens(theme, mode);
@@ -110,7 +110,7 @@ export function resolveShell(theme: StoryTheme, mode: ColorMode): ResolvedTokens
   return { ...base, bg: '#f6f2ea', panel: '#ffffff', line: '#eee3d2' };
 }
 
-/** Palette du studio — jour uniquement, poste de travail sur papier blanc. */
+/** Studio palette — light only, a workbench on white paper. */
 export const studio = {
   page: '#eee6d6',
   surface: '#ffffff',
@@ -141,27 +141,27 @@ export const studio = {
 } as const;
 
 /**
- * Couleurs des types de noeuds du studio.
+ * Colors of the studio node kinds.
  *
- * Le type d'un noeud est l'information la plus structurante du graphe : il
- * decide de qui parle et de si le joueur doit agir. Il doit donc se lire d'un
- * coup d'oeil sur le canvas, sans avoir a ouvrir l'inspecteur — d'ou une
- * couleur par type plutot qu'une etiquette.
+ * The kind of a node is the most structuring information in the graph: it
+ * decides who speaks and whether the player has to act. It must therefore read
+ * at a glance on the canvas, without opening the inspector — hence one color
+ * per kind rather than a label alone.
  *
- * Trois familles nettement distinctes a distance : encre froide pour
- * l'interlocuteur, vert pour la voix du joueur, prune pour la decision. La
- * teinte `ink` sert au texte pose dessus et reste lisible sur `surface`.
+ * Three families clearly distinct from a distance: cold ink for the
+ * correspondent, green for the player's voice, plum for a decision. The `ink`
+ * tint is used for text laid on top and stays readable on `surface`.
  */
 export interface KindTokens {
-  /** Fond de la carte. */
+  /** Card background. */
   surface: string;
-  /** Filet de la carte, et couleur de l'arete entrante. */
+  /** Card rule, and color of the incoming edge. */
   border: string;
-  /** Encre du titre et de l'etiquette de type. */
+  /** Ink of the title and of the kind label. */
   ink: string;
-  /** Pastille de l'etiquette de type. */
+  /** Pill behind the kind label. */
   badge: string;
-  /** Libelle affiche a l'auteur. */
+  /** Label shown to the author. */
   label: string;
 }
 
@@ -192,9 +192,9 @@ export const kinds: Record<SceneKindName, KindTokens> = {
 };
 
 export const typography = {
-  /** Interface : titres, boutons, etiquettes. */
+  /** Interface: titles, buttons, labels. */
   ui: "'Bricolage Grotesque', system-ui, -apple-system, sans-serif",
-  /** Prose : texte des scenes, titres de recits. */
+  /** Prose: scene text, story titles. */
   prose: "'Newsreader', Georgia, serif",
 } as const;
 
@@ -216,8 +216,8 @@ export const space = {
 } as const;
 
 /**
- * Rend la palette resolue sous forme de variables CSS, a poser sur un
- * conteneur. L'UI ne lit ensuite que `var(--emb-*)`.
+ * Renders the resolved palette as CSS variables, to be set on a container. The
+ * UI then only ever reads `var(--emb-*)`.
  */
 export function tokensToCssVars(tokens: ResolvedTokens): Record<string, string> {
   return {

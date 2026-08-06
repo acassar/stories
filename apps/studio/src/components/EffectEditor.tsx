@@ -9,8 +9,8 @@ interface Props {
 }
 
 /**
- * Editeur des effets d'un choix. Le vocabulaire est ferme (voir `story-format`)
- * donc une liste de lignes suffit : pas de repli JSON necessaire ici.
+ * Editor for the effects of a link. The vocabulary is closed (see
+ * `story-format`), so a list of rows is enough: no JSON fallback is needed here.
  */
 export function EffectEditor({ value, onChange, knownVariables }: Props) {
   const effects = value ?? [];
@@ -136,7 +136,7 @@ export function EffectEditor({ value, onChange, knownVariables }: Props) {
   );
 }
 
-/** Change l'operateur en conservant ce qui a du sens dans la nouvelle forme. */
+/** Changes the operator, keeping whatever still makes sense in the new shape. */
 function migrateEffect(effect: Effect, op: Effect['op'], knownVariables: string[]): Effect {
   const variable = 'variable' in effect ? effect.variable : (knownVariables[0] ?? 'variable');
   const item = 'item' in effect ? effect.item : 'objet';

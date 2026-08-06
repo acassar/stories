@@ -1,9 +1,9 @@
 /**
- * Persistance locale du studio.
+ * Local persistence of the studio.
  *
- * C'est *ici* que vit `localStorage`, pas dans le moteur ni dans le format :
- * remplacer ce fichier par un client HTTP ou par le systeme de fichiers Tauri
- * ne demanderait de toucher a rien d'autre.
+ * `localStorage` lives *here*, not in the engine nor in the format: replacing
+ * this file with an HTTP client or with the Tauri file system would not require
+ * touching anything else.
  */
 
 import { exampleStories, migrateStory, validateStory } from '@embranche/story-format';
@@ -11,7 +11,7 @@ import type { Story } from '@embranche/story-format';
 
 const STORAGE_KEY = 'embranche.studio.stories.v1';
 
-/** Interface de rangement — abstraite pour rendre le module testable. */
+/** Storage interface — abstracted to keep the module testable. */
 export interface StoryRepository {
   list(): Story[];
   save(story: Story): void;
@@ -24,9 +24,9 @@ function readAll(storage: Storage): Story[] {
   try {
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    // On garde tout ce qui est structurellement lisible : un recit en cours
-    // d'ecriture peut etre incoherent sans etre irrecuperable. Un brouillon
-    // ecrit sous un format anterieur est migre au passage, pas jete.
+    // Everything structurally readable is kept: a story being written can be
+    // inconsistent without being unrecoverable. A draft written under an older
+    // format is migrated along the way, not discarded.
     return parsed.map(migrateStory).filter((item): item is Story => isStoryLike(item));
   } catch {
     return [];
@@ -63,8 +63,8 @@ export function createLocalRepository(storage: Storage = window.localStorage): S
 }
 
 /**
- * Au tout premier lancement, on amorce la bibliotheque avec les recits
- * d'exemple : un studio vide n'apprend rien a personne.
+ * On the very first launch, the library is seeded with the sample stories: an
+ * empty studio teaches nobody anything.
  */
 export function seedIfEmpty(repository: StoryRepository): Story[] {
   const existing = repository.list();
@@ -73,7 +73,7 @@ export function seedIfEmpty(repository: StoryRepository): Story[] {
   return repository.list();
 }
 
-/** Telecharge le recit au format `story-format` — le fichier lu par le lecteur. */
+/** Downloads the story in `story-format` — the file the reader opens. */
 export function downloadStoryJson(story: Story): void {
   const blob = new Blob([JSON.stringify(story, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -90,8 +90,8 @@ export interface ImportResult {
 }
 
 /**
- * Lit le contenu d'un fichier. `Blob.text()` manque encore a l'appel sur
- * quelques moteurs (et sur jsdom) : on retombe alors sur `FileReader`.
+ * Reads the content of a file. `Blob.text()` is still missing on a few engines
+ * (and on jsdom), so `FileReader` is the fallback.
  */
 function readFileText(file: File): Promise<string> {
   if (typeof file.text === 'function') return file.text();
@@ -103,7 +103,7 @@ function readFileText(file: File): Promise<string> {
   });
 }
 
-/** Lit un fichier JSON et refuse tout document qui ne passe pas la validation. */
+/** Reads a JSON file and refuses any document that fails validation. */
 export async function importStoryFile(file: File): Promise<ImportResult> {
   let data: unknown;
   try {

@@ -2,14 +2,14 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterEach } from 'vitest';
 
-// Sans `globals: true`, Testing Library n'enregistre pas son nettoyage :
-// on le fait ici, sinon les DOM de deux tests se superposent.
+// Without `globals: true`, Testing Library does not register its cleanup: it is
+// done here, otherwise the DOM of two tests would overlap.
 afterEach(cleanup);
 
 /**
- * jsdom n'implemente pas `matchMedia`. On le remplace en demandant du
- * mouvement reduit : les tests lisent alors les scenes d'un bloc, sans avoir a
- * piloter des minuteries pour verifier une regle de recit.
+ * jsdom does not implement `matchMedia`. The stub asks for reduced motion, so
+ * tests read scenes in one block instead of driving timers to check a story
+ * rule.
  */
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
@@ -25,5 +25,5 @@ Object.defineProperty(window, 'matchMedia', {
   }),
 });
 
-// jsdom ne sait pas defiler : les appels de confort ne doivent pas casser.
+// jsdom cannot scroll: convenience calls must not break.
 Element.prototype.scrollTo = () => {};

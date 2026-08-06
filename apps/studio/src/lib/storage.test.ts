@@ -4,7 +4,7 @@ import { clairiereStory, createEmptyStory } from '@embranche/story-format';
 
 import { createLocalRepository, importStoryFile, seedIfEmpty } from './storage';
 
-/** Implementation minimale de `Storage`, pour ne pas dependre du jsdom global. */
+/** Minimal `Storage` implementation, to avoid depending on the jsdom global. */
 function memoryStorage(): Storage {
   const map = new Map<string, string>();
   return {
@@ -26,13 +26,13 @@ describe('createLocalRepository', () => {
     storage = memoryStorage();
   });
 
-  it('enregistre puis relit une histoire', () => {
+  it('saves then reads a story back', () => {
     const repository = createLocalRepository(storage);
     repository.save(clairiereStory);
     expect(repository.list()).toEqual([clairiereStory]);
   });
 
-  it('remplace une histoire existante plutot que de l’empiler', () => {
+  it('replaces an existing story rather than stacking it', () => {
     const repository = createLocalRepository(storage);
     repository.save(clairiereStory);
     repository.save({ ...clairiereStory, title: 'Titre revu' });
@@ -41,19 +41,19 @@ describe('createLocalRepository', () => {
     expect(stored[0]?.title).toBe('Titre revu');
   });
 
-  it('supprime', () => {
+  it('deletes', () => {
     const repository = createLocalRepository(storage);
     repository.save(clairiereStory);
     repository.remove(clairiereStory.id);
     expect(repository.list()).toEqual([]);
   });
 
-  it('survit a un contenu corrompu plutot que de faire tomber le studio', () => {
+  it('survives corrupted content rather than bringing the studio down', () => {
     storage.setItem('embranche.studio.stories.v1', 'ceci n’est pas du json');
     expect(createLocalRepository(storage).list()).toEqual([]);
   });
 
-  it('conserve un brouillon incoherent : on n’efface pas le travail en cours', () => {
+  it('keeps an inconsistent draft: work in progress is never erased', () => {
     const repository = createLocalRepository(storage);
     const draft = createEmptyStory();
     draft.startSceneId = 'pas-encore-ecrite';
@@ -61,7 +61,7 @@ describe('createLocalRepository', () => {
     expect(repository.list()).toHaveLength(1);
   });
 
-  it('amorce la bibliotheque au premier lancement, puis n’y touche plus', () => {
+  it('seeds the library on first launch, then leaves it alone', () => {
     const repository = createLocalRepository(storage);
     expect(seedIfEmpty(repository)).toHaveLength(4);
     repository.remove(clairiereStory.id);
@@ -73,17 +73,17 @@ describe('importStoryFile', () => {
   const asFile = (content: string) =>
     new File([content], 'histoire.json', { type: 'application/json' });
 
-  it('accepte un export du studio', async () => {
+  it('accepts a studio export', async () => {
     const result = await importStoryFile(asFile(JSON.stringify(clairiereStory)));
     expect(result.error).toBeUndefined();
     expect(result.story?.id).toBe('clairiere-lucioles');
   });
 
-  it('refuse un JSON illisible', async () => {
+  it('refuses unreadable JSON', async () => {
     expect((await importStoryFile(asFile('{ oups'))).error).toMatch(/JSON/);
   });
 
-  it('refuse une histoire incoherente', async () => {
+  it('refuses an inconsistent story', async () => {
     const broken = { ...structuredClone(clairiereStory), startSceneId: 'nulle-part' };
     const result = await importStoryFile(asFile(JSON.stringify(broken)));
     expect(result.story).toBeUndefined();

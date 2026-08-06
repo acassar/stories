@@ -8,7 +8,7 @@ import { countEndings } from '../lib/library';
 interface Props {
   story: Story;
   endingsSeen: number;
-  /** Vrai si une partie est en cours sur ce recit. */
+  /** True when a run is in progress on this story. */
   hasSave: boolean;
   mode: ColorMode;
   onToggleMode: () => void;
@@ -17,7 +17,7 @@ interface Props {
   onStart: () => void;
 }
 
-/** Fiche du recit : ce qu'on sait avant d'ouvrir le livre. */
+/** Story sheet: what is known before opening the book. */
 export function Detail({
   story,
   endingsSeen,

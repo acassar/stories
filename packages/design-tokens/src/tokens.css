@@ -1,8 +1,8 @@
 /*
- * Miroir CSS des tokens Embranche (voir `src/index.ts`).
- * Les variables `--emb-*` de palette sont posees dynamiquement par l'app en
- * fonction de la reliure du recit et du mode jour/nuit ; ce qui est ici est la
- * part statique : typographie, rayons, espacements, animations.
+ * CSS mirror of the Embranche tokens (see `src/index.ts`).
+ * The `--emb-*` palette variables are set dynamically by the app from the
+ * binding of the story and the light/dark mode; what lives here is the static
+ * part: typography, radii, spacing, animations.
  */
 
 :root {
@@ -26,7 +26,7 @@
   --emb-shadow-raised: 0 18px 50px -24px rgba(40, 30, 20, 0.4);
   --emb-shadow-bubble: 0 3px 10px -7px rgba(20, 15, 8, 0.5);
 
-  /* Repli : palette jour, reliure « encre ». L'app ecrase ces valeurs. */
+  /* Fallback: light palette, ink binding. The app overrides these values. */
   --emb-bg: #f6f2ea;
   --emb-panel: #ffffff;
   --emb-line: #eee3d2;

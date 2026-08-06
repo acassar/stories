@@ -1,19 +1,19 @@
 /**
- * Creation et serialisation de l'etat de jeu.
+ * Creation and serialization of the game state.
  *
- * Aucune I/O ici : le moteur produit et consomme des objets ou du texte, et
- * c'est l'app qui decide ou les ranger (localStorage, fichier, serveur...).
+ * No I/O here: the engine produces and consumes objects or text, and the app
+ * decides where to put them (localStorage, file, server...).
  */
 
 import { parseGameState } from '@embranche/story-format';
 import type { GameState, Story } from '@embranche/story-format';
 
-/** Horloge injectable — les tests la remplacent pour rester deterministes. */
+/** Injectable clock — tests replace it to stay deterministic. */
 export type Clock = () => string;
 
 export const systemClock: Clock = () => new Date().toISOString();
 
-/** Etat neuf, positionne sur la scene de depart du recit. */
+/** Fresh state, positioned on the start scene of the story. */
 export function createInitialState(story: Story, now: Clock = systemClock): GameState {
   const timestamp = now();
   return {
@@ -33,16 +33,15 @@ export function serializeState(state: GameState): string {
   return JSON.stringify(state);
 }
 
-/** Relit une sauvegarde. Leve `StoryFormatError` si le document est mal forme. */
+/** Reads a save back. Throws `StoryFormatError` when the document is malformed. */
 export function deserializeState(json: string): GameState {
   return parseGameState(JSON.parse(json) as unknown);
 }
 
 /**
- * Une sauvegarde est reprenable si elle vise ce recit et que sa scene courante
- * existe encore. Un changement de version du recit n'invalide pas la partie —
- * il est juste signale par `staleVersion`, a charge de l'app d'en informer le
- * joueur.
+ * A save can be resumed when it targets this story and its current scene still
+ * exists. A change of story version does not invalidate the run — it is only
+ * reported through `staleVersion`, and it is up to the app to tell the player.
  */
 export function inspectState(
   story: Story,

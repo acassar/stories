@@ -5,7 +5,7 @@ interface Props {
   onSelect: (sceneId: SceneId) => void;
 }
 
-/** Validation en direct : cliquer sur une anomalie selectionne la scene fautive. */
+/** Live validation: clicking an issue selects the offending scene. */
 export function IssuesBar({ issues, onSelect }: Props) {
   const errors = issues.filter((issue) => issue.severity === 'error');
   const warnings = issues.filter((issue) => issue.severity === 'warning');

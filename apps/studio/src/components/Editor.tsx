@@ -31,7 +31,7 @@ interface Props {
 
 const nodeTypes: NodeTypes = { scene: SceneNode };
 
-/** Ecran d'edition : canvas de scenes a gauche, panneau d'edition a droite. */
+/** Editing screen: scene canvas on the left, editing panel on the right. */
 export function Editor(props: Props) {
   return (
     <ReactFlowProvider>
@@ -44,8 +44,8 @@ function EditorCanvas({ story, onChange, onBack }: Props) {
   const [selectedId, setSelectedId] = useState<SceneId | null>(story.startSceneId);
   const [playtesting, setPlaytesting] = useState(false);
 
-  // Validation en direct : recalculee a chaque frappe, elle alimente a la fois
-  // l'anneau d'alerte des noeuds et la barre du bas.
+  // Live validation: recomputed on every keystroke, it feeds both the alert
+  // ring on the nodes and the bottom bar.
   const validation = useMemo(() => validateStory(story), [story]);
   const nodes = useMemo(
     () => toNodes(story, validation.issues, selectedId),
@@ -82,9 +82,9 @@ function EditorCanvas({ story, onChange, onBack }: Props) {
   );
 
   /**
-   * Tirer une arete cree un lien. C'est tout le geste « rejoindre un noeud
-   * lointain » : rien n'oblige a passer par un choix, et la cible peut etre
-   * n'importe quel noeud deja ecrit.
+   * Dragging an edge creates a link. That is the whole "reach a distant node"
+   * gesture: nothing forces going through a choice, and the target can be any
+   * node already written.
    */
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -97,10 +97,9 @@ function EditorCanvas({ story, onChange, onBack }: Props) {
   );
 
   /**
-   * On refuse la connexion plutot que de la laisser creer une incoherence :
-   * melanger, sous un meme noeud, des liens vers des choix et des liens
-   * d'enchainement ne veut rien dire — le lecteur ne saurait pas s'il doit
-   * attendre le joueur.
+   * The connection is refused rather than allowed to create an inconsistency:
+   * mixing, under one node, links to choices and chaining links means nothing —
+   * the reader would not know whether to wait for the player.
    */
   const isValidConnection = useCallback(
     (connection: Connection | { source: string; target: string }) => {
@@ -120,7 +119,7 @@ function EditorCanvas({ story, onChange, onBack }: Props) {
 
   const handleAddScene = (kind: SceneKind) => {
     const parent = selectedId ? story.scenes[selectedId] : undefined;
-    // Depuis un noeud selectionne, on cree la suite : le noeud *et* son lien.
+    // From a selected node, create the continuation: the node *and* its link.
     const result = parent
       ? addChild(story, parent.id, kind, childPosition(parent, parent.next.length + 1))
       : addScene(story, kind, nextScenePosition(story));
@@ -149,8 +148,8 @@ function EditorCanvas({ story, onChange, onBack }: Props) {
             {errorCount > 0 ? `${errorCount} erreur(s)` : 'Récit cohérent'}
           </span>
           {/*
-            Un bouton par type, colore comme le noeud qu'il cree : le
-            vocabulaire du format doit s'apprendre en s'en servant.
+            One button per kind, colored like the node it creates: the
+            vocabulary of the format is meant to be learned by using it.
           */}
           {(['npc', 'player', 'choice'] as const).map((kind) => (
             <button

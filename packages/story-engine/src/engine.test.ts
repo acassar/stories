@@ -7,7 +7,7 @@ import { StoryEngine } from './engine.js';
 import { EngineError } from './errors.js';
 import { createInitialState, deserializeState, inspectState } from './state.js';
 
-/** Horloge figee, puis avancable, pour verifier `updatedAt` sans flakiness. */
+/** Frozen but advanceable clock, to check `updatedAt` without flakiness. */
 function fakeClock(start = 0) {
   let tick = start;
   return {
@@ -23,9 +23,9 @@ function engine(story: Story = clairiereStory) {
 }
 
 /**
- * Un tour de jeu complet, du point de vue du joueur : il appuie sur un bouton,
- * puis le recit deroule seul jusqu'au prochain arret. C'est ce que fait l'UI,
- * et c'est donc la maille a laquelle la plupart des tests raisonnent.
+ * A full turn from the player's point of view: they press a button, then the
+ * story unrolls on its own until the next stop. That is what the UI does, so it
+ * is the granularity most of these tests reason at.
  */
 function play(e: StoryEngine, linkId: string): void {
   e.choose(linkId);
@@ -33,10 +33,10 @@ function play(e: StoryEngine, linkId: string): void {
 }
 
 /**
- * Recit compact dedie aux tests de conditions, effets et inventaire.
+ * Compact story dedicated to condition, effect and inventory tests.
  *
- * Condition et effets sont poses sur le lien qui mene au bouton : c'est
- * l'appui sur ce bouton-la qui les declenche.
+ * Condition and effects sit on the link that leads to the button: pressing that
+ * button is what triggers them.
  */
 const testStory: Story = {
   formatVersion: STORY_FORMAT_VERSION,
@@ -133,7 +133,7 @@ const testStory: Story = {
 };
 
 describe('StoryEngine — construction', () => {
-  it('demarre sur la scene de depart avec un etat neuf', () => {
+  it('starts on the start scene with a fresh state', () => {
     const e = engine();
     expect(e.state.currentSceneId).toBe('start');
     expect(e.state.history).toEqual([]);
@@ -141,56 +141,56 @@ describe('StoryEngine — construction', () => {
     expect(e.getCurrentScene().title).toBe('Le sentier');
   });
 
-  it('recopie les variables initiales du recit sans y toucher', () => {
+  it('copies the initial story variables without touching them', () => {
     const e = new StoryEngine(testStory, { now: fakeClock().now });
     expect(e.state.variables).toEqual({ cle: false, or: 0 });
     play(e, 'soulever');
     expect(testStory.variables).toEqual({ cle: false, or: 0 });
   });
 
-  it('valide le recit par defaut et refuse un document incoherent', () => {
+  it('validates the story by default and refuses an inconsistent document', () => {
     const broken = JSON.parse(JSON.stringify(clairiereStory)) as Story;
     broken.startSceneId = 'nulle-part';
     expect(() => new StoryEngine(broken)).toThrow();
   });
 
-  it('accepte un recit non valide quand la validation est desactivee', () => {
+  it('accepts an invalid story when validation is disabled', () => {
     const draft = JSON.parse(JSON.stringify(clairiereStory)) as Story;
     draft.scenes.start!.next[0]!.to = 'pas-encore-ecrite';
     expect(() => new StoryEngine(draft, { validate: false })).not.toThrow();
   });
 
-  it('refuse un etat qui appartient a un autre recit', () => {
+  it('refuses a state belonging to another story', () => {
     const foreign = { ...createInitialState(clairiereStory), storyId: 'autre-recit' };
     expect(() => new StoryEngine(clairiereStory, { state: foreign })).toThrow(EngineError);
   });
 
-  it('fromJson ouvre un recit serialise', () => {
+  it('fromJson opens a serialized story', () => {
     const e = StoryEngine.fromJson(JSON.stringify(clairiereStory));
     expect(e.story.id).toBe('clairiere-lucioles');
   });
 });
 
-describe('StoryEngine — scene resolue', () => {
-  it('n’expose que les choix dont la condition est remplie', () => {
+describe('StoryEngine — resolved scene', () => {
+  it('only exposes choices whose condition is satisfied', () => {
     const e = new StoryEngine(testStory, { now: fakeClock().now });
     expect(e.getAvailableChoices().map((c) => c.id)).toEqual(['soulever', 'partir']);
     expect(e.getCurrentScene().allChoices.map((c) => c.available)).toEqual([true, false, true]);
   });
 
-  it('prend le libelle du bouton sur le noeud de choix vise', () => {
+  it('takes the button label from the target choice node', () => {
     const e = new StoryEngine(testStory, { now: fakeClock().now });
     expect(e.getAvailableChoices().map((c) => c.label)).toEqual(['Soulever le tapis', 'Repartir']);
   });
 
-  it('rend le choix conditionnel disponible une fois sa condition satisfaite', () => {
+  it('makes a conditional choice available once its condition holds', () => {
     const e = new StoryEngine(testStory, { now: fakeClock().now });
     play(e, 'soulever');
     expect(e.getAvailableChoices().map((c) => c.id)).toEqual(['soulever', 'ouvrir', 'partir']);
     expect(e.canChoose('ouvrir')).toBe(true);
   });
 
-  it('ne propose aucun choix sur une scene terminale', () => {
+  it('offers no choice on a terminal scene', () => {
     const e = new StoryEngine(testStory, { now: fakeClock().now });
     play(e, 'partir');
     expect(e.isEnded).toBe(true);
@@ -198,7 +198,7 @@ describe('StoryEngine — scene resolue', () => {
     expect(e.getCurrentScene().ending?.name).toBe('Dehors');
   });
 
-  it('expose le type du noeud et qui y parle', () => {
+  it('exposes the node kind and who speaks in it', () => {
     const e = engine();
     expect(e.getCurrentScene().kind).toBe('npc');
     expect(e.getCurrentScene().speaker).toBe('narrator');
@@ -207,9 +207,9 @@ describe('StoryEngine — scene resolue', () => {
     expect(e.getCurrentScene().speaker).toBe('player');
   });
 
-  it('expose le chemin conditionnel du recit d’exemple', () => {
+  it('exposes the conditional path of the sample story', () => {
     const e = engine();
-    // Sans le detour prudent, le raccourci d'Elara n'existe pas.
+    // Without the cautious detour, Elara's shortcut does not exist.
     play(e, 'vers-lucioles');
     expect(e.getAvailableChoices().map((c) => c.id)).toEqual(['vers-franchir', 'vers-attendre']);
 
@@ -224,35 +224,35 @@ describe('StoryEngine — scene resolue', () => {
   });
 });
 
-describe('StoryEngine — enchainement automatique', () => {
-  it('n’attend une decision que devant des noeuds de choix', () => {
+describe('StoryEngine — automatic chaining', () => {
+  it('only awaits a decision in front of choice nodes', () => {
     const e = engine();
     expect(e.getCurrentScene().awaitsChoice).toBe(true);
     expect(e.canAdvance()).toBe(false);
 
     e.choose('vers-lucioles');
-    // Sur le noeud de choix lui-meme : rien a decider, le recit poursuit.
+    // On the choice node itself: nothing to decide, the story carries on.
     expect(e.getCurrentScene().awaitsChoice).toBe(false);
     expect(e.canAdvance()).toBe(true);
   });
 
-  it('avance d’un seul noeud a la fois, pour que chacun puisse s’afficher', () => {
+  it('advances one node at a time, so each one can be displayed', () => {
     const e = engine();
     play(e, 'vers-arbre');
     e.choose('vers-redescendre');
 
     expect(e.state.currentSceneId).toBe('c-redescendre');
     expect(e.advance()).toBe(true);
-    // Une replique du joueur, qui ne demande rien.
+    // A line from the player, asking for nothing.
     expect(e.state.currentSceneId).toBe('prudence');
     expect(e.getCurrentScene().kind).toBe('player');
     expect(e.advance()).toBe(true);
-    // …et qui rejoint un noeud personnage sans passer par un choix.
+    // ...and reaching an npc node without going through a choice.
     expect(e.state.currentSceneId).toBe('lucioles');
     expect(e.advance()).toBe(false);
   });
 
-  it('ne franchit pas un lien dont la condition n’est pas remplie', () => {
+  it('does not cross a link whose condition is not satisfied', () => {
     const gated: Story = {
       ...testStory,
       id: 'garde',
@@ -285,18 +285,18 @@ describe('StoryEngine — enchainement automatique', () => {
     expect(e.state.currentSceneId).toBe('depart');
   });
 
-  it('ne bouge pas depuis une fin', () => {
+  it('does not move from an ending', () => {
     const e = new StoryEngine(testStory, { now: fakeClock().now });
     play(e, 'partir');
     expect(e.advance()).toBe(false);
   });
 
-  it('refuse de « choisir » un lien qui n’est qu’un enchainement', () => {
+  it('refuses to "choose" a link that is plain chaining', () => {
     const e = engine();
     e.choose('vers-lucioles');
     try {
       e.choose('suite');
-      expect.unreachable('un enchainement n’est pas un choix');
+      expect.unreachable('chaining is not a choice');
     } catch (error) {
       expect((error as EngineError).code).toBe('not-a-choice');
     }
@@ -304,16 +304,16 @@ describe('StoryEngine — enchainement automatique', () => {
 });
 
 describe('StoryEngine — progression', () => {
-  it('avance, applique les effets et enregistre l’historique', () => {
+  it('advances, applies effects and records the history', () => {
     const e = new StoryEngine(testStory, { now: fakeClock().now });
     e.choose('soulever');
 
-    // Les effets sont ceux du lien emprunte, donc appliques des l'appui.
+    // The effects belong to the link taken, so they apply on the press.
     expect(e.state.variables).toEqual({ cle: true, or: 10 });
     expect(e.state.inventory).toEqual({ 'cle-rouillee': 1 });
     expect(e.state.history).toEqual([{ sceneId: 'hall', linkId: 'soulever' }]);
 
-    // L'enchainement du noeud de choix vers sa suite est une etape a part.
+    // The chaining from the choice node to its continuation is a separate step.
     e.advance();
     expect(e.state.history).toEqual([
       { sceneId: 'hall', linkId: 'soulever' },
@@ -321,7 +321,7 @@ describe('StoryEngine — progression', () => {
     ]);
   });
 
-  it('n’ajoute une scene a `visited` qu’une seule fois', () => {
+  it('adds a scene to `visited` only once', () => {
     const e = new StoryEngine(testStory, { now: fakeClock().now });
     play(e, 'soulever');
     play(e, 'soulever');
@@ -329,7 +329,7 @@ describe('StoryEngine — progression', () => {
     expect(e.state.history).toHaveLength(4);
   });
 
-  it('leve sur un lien inconnu', () => {
+  it('throws on an unknown link', () => {
     const e = engine();
     expect(() => e.choose('inexistant')).toThrow(EngineError);
     try {
@@ -339,7 +339,7 @@ describe('StoryEngine — progression', () => {
     }
   });
 
-  it('leve sur un choix dont la condition n’est pas remplie', () => {
+  it('throws on a choice whose condition is not satisfied', () => {
     const e = new StoryEngine(testStory, { now: fakeClock().now });
     try {
       e.choose('ouvrir');
@@ -347,12 +347,12 @@ describe('StoryEngine — progression', () => {
     } catch (error) {
       expect((error as EngineError).code).toBe('choice-unavailable');
     }
-    // L'etat n'a pas bouge.
+    // The state has not moved.
     expect(e.state.currentSceneId).toBe('hall');
     expect(e.state.history).toEqual([]);
   });
 
-  it('met a jour updatedAt a chaque transition', () => {
+  it('updates updatedAt on every transition', () => {
     const clock = fakeClock();
     const e = new StoryEngine(testStory, { now: clock.now });
     const before = e.state.updatedAt;
@@ -363,8 +363,8 @@ describe('StoryEngine — progression', () => {
   });
 });
 
-describe('StoryEngine — retour en arriere', () => {
-  it('annule exactement les effets en rejouant l’historique', () => {
+describe('StoryEngine — going back', () => {
+  it('undoes effects exactly by replaying the history', () => {
     const e = new StoryEngine(testStory, { now: fakeClock().now });
     play(e, 'soulever');
     play(e, 'ouvrir');
@@ -384,9 +384,9 @@ describe('StoryEngine — retour en arriere', () => {
     expect(e.state.variables).toEqual({ cle: true, or: 10 });
   });
 
-  it('revient au dernier choix, pas au dernier noeud traverse', () => {
-    // Le detour prudent enchaine choix → replique → scene : reculer doit
-    // ramener devant le choix, pas au milieu de l'enchainement.
+  it('goes back to the last choice, not the last node walked through', () => {
+    // The cautious detour chains choice → line → scene: going back must land
+    // in front of the choice, not in the middle of the chain.
     const e = engine();
     play(e, 'vers-arbre');
     play(e, 'vers-redescendre');
@@ -397,7 +397,7 @@ describe('StoryEngine — retour en arriere', () => {
     expect(e.getAvailableChoices().map((c) => c.id)).toEqual(['vers-sauter', 'vers-redescendre']);
   });
 
-  it('annule correctement un set, que l’inversion naive casserait', () => {
+  it('undoes a set correctly, where naive inversion would break', () => {
     const toggleStory: Story = {
       ...testStory,
       id: 'toggle-story',
@@ -441,7 +441,7 @@ describe('StoryEngine — retour en arriere', () => {
     expect(e.state.variables.flag).toBe(true);
   });
 
-  it('conserve startedAt lors du retour', () => {
+  it('keeps startedAt when going back', () => {
     const e = new StoryEngine(testStory, { now: fakeClock().now });
     const started = e.state.startedAt;
     play(e, 'soulever');
@@ -449,15 +449,15 @@ describe('StoryEngine — retour en arriere', () => {
     expect(e.state.startedAt).toBe(started);
   });
 
-  it('leve quand il n’y a rien a annuler', () => {
+  it('throws when there is nothing to undo', () => {
     const e = engine();
     expect(e.canGoBack()).toBe(false);
     expect(() => e.goBack()).toThrow(EngineError);
   });
 });
 
-describe('StoryEngine — reinitialisation et reprise', () => {
-  it('reset ramene a la scene de depart et efface l’etat', () => {
+describe('StoryEngine — reset and resume', () => {
+  it('reset returns to the start scene and clears the state', () => {
     const e = new StoryEngine(testStory, { now: fakeClock().now });
     play(e, 'soulever');
     e.reset();
@@ -466,7 +466,7 @@ describe('StoryEngine — reinitialisation et reprise', () => {
     expect(e.state.history).toEqual([]);
   });
 
-  it('loadState reprend une partie', () => {
+  it('loadState resumes a run', () => {
     const source = new StoryEngine(testStory, { now: fakeClock().now });
     play(source, 'soulever');
     const saved = source.state;
@@ -477,19 +477,19 @@ describe('StoryEngine — reinitialisation et reprise', () => {
     expect(target.getAvailableChoices().map((c) => c.id)).toContain('ouvrir');
   });
 
-  it('loadState refuse une sauvegarde d’un autre recit', () => {
+  it('loadState refuses a save from another story', () => {
     const e = new StoryEngine(testStory, { now: fakeClock().now });
     expect(() => e.loadState(createInitialState(clairiereStory))).toThrow(EngineError);
   });
 
-  it('refuse une sauvegarde pointant une scene disparue', () => {
+  it('refuses a save pointing at a scene that is gone', () => {
     const saved = { ...createInitialState(testStory), currentSceneId: 'cave' };
     expect(() => new StoryEngine(testStory, { state: saved })).toThrow(EngineError);
   });
 });
 
-describe('StoryEngine — serialisation', () => {
-  it('fait un aller-retour sans perte', () => {
+describe('StoryEngine — serialization', () => {
+  it('round-trips without loss', () => {
     const e = new StoryEngine(testStory, { now: fakeClock().now });
     play(e, 'soulever');
     play(e, 'ouvrir');
@@ -502,12 +502,12 @@ describe('StoryEngine — serialisation', () => {
     expect(resumed.getAvailableChoices().map((c) => c.id)).toEqual(['payer']);
   });
 
-  it('rejette une sauvegarde mal formee', () => {
+  it('rejects a malformed save', () => {
     expect(() => deserializeState('{"storyId":"x"}')).toThrow();
     expect(() => deserializeState('pas du json')).toThrow();
   });
 
-  it('inspectState signale un recit different, une scene disparue, une version obsolete', () => {
+  it('inspectState reports another story, a missing scene, a stale version', () => {
     const state = createInitialState(testStory);
     expect(inspectState(testStory, state)).toEqual({ resumable: true, staleVersion: false });
 
@@ -520,14 +520,14 @@ describe('StoryEngine — serialisation', () => {
   });
 });
 
-describe('StoryEngine — evenements', () => {
+describe('StoryEngine — events', () => {
   let e: StoryEngine;
 
   beforeEach(() => {
     e = new StoryEngine(testStory, { now: fakeClock().now });
   });
 
-  it('previent les abonnes bruts a chaque changement d’etat', () => {
+  it('notifies raw subscribers on every state change', () => {
     const listener = vi.fn();
     const unsubscribe = e.subscribe(listener);
     e.choose('soulever');
@@ -538,7 +538,7 @@ describe('StoryEngine — evenements', () => {
     expect(listener).toHaveBeenCalledTimes(1);
   });
 
-  it('expose subscribe et getSnapshot detachables, comme useSyncExternalStore les passe', () => {
+  it('exposes detachable subscribe and getSnapshot, as useSyncExternalStore passes them', () => {
     const { subscribe, getSnapshot } = e;
     const listener = vi.fn();
     subscribe(listener);
@@ -548,7 +548,7 @@ describe('StoryEngine — evenements', () => {
     expect(getSnapshot().state.variables.cle).toBe(true);
   });
 
-  it('expose un instantane dont la reference ne change qu’avec l’etat', () => {
+  it('exposes a snapshot whose reference only changes with the state', () => {
     const first = e.getSnapshot();
     expect(e.getSnapshot()).toBe(first);
     e.choose('soulever');
@@ -556,7 +556,7 @@ describe('StoryEngine — evenements', () => {
     expect(e.getSnapshot().state).toBe(e.state);
   });
 
-  it('emet scene:changed uniquement quand la scene change vraiment', () => {
+  it('emits scene:changed only when the scene really changes', () => {
     const listener = vi.fn();
     e.on('scene:changed', listener);
     e.choose('soulever'); // hall -> c-soulever
@@ -564,7 +564,7 @@ describe('StoryEngine — evenements', () => {
     expect(listener.mock.calls[0]?.[0].previousSceneId).toBe('hall');
   });
 
-  it('emet link:followed en distinguant la decision de l’enchainement', () => {
+  it('emits link:followed, distinguishing a decision from chaining', () => {
     const listener = vi.fn();
     e.on('link:followed', listener);
     e.choose('partir');
@@ -577,7 +577,7 @@ describe('StoryEngine — evenements', () => {
     );
   });
 
-  it('emet story:ended a l’arrivee sur une fin', () => {
+  it('emits story:ended on arrival at an ending', () => {
     const listener = vi.fn();
     e.on('story:ended', listener);
     play(e, 'partir');
@@ -585,7 +585,7 @@ describe('StoryEngine — evenements', () => {
     expect(listener.mock.calls[0]?.[0].ending.name).toBe('Dehors');
   });
 
-  it('n’emet rien apres dispose', () => {
+  it('emits nothing after dispose', () => {
     const raw = vi.fn();
     const typed = vi.fn();
     e.subscribe(raw);
@@ -596,7 +596,7 @@ describe('StoryEngine — evenements', () => {
     expect(typed).not.toHaveBeenCalled();
   });
 
-  it('once ne se declenche qu’une fois', () => {
+  it('once fires only once', () => {
     const listener = vi.fn();
     e.once('state:changed', listener);
     play(e, 'soulever');
@@ -604,7 +604,7 @@ describe('StoryEngine — evenements', () => {
     expect(listener).toHaveBeenCalledTimes(1);
   });
 
-  it('supporte qu’un abonne se desabonne pendant l’emission', () => {
+  it('supports a listener unsubscribing during emission', () => {
     const second = vi.fn();
     const unsubscribeFirst = e.subscribe(() => unsubscribeFirst());
     e.subscribe(second);
@@ -613,10 +613,10 @@ describe('StoryEngine — evenements', () => {
   });
 });
 
-describe('StoryEngine — le coeur reste agnostique', () => {
-  it('n’a besoin d’aucun global navigateur', () => {
-    // Le moteur tourne ici dans l'environnement `node` de Vitest : si une
-    // implementation touchait a `window` ou `localStorage`, ce test casserait.
+describe('StoryEngine — the core stays agnostic', () => {
+  it('needs no browser global', () => {
+    // The engine runs here in Vitest's `node` environment: if an
+    // implementation touched `window` or `localStorage`, this test would break.
     expect(typeof globalThis).toBe('object');
     expect('window' in globalThis).toBe(false);
     const e = engine();

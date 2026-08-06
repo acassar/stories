@@ -15,7 +15,7 @@ interface Props {
   onDelete: (storyId: string) => void;
 }
 
-/** Tableau de bord createur : ajouter, ouvrir, dupliquer, importer, supprimer. */
+/** Author dashboard: add, open, duplicate, import, delete. */
 export function Dashboard({ stories, onOpen, onSave, onDelete }: Props) {
   const [query, setQuery] = useState('');
   const [message, setMessage] = useState<string | null>(null);
@@ -54,7 +54,7 @@ export function Dashboard({ stories, onOpen, onSave, onDelete }: Props) {
       setMessage(result.error ?? 'Import impossible.');
       return;
     }
-    // Un import ne doit jamais ecraser silencieusement un recit existant.
+    // An import must never silently overwrite an existing story.
     const clash = stories.some((story) => story.id === result.story?.id);
     const story = clash ? { ...result.story, id: createId('story') } : result.story;
     onSave(story);

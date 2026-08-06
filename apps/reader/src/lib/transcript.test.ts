@@ -9,14 +9,14 @@ function engine() {
   return new StoryEngine(clairiereStory);
 }
 
-/** Un tour complet : le joueur appuie, puis le recit deroule jusqu'a l'arret. */
+/** A full turn: the player presses, then the story unrolls until it stops. */
 function play(e: StoryEngine, linkId: string): void {
   e.choose(linkId);
   for (let steps = 0; steps < 50 && e.advance(); steps += 1);
 }
 
 describe('buildTranscript', () => {
-  it('n’affiche que les messages deja reveles de la scene courante', () => {
+  it('only displays the already revealed messages of the current scene', () => {
     const e = engine();
     expect(buildTranscript(clairiereStory, e.state, e.getCurrentScene(), { revealed: 0 })).toEqual(
       [],
@@ -26,25 +26,25 @@ describe('buildTranscript', () => {
     expect(partial[0]?.text).toContain('fougères');
   });
 
-  it('intercale la replique du joueur entre deux scenes', () => {
+  it('inserts the player line between two scenes', () => {
     const e = engine();
     play(e, 'vers-lucioles');
     const messages = buildTranscript(clairiereStory, e.state, e.getCurrentScene(), { revealed: 2 });
 
-    // 2 messages du sentier + la replique du choix + 2 messages des lucioles
+    // 2 messages from the path + the choice line + 2 messages from the fireflies
     expect(messages).toHaveLength(5);
     expect(messages[2]).toMatchObject({ text: 'Je les suis.', fromPlayer: true });
     expect(messages[3]?.fromPlayer).toBe(false);
   });
 
-  it('range les messages du bon cote selon le type du noeud', () => {
+  it('places messages on the right side according to the node kind', () => {
     const e = engine();
     play(e, 'vers-arbre');
     play(e, 'vers-redescendre');
     const messages = buildTranscript(clairiereStory, e.state, e.getCurrentScene(), { revealed: 2 });
 
-    // start ×2 → le choix « grimper » → arbre ×2 → le choix « redescendre »
-    // → la replique libre → lucioles ×2
+    // start ×2 → the "grimper" choice → arbre ×2 → the "redescendre" choice
+    // → the free line → lucioles ×2
     expect(messages.map((m) => m.fromPlayer)).toEqual([
       false,
       false,
@@ -59,7 +59,7 @@ describe('buildTranscript', () => {
     expect(messages[6]?.text).toContain('ne rien brusquer');
   });
 
-  it('envoie le libelle du bouton quand le choix n’a pas de corps', () => {
+  it('sends the button label when the choice has no body', () => {
     const story = structuredClone(clairiereStory);
     story.scenes['c-lucioles']!.blocks = [];
     const e = new StoryEngine(story);
@@ -68,9 +68,9 @@ describe('buildTranscript', () => {
     expect(messages.at(-1)).toMatchObject({ text: 'Suivre les lucioles', fromPlayer: true });
   });
 
-  it('range les messages selon le seul type du noeud, sans exception', () => {
-    // Le meme nœud, basculé en « joueur » : tous ses messages changent de côté
-    // d'un coup. Aucun message ne peut contredire la couleur de son nœud.
+  it('places messages by node kind alone, without exception', () => {
+    // The same node, switched to "player": all its messages change side at
+    // once. No message can contradict the color of its node.
     const story = structuredClone(clairiereStory);
     story.scenes.start!.kind = 'player';
     const e = new StoryEngine(story, { validate: false });
@@ -78,7 +78,7 @@ describe('buildTranscript', () => {
     expect(messages.map((m) => m.fromPlayer)).toEqual([true, true]);
   });
 
-  it('donne a chaque message une cle unique, meme si le texte se repete', () => {
+  it('gives each message a unique key, even when the text repeats', () => {
     const e = engine();
     play(e, 'vers-arbre');
     play(e, 'vers-redescendre');

@@ -1,9 +1,9 @@
 /**
- * `@embranche/story-engine` — le moteur d'histoires Embranche.
+ * `@embranche/story-engine` — the Embranche story engine.
  *
- * TypeScript pur : ni React, ni DOM, ni acces disque ou reseau. Il expose un
- * etat, des transitions et des evenements ; brancher une UI dessus est l'affaire
- * de quelques lignes, et en changer n'affecte pas ce paquet.
+ * Pure TypeScript: no React, no DOM, no disk or network access. It exposes a
+ * state, transitions and events; wiring a UI onto it takes a few lines, and
+ * swapping that UI does not affect this package.
  */
 
 export { StoryEngine } from './engine.js';

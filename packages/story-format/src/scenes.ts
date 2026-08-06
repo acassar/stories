@@ -1,26 +1,25 @@
 /**
- * Lecture d'un noeud : qui parle, ce qu'il envoie, et ce qui se passe apres.
+ * Reading a node: who speaks, what it sends, and what happens next.
  *
- * Tout ce qui interprete `kind` et `next` passe par ici — moteur comme studio.
- * C'est le seul endroit qui connait la regle d'enchainement, pour qu'elle ne
- * puisse pas diverger entre le lecteur et l'apercu du createur.
+ * Everything that interprets `kind` and `next` goes through here — engine and
+ * studio alike. This is the only place that knows the chaining rule, so it
+ * cannot drift between the reader and the studio preview.
  */
 
 import type { Link, Scene, SceneId, Story, TextBlock } from './types.js';
 
 /**
- * Qui parle dans ce noeud. Le type le decide, seul et sans exception : c'est
- * ce qui garantit qu'un noeud ne peut pas afficher ses messages du cote de
- * quelqu'un d'autre que ce que sa couleur annonce dans le studio.
+ * Who speaks in this node. The kind decides, alone and without exception —
+ * which is what guarantees a node cannot show its messages on a different side
+ * than the one its color announces in the studio.
  */
 export function speakerOf(scene: Pick<Scene, 'kind'>): 'narrator' | 'player' {
   return scene.kind === 'npc' ? 'narrator' : 'player';
 }
 
 /**
- * Les messages effectivement envoyes par une scene. Un noeud `choice` sans
- * corps envoie son libelle : l'auteur qui n'ecrit qu'un bouton obtient quand
- * meme une replique, comme dans l'ancien format.
+ * The messages a scene actually sends. A `choice` node without a body sends its
+ * label, so an author who writes nothing but a button still gets a line.
  */
 export function sceneMessages(scene: Scene): readonly TextBlock[] {
   if (scene.blocks.length > 0) return scene.blocks;
@@ -28,43 +27,43 @@ export function sceneMessages(scene: Scene): readonly TextBlock[] {
   return [];
 }
 
-/** Le texte du bouton d'un noeud `choice`. */
+/** The button text of a `choice` node. */
 export function choiceLabel(scene: Scene): string {
   return scene.label || scene.blocks[0]?.text || scene.title || scene.id;
 }
 
 /**
- * **La regle.** Un noeud attend une decision si ses liens visent des noeuds
- * `choice` ; sinon le recit enchaine tout seul. Rien d'autre ne distingue un
- * embranchement d'une suite de repliques.
+ * **The rule.** A node waits for a decision when its links point at `choice`
+ * nodes; otherwise the story chains on by itself. Nothing else distinguishes a
+ * branch from a run of lines.
  *
- * Les liens pendants sont ignores : un document en cours d'ecriture ne doit pas
- * changer de comportement a cause d'une cible pas encore creee.
+ * Dangling links are ignored: a document being written must not change behavior
+ * because a target has not been created yet.
  */
 export function awaitsChoice(story: Story, scene: Scene): boolean {
   return scene.next.some((link) => story.scenes[link.to]?.kind === 'choice');
 }
 
-/** Les liens du noeud, resolus vers leur scene cible quand elle existe. */
+/** The links of a node, resolved to their target scene when it exists. */
 export function outgoing(story: Story, scene: Scene): { link: Link; target: Scene | undefined }[] {
   return scene.next.map((link) => ({ link, target: story.scenes[link.to] }));
 }
 
-/** Vrai si la scene termine le recit — aucun lien n'en sort, quoi qu'il arrive. */
+/** True when the scene ends the story — no link is ever followed out of it. */
 export function isTerminal(scene: Scene): boolean {
   return Boolean(scene.ending);
 }
 
 /**
- * Scenes prises dans une boucle d'enchainements automatiques.
+ * Scenes caught in an automatic chaining loop.
  *
- * Une boucle passant par un noeud `choice` est parfaitement legitime — le
- * joueur peut tourner en rond s'il le veut. Une boucle qui n'en contient aucun
- * ne rend jamais la main : le lecteur enchainerait a l'infini. On ne cherche
- * donc les cycles que dans le sous-graphe des liens automatiques.
+ * A loop going through a `choice` node is perfectly legitimate — the player may
+ * go around in circles on purpose. A loop containing none never gives control
+ * back: the reader would chain forever. Cycles are therefore searched for only
+ * in the subgraph of automatic links.
  *
- * Les conditions ne sont pas evaluees : une boucle qu'une condition briserait
- * *peut-etre* reste une boucle qu'il faut signaler a l'auteur.
+ * Conditions are not evaluated: a loop that a condition *might* break is still
+ * a loop worth reporting to the author.
  */
 export function findAutoLoops(story: Story): SceneId[] {
   const inProgress = new Set<SceneId>();

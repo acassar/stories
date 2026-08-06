@@ -7,9 +7,9 @@ import { Editor } from './components/Editor';
 import { createLocalRepository, seedIfEmpty } from './lib/storage';
 
 /**
- * Coquille du studio. Elle tient deux choses : quelle histoire est ouverte, et
- * la synchronisation avec le rangement local. Toute la logique d'edition vit
- * dans `lib/storyDoc`, toute la logique de recit dans les paquets du coeur.
+ * Studio shell. It holds two things: which story is open, and the
+ * synchronization with local storage. All editing logic lives in
+ * `lib/storyDoc`, all story logic in the core packages.
  */
 export function App() {
   const repository = useMemo(() => createLocalRepository(), []);
@@ -18,8 +18,8 @@ export function App() {
 
   const openStory = openId ? stories.find((story) => story.id === openId) : undefined;
 
-  // L'ecriture disque est repoussee : l'auteur tape vite, le disque n'a pas
-  // besoin de suivre chaque frappe.
+  // The write is deferred: the author types fast, and storage does not need to
+  // follow every keystroke.
   const pending = useRef<Story | null>(null);
   useEffect(() => {
     if (!pending.current) return;
@@ -48,7 +48,7 @@ export function App() {
     [repository],
   );
 
-  // Filet de securite : ce qui est en attente part avant la fermeture d'onglet.
+  // Safety net: whatever is pending is flushed before the tab closes.
   useEffect(() => {
     const flush = () => {
       if (pending.current) repository.save(pending.current);

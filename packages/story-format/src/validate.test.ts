@@ -15,23 +15,23 @@ import {
 } from './validate.js';
 import type { Story } from './types.js';
 
-/** Copie profonde : les tests ne doivent jamais abimer les exemples partages. */
+/** Deep copy: tests must never damage the shared examples. */
 function clone(story: Story): Story {
   return JSON.parse(JSON.stringify(story)) as Story;
 }
 
 describe('validateStoryShape', () => {
-  it('accepte un document bien forme', () => {
+  it('accepts a well-formed document', () => {
     expect(validateStoryShape(clairiereStory).valid).toBe(true);
   });
 
-  it('rejette un document qui n’est pas un objet', () => {
+  it('rejects a document that is not an object', () => {
     const result = validateStoryShape('pas une histoire');
     expect(result.valid).toBe(false);
     expect(result.issues[0]?.code).toBe('schema');
   });
 
-  it('rejette un champ obligatoire manquant et pointe le chemin fautif', () => {
+  it('rejects a missing required field and points at the offending path', () => {
     const story = clone(clairiereStory) as Partial<Story>;
     delete story.startSceneId;
     const result = validateStoryShape(story);
@@ -39,29 +39,29 @@ describe('validateStoryShape', () => {
     expect(result.issues.some((i) => i.path === 'startSceneId')).toBe(true);
   });
 
-  it('rejette un identifiant de scene contenant des caracteres interdits', () => {
+  it('rejects a scene id containing forbidden characters', () => {
     const story = clone(clairiereStory);
     story.scenes['scene invalide'] = createScene({ id: 'scene invalide', kind: 'npc' });
     expect(validateStoryShape(story).valid).toBe(false);
   });
 
-  it('rejette un type de noeud hors vocabulaire', () => {
+  it('rejects a node kind outside the vocabulary', () => {
     const story = clone(clairiereStory);
-    // @ts-expect-error — on injecte volontairement un type inconnu
+    // @ts-expect-error — an unknown kind is injected on purpose
     story.scenes.start.kind = 'narrateur';
     expect(validateStoryShape(story).valid).toBe(false);
   });
 
-  it('rejette une condition dont l’operateur est inconnu', () => {
+  it('rejects a condition with an unknown operator', () => {
     const story = clone(clairiereStory);
-    // @ts-expect-error — on injecte volontairement un operateur hors vocabulaire
+    // @ts-expect-error — an out-of-vocabulary operator is injected on purpose
     story.scenes.start.next[0].condition = { op: 'eval', code: 'process.exit()' };
     expect(validateStoryShape(story).valid).toBe(false);
   });
 });
 
-describe('validateStory — coherence du graphe', () => {
-  it('valide les quatre recits d’exemple sans erreur', () => {
+describe('validateStory — graph coherence', () => {
+  it('validates the four sample stories without error', () => {
     for (const story of exampleStories) {
       const result = validateStory(story);
       const errors = result.issues.filter((i) => i.severity === 'error');
@@ -70,11 +70,11 @@ describe('validateStory — coherence du graphe', () => {
     }
   });
 
-  it('valide le recit produit par createEmptyStory', () => {
+  it('validates the story produced by createEmptyStory', () => {
     expect(validateStory(createEmptyStory()).valid).toBe(true);
   });
 
-  it('signale une scene de depart inexistante', () => {
+  it('reports a start scene that does not exist', () => {
     const story = clone(clairiereStory);
     story.startSceneId = 'nulle-part';
     const result = validateStory(story);
@@ -82,7 +82,7 @@ describe('validateStory — coherence du graphe', () => {
     expect(result.issues.some((i) => i.code === 'missing-start-scene')).toBe(true);
   });
 
-  it('signale un lien vers une scene inexistante', () => {
+  it('reports a link to a scene that does not exist', () => {
     const story = clone(clairiereStory);
     story.scenes.start!.next[0]!.to = 'fantome';
     const result = validateStory(story);
@@ -92,7 +92,7 @@ describe('validateStory — coherence du graphe', () => {
     expect(issue?.linkId).toBe('vers-lucioles');
   });
 
-  it('signale une cle de dictionnaire qui ne correspond pas a l’id de la scene', () => {
+  it('reports a dictionary key that does not match the scene id', () => {
     const story = clone(clairiereStory);
     story.scenes.egaree = createScene({ id: 'autre-id', kind: 'npc' });
     const result = validateStory(story);
@@ -100,7 +100,7 @@ describe('validateStory — coherence du graphe', () => {
     expect(result.issues.some((i) => i.code === 'scene-id-mismatch')).toBe(true);
   });
 
-  it('signale deux liens partageant le meme identifiant', () => {
+  it('reports two links sharing the same id', () => {
     const story = clone(clairiereStory);
     const scene = story.scenes.start!;
     scene.next.push({ ...scene.next[0]!, to: 'c-arbre' });
@@ -109,7 +109,7 @@ describe('validateStory — coherence du graphe', () => {
     expect(result.issues.some((i) => i.code === 'duplicate-link-id')).toBe(true);
   });
 
-  it('signale un noeud de choix sans libelle : le bouton serait vide', () => {
+  it('reports a choice node without a label: the button would be empty', () => {
     const story = clone(clairiereStory);
     delete story.scenes['c-lucioles']!.label;
     const result = validateStory(story);
@@ -117,9 +117,9 @@ describe('validateStory — coherence du graphe', () => {
     expect(result.issues.some((i) => i.code === 'choice-without-label')).toBe(true);
   });
 
-  it('refuse un noeud qui melange choix et enchainement', () => {
+  it('refuses a node that mixes choices and chaining', () => {
     const story = clone(clairiereStory);
-    // `start` propose deja deux choix ; on y ajoute un lien direct vers un npc.
+    // `start` already offers two choices; add a direct link to an npc node.
     story.scenes.start!.next.push({ id: 'raccourci', to: 'arbre' });
     const result = validateStory(story);
     expect(result.valid).toBe(false);
@@ -127,9 +127,9 @@ describe('validateStory — coherence du graphe', () => {
     expect(issue?.sceneId).toBe('start');
   });
 
-  it('refuse une boucle d’enchainements que le joueur ne pourrait pas rompre', () => {
+  it('refuses a chaining loop the player could not break', () => {
     const story = clone(clairiereStory);
-    // `prudence` enchaine deja seul ; on le fait boucler sur lui-meme.
+    // `prudence` already chains on its own; make it loop back on itself.
     story.scenes.prudence!.next = [{ id: 'boucle', to: 'prudence' }];
     const result = validateStory(story);
     expect(result.valid).toBe(false);
@@ -138,12 +138,12 @@ describe('validateStory — coherence du graphe', () => {
     );
   });
 
-  it('accepte une boucle qui repasse par un choix — le joueur peut en sortir', () => {
-    // `c-repartir` ramene a `sommet`, deja visite : c'est legitime.
+  it('accepts a loop that goes through a choice — the player can leave it', () => {
+    // `c-repartir` leads back to `sommet`, already visited: that is legitimate.
     expect(validateStory(cimesStory).issues.some((i) => i.code === 'auto-loop')).toBe(false);
   });
 
-  it('avertit quand tous les liens d’un enchainement sont conditionnels', () => {
+  it('warns when every link of a chaining node is conditional', () => {
     const story = clone(clairiereStory);
     story.scenes.prudence!.next[0]!.condition = { op: 'eq', variable: 'prudent', value: true };
     const issue = validateStory(story).issues.find((i) => i.code === 'no-default-link');
@@ -151,7 +151,7 @@ describe('validateStory — coherence du graphe', () => {
     expect(issue?.sceneId).toBe('prudence');
   });
 
-  it('avertit — sans bloquer — sur une scene orpheline', () => {
+  it('warns — without blocking — about an orphan scene', () => {
     const story = clone(clairiereStory);
     story.scenes.oubliee = createScene({
       id: 'oubliee',
@@ -166,7 +166,7 @@ describe('validateStory — coherence du graphe', () => {
     expect(issue?.sceneId).toBe('oubliee');
   });
 
-  it('avertit sur un cul-de-sac : ni suite ni fin', () => {
+  it('warns about a dead end: neither continuation nor ending', () => {
     const story = clone(clairiereStory);
     delete story.scenes.portail!.ending;
     const result = validateStory(story);
@@ -174,26 +174,26 @@ describe('validateStory — coherence du graphe', () => {
     expect(result.issues.some((i) => i.code === 'dead-end' && i.sceneId === 'portail')).toBe(true);
   });
 
-  it('avertit sur une fin qui garde des liens sortants', () => {
+  it('warns about an ending that keeps outgoing links', () => {
     const story = clone(clairiereStory);
     story.scenes.portail!.next.push({ id: 'apres-la-fin', to: 'start' });
     const result = validateStory(story);
     expect(result.issues.some((i) => i.code === 'ending-with-links')).toBe(true);
   });
 
-  it('avertit sur un lien qui boucle sur son propre noeud', () => {
+  it('warns about a link looping back on its own node', () => {
     const story = clone(clairiereStory);
     story.scenes.prudence!.next[0]!.to = 'prudence';
     expect(validateStory(story).issues.some((i) => i.code === 'self-loop')).toBe(true);
   });
 
-  it('avertit sur un recit sans aucune fin', () => {
+  it('warns about a story without any ending', () => {
     const story = clone(clairiereStory);
     for (const scene of Object.values(story.scenes)) delete scene.ending;
     expect(validateStory(story).issues.some((i) => i.code === 'no-ending')).toBe(true);
   });
 
-  it('avertit sur une condition lisant une variable jamais ecrite', () => {
+  it('warns about a condition reading a variable that is never written', () => {
     const story = clone(clairiereStory);
     story.scenes.start!.next[0]!.condition = { op: 'gt', variable: 'karma', value: 3 };
     const issue = validateStory(story).issues.find((i) => i.code === 'unknown-variable');
@@ -201,46 +201,46 @@ describe('validateStory — coherence du graphe', () => {
     expect(issue?.message).toContain('karma');
   });
 
-  it('n’avertit pas quand la variable est ecrite par un effet ailleurs', () => {
-    // `prudent` est initialisee par le recit et posee par un effet : rien a signaler.
+  it('does not warn when the variable is written by an effect elsewhere', () => {
+    // `prudent` is initialized by the story and set by an effect: nothing to report.
     const result = validateStory(clairiereStory);
     expect(result.issues.some((i) => i.code === 'unknown-variable')).toBe(false);
   });
 });
 
 describe('parseStory', () => {
-  it('renvoie l’histoire typee quand elle est valide', () => {
+  it('returns the typed story when it is valid', () => {
     expect(parseStory(clairiereStory).id).toBe('clairiere-lucioles');
   });
 
-  it('leve StoryFormatError et expose toutes les anomalies', () => {
+  it('throws StoryFormatError and exposes every issue', () => {
     const story = clone(clairiereStory);
     story.startSceneId = 'nulle-part';
     try {
       parseStory(story);
-      expect.unreachable('parseStory aurait du lever');
+      expect.unreachable('parseStory should have thrown');
     } catch (error) {
       expect(error).toBeInstanceOf(StoryFormatError);
       expect((error as StoryFormatError).issues.length).toBeGreaterThan(0);
     }
   });
 
-  it('accepte un aller-retour JSON complet', () => {
+  it('accepts a full JSON round-trip', () => {
     const parsed = parseStoryJson(JSON.stringify(clairiereStory));
     expect(parsed).toEqual(clairiereStory);
   });
 
-  it('leve sur un JSON syntaxiquement invalide', () => {
+  it('throws on syntactically invalid JSON', () => {
     expect(() => parseStoryJson('{ oups')).toThrow(StoryFormatError);
   });
 });
 
-describe('utilitaires', () => {
-  it('findUnreachableScenes ne renvoie rien sur un recit connexe', () => {
+describe('helpers', () => {
+  it('findUnreachableScenes returns nothing on a connected story', () => {
     expect(findUnreachableScenes(clairiereStory)).toEqual([]);
   });
 
-  it('collectConditionVariables descend dans les operateurs composites', () => {
+  it('collectConditionVariables descends into composite operators', () => {
     const names = collectConditionVariables({
       op: 'and',
       conditions: [
@@ -252,11 +252,11 @@ describe('utilitaires', () => {
     expect([...names].sort()).toEqual(['karma', 'prudent']);
   });
 
-  it('collectStoryVariables reunit les variables lues et ecrites', () => {
+  it('collectStoryVariables gathers variables read and written', () => {
     expect([...collectStoryVariables(clairiereStory)]).toEqual(['prudent']);
   });
 
-  it('issuesForScene filtre par scene', () => {
+  it('issuesForScene filters by scene', () => {
     const story = clone(clairiereStory);
     story.scenes.start!.next[0]!.to = 'fantome';
     const result = validateStory(story);
@@ -264,7 +264,7 @@ describe('utilitaires', () => {
     expect(issuesForScene(result, 'arbre')).toHaveLength(0);
   });
 
-  it('slugify produit un identifiant accepte par le schema', () => {
+  it('slugify produces an id accepted by the schema', () => {
     expect(slugify('La Clairière aux Lucioles !')).toBe('la-clairiere-aux-lucioles');
     expect(slugify('   ')).toBe('scene');
   });

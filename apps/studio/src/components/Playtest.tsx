@@ -8,15 +8,14 @@ import type { GameState, Story } from '@embranche/story-format';
 
 interface Props {
   story: Story;
-  /** Scene de depart du test — permet de jouer a partir de la scene selectionnee. */
+  /** Start scene of the test — lets the author play from the selected scene. */
   fromSceneId?: string | null;
   onClose: () => void;
 }
 
 /**
- * Playtest integre : la meme histoire, le meme moteur que le lecteur, dans un
- * cadre de telephone. Aucune logique de recit ici — juste un affichage branche
- * sur `story-engine`.
+ * Built-in playtest: the same story and the same engine as the reader, in a
+ * phone frame. No story logic here — just a view wired onto `story-engine`.
  */
 export function Playtest({ story, fromSceneId, onClose }: Props) {
   const [mode, setMode] = useState<ColorMode>('light');
@@ -102,8 +101,8 @@ interface SessionProps {
 }
 
 function PlaytestSession({ story, fromSceneId, mode, onToggleMode }: SessionProps) {
-  // Une session = un moteur. Changer d'histoire ou de point de depart en cree
-  // un neuf, ce qui remet naturellement la partie a zero.
+  // One session = one engine. Changing story or start point creates a new one,
+  // which naturally resets the run.
   const engine = useMemo(() => {
     const created = new StoryEngine(story);
     if (fromSceneId && story.scenes[fromSceneId]) {
@@ -117,10 +116,9 @@ function PlaytestSession({ story, fromSceneId, mode, onToggleMode }: SessionProp
   const snapshot = useSyncExternalStore(engine.subscribe, engine.getSnapshot, engine.getSnapshot);
   const { scene, state } = snapshot;
 
-  // Le playtest n'a pas de mise en scene : les enchainements automatiques se
-  // deroulent d'un trait jusqu'au prochain choix. La borne n'est qu'un garde-fou
-  // — une boucle sans choix est une erreur bloquante, et le playtest refuse de
-  // s'ouvrir sur un recit qui en contient.
+  // The playtest has no staging: automatic chaining unrolls in one go up to the
+  // next choice. The bound is only a guard rail — a loop without a choice is a
+  // blocking error, and the playtest refuses to open on a story containing one.
   useEffect(() => {
     for (let steps = 0; steps < 200 && engine.advance(); steps += 1);
   }, [engine, snapshot]);
@@ -301,12 +299,12 @@ interface TranscriptMessage {
 }
 
 /**
- * Reconstitue la correspondance depuis l'historique : les messages de chaque
- * noeud traverse, puis ceux du noeud courant.
+ * Rebuilds the conversation from the history: the messages of each node walked
+ * through, then those of the current node.
  *
- * Le type du noeud suffit a savoir de quel cote afficher la bulle — plus besoin
- * de conserver le libelle du choix dans l'historique, puisque le choix est
- * lui-meme un noeud traverse.
+ * The kind of a node is enough to know which side to display the bubble on: the
+ * choice is itself a node walked through, so its label needs no separate
+ * bookkeeping.
  */
 function buildTranscript(story: Story, state: GameState): TranscriptMessage[] {
   const messages: TranscriptMessage[] = [];

@@ -9,13 +9,13 @@ interface Props {
   story: Story;
   ending: SceneEnding;
   endingsSeen: number;
-  /** Nombre de choix faits pour arriver la. */
+  /** Number of choices made to get here. */
   steps: number;
   onRestart: () => void;
   onLibrary: () => void;
 }
 
-/** Ecran de fin : ce que le joueur emporte de sa traversee. */
+/** Ending screen: what the player takes away from the run. */
 export function Ending({ story, ending, endingsSeen, steps, onRestart, onLibrary }: Props) {
   const theme = (story.theme ?? 'night') as StoryTheme;
 

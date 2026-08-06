@@ -7,9 +7,9 @@ import { parseStory, validateStory } from './validate.js';
 import type { Story } from './types.js';
 
 /**
- * Un recit au format 1 : la transition y etait un champ de la scene source.
- * On le garde ecrit en dur plutot que genere — c'est un document d'archive, il
- * ne doit pas bouger quand le format, lui, bouge.
+ * A format 1 story: the transition was a field of the source scene. It is
+ * hand-written rather than generated — this is an archive document, it must not
+ * move when the format does.
  */
 const legacy: {
   formatVersion: number;
@@ -72,23 +72,23 @@ const legacy: {
   },
 };
 
-describe('migrateStory — format 1 vers 2', () => {
+describe('migrateStory — format 1 to 2', () => {
   const migrated = migrateStory(structuredClone(legacy)) as Story;
 
-  it('produit un document valide', () => {
+  it('produces a valid document', () => {
     const result = validateStory(migrated);
     const errors = result.issues.filter((issue) => issue.severity === 'error');
     expect(errors.map((issue) => issue.message)).toEqual([]);
     expect(migrated.formatVersion).toBe(2);
   });
 
-  it('fait de chaque ancienne scene un noeud personnage', () => {
+  it('turns each legacy scene into an npc node', () => {
     expect(migrated.scenes.start!.kind).toBe('npc');
     expect(migrated.scenes.dedans!.kind).toBe('npc');
     expect(migrated.scenes.start!.blocks).toEqual([{ text: 'Tu es devant la porte.' }]);
   });
 
-  it('intercale un noeud de choix entre la scene et sa cible', () => {
+  it('inserts a choice node between the scene and its target', () => {
     const [entrer] = migrated.scenes.start!.next;
     const choice = migrated.scenes[entrer!.to]!;
     expect(choice.kind).toBe('choice');
@@ -96,22 +96,22 @@ describe('migrateStory — format 1 vers 2', () => {
     expect(choice.next.map((link) => link.to)).toEqual(['dedans']);
   });
 
-  it('laisse condition et effets sur le lien qui mene au bouton', () => {
+  it('leaves condition and effects on the link that leads to the button', () => {
     const partir = migrated.scenes.start!.next[1]!;
     expect(partir.condition).toEqual({ op: 'eq', variable: 'prudent', value: true });
     expect(partir.effects).toEqual([{ op: 'set', variable: 'prudent', value: true }]);
-    // Le second saut, lui, n'est qu'un enchainement.
+    // The second hop is plain chaining.
     expect(migrated.scenes[partir.to]!.next[0]!.condition).toBeUndefined();
   });
 
-  it('conserve la semantique : la scene de depart attend toujours un choix', () => {
+  it('preserves the semantics: the start scene still awaits a choice', () => {
     expect(awaitsChoice(migrated, migrated.scenes.start!)).toBe(true);
     expect(migrated.scenes.start!.next).toHaveLength(2);
   });
 
-  it('n’ecrase pas un identifiant deja pris', () => {
+  it('does not overwrite an id that is already taken', () => {
     const collision = structuredClone(legacy);
-    // Un noeud porte deja le nom que la migration voudrait donner au choix.
+    // A node already bears the name the migration would give to the choice.
     (collision.scenes as Record<string, unknown>)['start-entrer'] = {
       id: 'start-entrer',
       title: 'Déjà là',
@@ -125,11 +125,10 @@ describe('migrateStory — format 1 vers 2', () => {
     expect(Object.keys(result.scenes)).toContain('start-entrer-2');
   });
 
-  it('éclate une scène qui changeait de locuteur en cours de route', () => {
-    // Le format 1 permettait ceci : trois messages dans une seule scène, dont
-    // le deuxième attribué au joueur. Recopié tel quel dans un nœud `npc`, il
-    // se serait affiché du côté du joueur en contredisant le type du nœud —
-    // et sans aucun moyen de le corriger, le champ ayant disparu.
+  it('splits a scene that changed speaker halfway through', () => {
+    // Format 1 allowed this: three messages in a single scene, the second one
+    // attributed to the player. Copied as-is into an `npc` node it would show
+    // on the player side, contradicting the node kind.
     const mixed = structuredClone(legacy);
     mixed.scenes.start!.blocks = [
       { text: 'Tu es devant la porte.' },
@@ -150,13 +149,13 @@ describe('migrateStory — format 1 vers 2', () => {
     expect(last.kind).toBe('npc');
     expect(last.blocks).toEqual([{ text: 'Personne ne répond.' }]);
 
-    // Les choix de la scène partent du dernier fragment, pas du premier.
+    // The choices of the scene leave from the last fragment, not the first.
     expect(head.next).toHaveLength(1);
     expect(last.next).toHaveLength(2);
     expect(validateStory(story).valid).toBe(true);
   });
 
-  it('donne la fin au dernier fragment d’une scène éclatée', () => {
+  it('gives the ending to the last fragment of a split scene', () => {
     const mixed = structuredClone(legacy);
     mixed.scenes.dedans!.blocks = [
       { text: 'Il fait chaud.' },
@@ -169,13 +168,12 @@ describe('migrateStory — format 1 vers 2', () => {
     expect(story.scenes[head.next[0]!.to]!.ending?.name).toBe('Dedans');
   });
 
-  it('laisse passer un document deja au format courant, sans le toucher', () => {
+  it('lets a document already in the current format through untouched', () => {
     expect(migrateStory(clairiereStory)).toBe(clairiereStory);
   });
 
-  it('répare un document v2 dont les blocs portent encore un « speaker »', () => {
-    // Ce que produisait une première version de la migration : le champ avait
-    // survécu au passage en v2, et contredisait le type du nœud.
+  it('repairs a v2 document whose blocks still carry a speaker field', () => {
+    // A `speaker` left over on a v2 document contradicts the node kind.
     const damaged = structuredClone(clairiereStory) as Story;
     damaged.scenes.arbre!.blocks = [
       { text: 'Du haut du vieux chêne, un château flotte entre les nuages.' },
@@ -193,12 +191,12 @@ describe('migrateStory — format 1 vers 2', () => {
 
     const last = repaired.scenes[middle.next[0]!.to]!;
     expect(last.kind).toBe('npc');
-    // Les deux choix de la scène sont passés au dernier fragment.
+    // Both choices of the scene moved to the last fragment.
     expect(last.next.map((link) => link.id)).toEqual(['vers-sauter', 'vers-redescendre']);
     expect(validateStory(repaired).valid).toBe(true);
   });
 
-  it('est idempotente : réparer deux fois ne change plus rien', () => {
+  it('is idempotent: repairing twice changes nothing more', () => {
     const damaged = structuredClone(clairiereStory) as Story;
     damaged.scenes.portail!.blocks = [
       { text: 'Tu franchis le seuil.', speaker: 'player' },
@@ -206,11 +204,11 @@ describe('migrateStory — format 1 vers 2', () => {
 
     const once = migrateStory(damaged);
     expect(migrateStory(once)).toBe(once);
-    // La fin est restée attachée, et sur le bon fragment.
+    // The ending stayed attached, and on the right fragment.
     expect((once as Story).scenes.portail!.ending?.name).toBe('Le Royaume Lumière');
   });
 
-  it('rend un fichier d’hier lisible par parseStory', () => {
+  it('makes a legacy file readable by parseStory', () => {
     expect(parseStory(structuredClone(legacy)).id).toBe('ancien-recit');
   });
 });

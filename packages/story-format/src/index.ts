@@ -1,7 +1,7 @@
 /**
- * `@embranche/story-format` — le contrat entre le studio et le lecteur.
+ * `@embranche/story-format` — the contract between the studio and the reader.
  *
- * TypeScript pur. Aucune dependance framework, aucun acces au DOM, aucune I/O.
+ * Pure TypeScript. No framework dependency, no DOM access, no I/O.
  */
 
 export * from './types.js';

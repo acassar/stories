@@ -22,10 +22,10 @@ import { Reading } from './screens/Reading';
 type Screen = 'library' | 'detail' | 'read';
 
 /**
- * Coquille du lecteur : quelle histoire, quel ecran, quel mode.
+ * Reader shell: which story, which screen, which mode.
  *
- * Toute la persistance passe par `lib/library` et est declenchee depuis ici —
- * le moteur, lui, ne sait pas que `localStorage` existe.
+ * All persistence goes through `lib/library` and is triggered from here — the
+ * engine does not know `localStorage` exists.
  */
 export function App() {
   const [mode, toggleMode] = useColorMode();
@@ -36,8 +36,8 @@ export function App() {
   const [toast, setToast] = useState<string | null>(null);
 
   /**
-   * Une session de lecture est identifiee par ce jeton : le changer remonte un
-   * moteur neuf. C'est ce qui distingue « reprendre » de « recommencer ».
+   * A reading session is identified by this token: changing it mounts a fresh
+   * engine. That is what separates "resume" from "start over".
    */
   const [session, setSession] = useState(0);
   const [resumeState, setResumeState] = useState<GameState | null>(null);
@@ -46,8 +46,8 @@ export function App() {
   const theme = (story?.theme ?? 'night') as StoryTheme;
   const tokens = useMemo(() => resolveShell(theme, mode), [theme, mode]);
 
-  // Les sauvegardes sont tenues a jour aux trois seuls moments ou elles
-  // bougent : une partie avance, une partie est relancee, une histoire arrive.
+  // Saves are kept up to date at the only three moments they move: a run
+  // advances, a run is restarted, a story arrives.
   const [saves, setSaves] = useState<Record<string, GameState | null>>(() => readSaves(stories));
 
   const activeIdRef = useRef(activeId);
@@ -68,7 +68,7 @@ export function App() {
     const storyId = activeIdRef.current;
     if (!storyId) return;
     setEndings(recordEnding(storyId, sceneId));
-    // Une partie terminee n'est plus « en cours » : on libere la reprise.
+    // A finished run is no longer "in progress": the resume slot is released.
     clearSave(storyId);
     setSaves((current) => ({ ...current, [storyId]: null }));
   }, []);
@@ -143,7 +143,7 @@ export function App() {
 
       {screen === 'read' && story && (
         <Reading
-          // Remonter le composant a chaque session garantit un moteur neuf.
+          // Remounting the component per session guarantees a fresh engine.
           key={`${story.id}-${session}`}
           story={story}
           initialState={resumeState}
@@ -171,7 +171,7 @@ function readSaves(library: Story[]): Record<string, GameState | null> {
   return map;
 }
 
-/** `Blob.text()` manque encore sur quelques moteurs : repli `FileReader`. */
+/** `Blob.text()` is still missing on a few engines: `FileReader` fallback. */
 function readText(file: File): Promise<string> {
   if (typeof file.text === 'function') return file.text();
   return new Promise((resolve, reject) => {

@@ -1,32 +1,33 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-/** Cadence d'arrivee des messages, en millisecondes. */
+/** Pace at which messages arrive, in milliseconds. */
 export const REVEAL_TIMING = {
-  /** Frappe avant le tout premier message d'une scene. */
+  /** Typing time before the very first message of a scene. */
   first: 600,
-  /** Frappe avant les suivants. */
+  /** Typing time before the following ones. */
   next: 700,
-  /** Silence entre un message affiche et le debut de la frappe suivante. */
+  /** Silence between a displayed message and the start of the next typing. */
   pause: 320,
 } as const;
 
 export interface Reveal {
-  /** Nombre de messages deja affiches pour la scene courante. */
+  /** Number of messages already displayed for the current scene. */
   revealed: number;
-  /** Vrai pendant l'indicateur « ecrit… ». */
+  /** True while the typing indicator is showing. */
   typing: boolean;
-  /** Vrai quand toute la scene est arrivee — les choix peuvent s'afficher. */
+  /** True once the whole scene has arrived — choices may be displayed. */
   done: boolean;
-  /** Affiche immediatement la scene entiere. */
+  /** Displays the whole scene immediately. */
   skip: () => void;
 }
 
 /**
- * Fait arriver les messages d'une scene un a un, avec un temps de frappe.
+ * Brings the messages of a scene in one by one, with a typing delay.
  *
- * C'est une decision d'affichage, pas de recit : le moteur, lui, a deja tout
- * resolu. Couper l'animation (`animate = false`, ou une preference systeme de
- * mouvement reduit) affiche la scene d'un bloc, sans rien changer au jeu.
+ * This is a display decision, not a story one: the engine has already resolved
+ * everything. Turning the animation off (`animate = false`, or a system
+ * reduced-motion preference) shows the scene in one block, changing nothing to
+ * the game.
  */
 export function useReveal(sceneId: string, total: number, animate = true): Reveal {
   const [revealed, setRevealed] = useState(animate ? 0 : total);

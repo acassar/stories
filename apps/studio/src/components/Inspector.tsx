@@ -29,7 +29,7 @@ interface Props {
   onSelect: (sceneId: SceneId | null) => void;
 }
 
-/** Panneau d'edition : la scene selectionnee, ou les metadonnees du recit. */
+/** Editing panel: the selected scene, or the story metadata. */
 export function Inspector({ story, selectedId, issues, onChange, onSelect }: Props) {
   const [tab, setTab] = useState<'scene' | 'story'>('scene');
   const scene = selectedId ? story.scenes[selectedId] : undefined;
@@ -226,8 +226,8 @@ function ScenePanel({ story, scene, issues, onChange, onSelect }: ScenePanelProp
       </div>
 
       {/*
-        Le type en premier : c'est lui qui commande tout le reste du panneau,
-        du libelle au comportement de la lecture.
+        The kind comes first: it drives everything else in the panel, from the
+        label to the reading behavior.
       */}
       <div className="field">
         <span className="field__label">Type de nœud</span>
@@ -464,9 +464,9 @@ function ScenePanel({ story, scene, issues, onChange, onSelect }: ScenePanelProp
                   )}
 
                   {/*
-                    Sur un lien vers un choix, condition et effets s'editent
-                    aussi depuis le noeud de choix lui-meme — c'est le meme
-                    objet, vu de ses deux bouts.
+                    On a link to a choice, condition and effects can also be
+                    edited from the choice node itself — it is the same object,
+                    seen from both ends.
                   */}
                   <ConditionEditor
                     value={link.condition}
@@ -555,7 +555,7 @@ function nodeName(story: Story, id: SceneId): string {
   return (scene.kind === 'choice' ? scene.label || scene.title : scene.title) || id;
 }
 
-/** Dit en clair ce que le format deduit du type des cibles. */
+/** States in plain words what the format infers from the kind of the targets. */
 function describeFlow(story: Story, scene: Scene): string {
   const targets = scene.next
     .map((link) => story.scenes[link.to])
@@ -570,12 +570,12 @@ function describeFlow(story: Story, scene: Scene): string {
 }
 
 /**
- * Condition et effets du lien qui *mene* a ce choix.
+ * Condition and effects of the link that *leads* to this choice.
  *
- * Ils vivent sur l'arete — c'est le chemin emprunte qui a des consequences, pas
- * le noeud d'arrivee, qui peut etre atteint par plusieurs routes. Mais pour
- * l'auteur, « ce bouton n'apparait que si… » est une propriete du bouton : on
- * les lui montre donc ici, sur le noeud, tant que l'entree est unique.
+ * They live on the edge — it is the path taken that has consequences, not the
+ * node reached, which several routes may lead to. But for the author, "this
+ * button only appears if..." is a property of the button, so they are shown
+ * here, on the node, as long as there is a single incoming link.
  */
 function IncomingLinkPanel({
   story,

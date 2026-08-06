@@ -1,13 +1,13 @@
 /**
- * Format d'histoire Embranche — le contrat entre le studio (qui ecrit) et le
- * lecteur (qui lit). TypeScript pur : aucune dependance framework, aucun DOM.
+ * Embranche story format — the contract between the studio (which writes) and
+ * the reader (which reads). Pure TypeScript: no framework dependency, no DOM.
  *
- * Regle d'or : tout ce qui est ici doit survivre a un aller-retour JSON.
- * Pas de fonction, pas de `Date`, pas de code — conditions et effets sont des
- * donnees declaratives interpretees par `@embranche/story-engine`.
+ * Golden rule: everything here must survive a JSON round-trip. No functions, no
+ * `Date`, no code — conditions and effects are declarative data interpreted by
+ * `@embranche/story-engine`.
  */
 
-/** Version du format lui-meme, pour la migration future des fichiers. */
+/** Version of the format itself, so files can be migrated. */
 export const STORY_FORMAT_VERSION = 2;
 
 export type SceneId = string;
@@ -15,31 +15,31 @@ export type LinkId = string;
 export type VariableName = string;
 export type ItemId = string;
 
-/** Les seules valeurs qu'une variable de jeu peut prendre. */
+/** The only values a game variable can hold. */
 export type VariableValue = string | number | boolean;
 
-/** Teinte de reliure du recit — pilote la couverture et l'accent de l'UI. */
+/** Binding tint of the story — drives the cover and the UI accent. */
 export type StoryTheme = 'fantasy' | 'mystery' | 'adventure' | 'night';
 
-/** Cycle de vie editorial, pilote depuis le tableau de bord du studio. */
+/** Editorial lifecycle, driven from the studio dashboard. */
 export type StoryStatus = 'draft' | 'published';
 
 // ---------------------------------------------------------------------------
-// Conditions — vocabulaire ferme, evalue par le moteur.
+// Conditions — closed vocabulary, evaluated by the engine.
 // ---------------------------------------------------------------------------
 
 export type ComparisonOperator = 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte';
 
 export type Condition =
-  /** Toujours vrai — sert de valeur neutre explicite. */
+  /** Always true — an explicit neutral value. */
   | { op: 'always' }
-  /** Compare une variable de jeu a une valeur litterale. */
+  /** Compares a game variable against a literal value. */
   | { op: ComparisonOperator; variable: VariableName; value: VariableValue }
-  /** L'inventaire contient au moins `quantity` (defaut 1) exemplaires. */
+  /** The inventory holds at least `quantity` (default 1) units. */
   | { op: 'hasItem'; item: ItemId; quantity?: number }
-  /** L'inventaire en contient strictement moins que `quantity` (defaut 1). */
+  /** The inventory holds strictly fewer than `quantity` (default 1) units. */
   | { op: 'lacksItem'; item: ItemId; quantity?: number }
-  /** La scene a deja ete traversee au cours de la partie. */
+  /** The scene has already been walked through during this run. */
   | { op: 'visited'; scene: SceneId }
   | { op: 'notVisited'; scene: SceneId }
   | { op: 'and'; conditions: Condition[] }
@@ -47,142 +47,140 @@ export type Condition =
   | { op: 'not'; condition: Condition };
 
 // ---------------------------------------------------------------------------
-// Effets — appliques quand un choix est retenu.
+// Effects — applied when a link is taken.
 // ---------------------------------------------------------------------------
 
 export type Effect =
-  /** Ecrit une valeur litterale dans une variable. */
+  /** Writes a literal value into a variable. */
   | { op: 'set'; variable: VariableName; value: VariableValue }
-  /** Incremente / decremente une variable numerique (creee a 0 si absente). */
+  /** Increments / decrements a numeric variable (created at 0 if absent). */
   | { op: 'inc'; variable: VariableName; value: number }
   | { op: 'dec'; variable: VariableName; value: number }
-  /** Inverse un booleen (une variable absente devient `true`). */
+  /** Flips a boolean (an absent variable becomes `true`). */
   | { op: 'toggle'; variable: VariableName }
-  /** Retire completement la variable de l'etat. */
+  /** Removes the variable from the state entirely. */
   | { op: 'unset'; variable: VariableName }
   | { op: 'addItem'; item: ItemId; quantity?: number }
-  /** Retire au plus `quantity` exemplaires ; ne descend jamais sous zero. */
+  /** Removes at most `quantity` units; never goes below zero. */
   | { op: 'removeItem'; item: ItemId; quantity?: number };
 
 // ---------------------------------------------------------------------------
-// Contenu
+// Content
 // ---------------------------------------------------------------------------
 
 /**
- * Un bloc de texte d'une scene. Le lecteur les rend en correspondance : un
- * bloc = un message qui arrive, avec un temps de frappe avant apparition.
+ * A block of text within a scene. The reader renders blocks as a conversation:
+ * one block = one incoming message, preceded by a typing delay.
  *
- * Le bloc ne dit pas qui parle : c'est le `kind` du noeud qui le porte, et lui
- * seul. Le format 1 avait un `speaker` par message ; deux sources de verite
- * pour la meme question finissent toujours par se contredire, et c'etait le
- * cas. Un changement de locuteur au milieu d'une scene se dit desormais avec
- * ce que le format sait faire : un second noeud, enchaine.
+ * A block does not say who is speaking — the `kind` of its node does, and it
+ * alone. A change of speaker in the middle of a scene is written with what the
+ * format already offers: a second node, chained to the first.
  */
 export interface TextBlock {
   text: string;
 }
 
 /**
- * Type d'un noeud — c'est lui qui porte toute la semantique du graphe.
+ * Node kind — it carries the whole semantics of the graph.
  *
- * - `npc`    : l'interlocuteur parle.
- * - `player` : le joueur parle, sans rien decider. Le recit enchaine seul.
- * - `choice` : le joueur decide. Seul type qui arrete la lecture.
+ * - `npc`    : the correspondent speaks.
+ * - `player` : the player speaks without deciding anything. The story chains on.
+ * - `choice` : the player decides. The only kind that stops the reading.
  *
- * Consequence : une scene n'a plus a declarer si elle propose des choix. Il
- * suffit de regarder le type de ce qu'elle vise — si ce sont des `choice`, ce
- * sont des boutons ; sinon, on enchaine.
+ * As a result, a scene never declares whether it offers choices. Looking at the
+ * kind of what it points to is enough — `choice` targets become buttons, and
+ * anything else chains on automatically.
  */
 export type SceneKind = 'npc' | 'player' | 'choice';
 
 /**
- * Une transition, devenue un objet a part entiere.
+ * A transition, as a first-class object.
  *
- * C'est le lien — pas la scene d'arrivee — qui porte `condition` et `effects` :
- * une meme scene pouvant desormais etre atteinte par plusieurs chemins, ranger
- * les consequences sur la scene les appliquerait quel que soit le chemin suivi.
+ * The link — not the target scene — carries `condition` and `effects`, because
+ * a scene can be reached through several paths: storing the consequences on the
+ * scene would apply them whichever path was taken.
  */
 export interface Link {
   id: LinkId;
-  /** Scene atteinte en empruntant ce lien. */
+  /** Scene reached by following this link. */
   to: SceneId;
   /**
-   * Si presente et non satisfaite, le lien est impraticable : le bouton n'est
-   * pas propose, ou l'enchainement automatique passe au lien suivant.
+   * When present and unsatisfied, the link is impassable: the button is not
+   * offered, or the automatic chaining moves on to the next link.
    */
   condition?: Condition;
-  /** Appliques dans l'ordre, avant l'arrivee sur la scene cible. */
+  /** Applied in order, before arriving on the target scene. */
   effects?: Effect[];
 }
 
 /**
- * Habillage d'une fin. Sa presence marque la scene comme terminale : le lecteur
- * bascule alors sur l'ecran de fin au lieu de proposer des choix.
+ * Presentation of an ending. Its presence marks the scene as terminal: the
+ * reader switches to the ending screen instead of offering choices.
  */
 export interface SceneEnding {
-  /** Categorie affichee en capitales : « Fin lumineuse », « Fin tragique »... */
+  /** Category displayed in capitals: « Fin lumineuse », « Fin tragique »... */
   type: string;
-  /** Nom de la fin, tel qu'il apparait au palmares du joueur. */
+  /** Name of the ending, as it appears in the player's record. */
   name: string;
-  /** Une ou deux phrases de cloture. */
+  /** One or two closing sentences. */
   blurb: string;
 }
 
 /**
- * Champs media — declares des maintenant pour figer le contrat, volontairement
- * non exploites par les apps de cette iteration.
+ * Media fields — declared to freeze the contract, deliberately unused by the
+ * apps for now.
  */
 export interface SceneMedia {
-  /** Chemin ou URL d'une image de fond. */
+  /** Path or URL of a background image. */
   backgroundImage?: string;
-  /** Chemin ou URL d'une ambiance sonore bouclee. */
+  /** Path or URL of a looping ambience track. */
   ambience?: string;
-  /** Portrait de l'interlocuteur pour cette scene. */
+  /** Portrait of the correspondent for this scene. */
   portrait?: string;
 }
 
 export interface Scene {
   id: SceneId;
   kind: SceneKind;
-  /** Titre de travail — affiche dans le studio, jamais au joueur. */
+  /** Working title — shown in the studio, never to the player. */
   title: string;
   /**
-   * Libelle du bouton, pour un noeud `choice` uniquement. Distinct de `blocks` :
-   * le bouton peut annoncer « Mentir » quand la replique envoyee est tout autre.
-   * A defaut de `blocks`, c'est le libelle qui part dans la correspondance.
+   * Button label, for a `choice` node only. Distinct from `blocks`: the button
+   * may read « Mentir » while the message actually sent says something else.
+   * Without `blocks`, the label is what goes out into the conversation.
    */
   label?: string;
-  /** Corps de la scene, decoupe en messages. */
+  /** Body of the scene, split into messages. */
   blocks: TextBlock[];
-  /** Liens sortants, dans l'ordre — c'est l'ordre d'affichage des boutons. */
+  /** Outgoing links, in order — that is the display order of the buttons. */
   next: Link[];
-  /** Position du noeud sur le canvas du studio ; persistee dans le format. */
+  /** Node position on the studio canvas; persisted in the format. */
   position: { x: number; y: number };
   ending?: SceneEnding;
   media?: SceneMedia;
-  /** Etiquettes libres, pour le filtrage cote studio. */
+  /** Free-form labels, for filtering on the studio side. */
   tags?: string[];
 }
 
-/** L'interlocuteur de la correspondance : qui ecrit au joueur. */
+/** The correspondent of the conversation: who writes to the player. */
 export interface Narrator {
   name: string;
-  /** Ligne de statut sous le nom : « la voix de la clairiere », « en ligne »... */
+  /** Status line under the name: « la voix de la clairiere », « en ligne »... */
   status?: string;
 }
 
 export interface StoryMeta {
   id: string;
   title: string;
-  /** Version editoriale du recit (semver libre), distincte de `formatVersion`. */
+  /** Editorial version of the story (free semver), distinct from `formatVersion`. */
   version: string;
   author?: string;
-  /** Accroche de l'ecran de detail. */
+  /** Teaser shown on the detail screen. */
   blurb?: string;
-  /** Etiquette de genre affichee : « Fantastique », « Enquete »... */
+  /** Genre label displayed to the player: « Fantastique », « Enquete »... */
   tag?: string;
   theme?: StoryTheme;
-  /** Duree de lecture annoncee, en minutes. */
+  /** Advertised reading time, in minutes. */
   estimatedMinutes?: number;
   status?: StoryStatus;
   narrator?: Narrator;
@@ -191,19 +189,19 @@ export interface StoryMeta {
 export interface Story extends StoryMeta {
   formatVersion: number;
   startSceneId: SceneId;
-  /** Valeurs initiales des variables de jeu. */
+  /** Initial values of the game variables. */
   variables?: Record<VariableName, VariableValue>;
-  /** Contenu initial de l'inventaire : identifiant d'objet → quantite. */
+  /** Initial inventory contents: item id → quantity. */
   inventory?: Record<ItemId, number>;
-  /** Dictionnaire des scenes, indexe par `Scene.id`. */
+  /** Scene dictionary, indexed by `Scene.id`. */
   scenes: Record<SceneId, Scene>;
 }
 
 // ---------------------------------------------------------------------------
-// Etat de jeu
+// Game state
 // ---------------------------------------------------------------------------
 
-/** Une etape franchie : la scene quittee et le lien qui en a fait sortir. */
+/** One step taken: the scene left behind and the link that led out of it. */
 export interface HistoryEntry {
   sceneId: SceneId;
   linkId: LinkId;
@@ -211,15 +209,15 @@ export interface HistoryEntry {
 
 export interface GameState {
   storyId: string;
-  /** Version du recit au moment de la sauvegarde, pour detecter un decalage. */
+  /** Story version at save time, to detect a mismatch on resume. */
   storyVersion: string;
   currentSceneId: SceneId;
   variables: Record<VariableName, VariableValue>;
   inventory: Record<ItemId, number>;
   history: HistoryEntry[];
-  /** Scenes traversees, dans l'ordre de premiere visite. */
+  /** Scenes walked through, in order of first visit. */
   visited: SceneId[];
-  /** Horodatages ISO 8601 — chaines, pour rester serialisables. */
+  /** ISO 8601 timestamps — strings, to stay serializable. */
   startedAt: string;
   updatedAt: string;
 }
@@ -243,28 +241,28 @@ export type IssueCode =
   | 'unknown-variable'
   | 'empty-scene'
   | 'no-ending'
-  /** Un noeud `choice` sans libelle : le bouton serait vide. */
+  /** A `choice` node without a label: the button would be empty. */
   | 'choice-without-label'
-  /** Un noeud melange des liens vers des choix et vers des enchainements. */
+  /** A node mixes links to choices with automatic chaining links. */
   | 'mixed-links'
-  /** Enchainement automatique dont tous les liens sont conditionnels. */
+  /** Automatic chaining whose links are all conditional. */
   | 'no-default-link'
-  /** Boucle d'enchainements automatiques : la lecture ne s'arreterait jamais. */
+  /** Automatic chaining loop: the reading would never stop. */
   | 'auto-loop';
 
 export interface ValidationIssue {
   severity: IssueSeverity;
   code: IssueCode;
   message: string;
-  /** Scene concernee, quand l'anomalie est localisable. */
+  /** Scene concerned, when the issue can be located. */
   sceneId?: SceneId;
   linkId?: LinkId;
-  /** Chemin dans le document, pour les erreurs de schema. */
+  /** Path within the document, for schema errors. */
   path?: string;
 }
 
 export interface ValidationResult {
-  /** Vrai si aucune anomalie de severite `error`. */
+  /** True when no issue has `error` severity. */
   valid: boolean;
   issues: ValidationIssue[];
 }

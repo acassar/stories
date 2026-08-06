@@ -1,9 +1,9 @@
 /**
- * Validation d'une histoire : schema (forme) + coherence du graphe (fond).
+ * Story validation: schema (shape) + graph coherence (substance).
  *
- * Le studio appelle `validateStory` en continu pour signaler les incoherences
- * pendant l'ecriture ; le lecteur appelle `parseStory` a l'ouverture d'un
- * fichier pour refuser net un document mal forme.
+ * The studio calls `validateStory` continuously to surface inconsistencies
+ * while writing; the reader calls `parseStory` when opening a file to reject a
+ * malformed document outright.
  */
 
 import { migrateStory } from './migrate.js';
@@ -32,7 +32,7 @@ export class StoryFormatError extends Error {
   }
 }
 
-/** Valide la forme du document. N'inspecte pas la coherence du graphe. */
+/** Validates the document shape. Does not inspect graph coherence. */
 export function validateStoryShape(input: unknown): ValidationResult {
   const parsed = storySchema.safeParse(input);
   if (parsed.success) return { valid: true, issues: [] };
@@ -48,8 +48,8 @@ export function validateStoryShape(input: unknown): ValidationResult {
 }
 
 /**
- * Valide forme *et* coherence. Les `error` empechent de jouer le recit, les
- * `warning` signalent un probleme d'ecriture sans bloquer.
+ * Validates shape *and* coherence. An `error` makes the story unplayable; a
+ * `warning` flags a writing problem without blocking.
  */
 export function validateStory(input: unknown): ValidationResult {
   const shape = validateStoryShape(input);
@@ -62,9 +62,9 @@ export function validateStory(input: unknown): ValidationResult {
 }
 
 /**
- * Valide et renvoie l'histoire typee. Leve `StoryFormatError` si le document
- * est inutilisable — c'est la porte d'entree des JSON venus de l'exterieur, et
- * donc l'endroit ou un document d'une version anterieure est migre.
+ * Validates and returns the typed story. Throws `StoryFormatError` when the
+ * document is unusable — this is the entry point for JSON coming from outside,
+ * and therefore the place where an older document is migrated.
  */
 export function parseStory(input: unknown): Story {
   const migrated = migrateStory(input);
@@ -79,7 +79,7 @@ export function parseStory(input: unknown): Story {
   return migrated as Story;
 }
 
-/** Meme contrat que `parseStory`, mais depuis du texte JSON. */
+/** Same contract as `parseStory`, but starting from JSON text. */
 export function parseStoryJson(json: string): Story {
   let data: unknown;
   try {
@@ -107,7 +107,7 @@ export function parseGameState(input: unknown): GameState {
 }
 
 // ---------------------------------------------------------------------------
-// Coherence du graphe
+// Graph coherence
 // ---------------------------------------------------------------------------
 
 function checkGraph(story: Story): ValidationIssue[] {
@@ -203,7 +203,7 @@ function checkGraph(story: Story): ValidationIssue[] {
   return issues;
 }
 
-/** Identifiants dupliques, cibles pendantes, retours sur soi. */
+/** Duplicate ids, dangling targets, self-loops. */
 function checkLinkShape(scene: Scene, sceneIds: Set<SceneId>): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   const seen = new Set<string>();
@@ -245,12 +245,12 @@ function checkLinkShape(scene: Scene, sceneIds: Set<SceneId>): ValidationIssue[]
 }
 
 /**
- * Coherence des types en sortie d'un noeud.
+ * Kind coherence of the links leaving a node.
  *
- * Deux regles, et c'est tout ce qui separe un embranchement d'un enchainement :
- * on ne melange pas des liens vers des choix et des liens vers autre chose (le
- * lecteur ne saurait pas s'il doit attendre le joueur), et un enchainement
- * automatique doit avoir une issue inconditionnelle.
+ * Two rules, and they are all that separates a branch from a chain: links to
+ * choices are never mixed with links to anything else (the reader would not
+ * know whether to wait for the player), and automatic chaining needs one
+ * unconditional way out.
  */
 function checkLinkKinds(story: Story, scene: Scene): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
@@ -271,8 +271,8 @@ function checkLinkKinds(story: Story, scene: Scene): ValidationIssue[] {
     });
   }
 
-  // Un enchainement automatique entierement conditionnel peut n'avoir aucune
-  // issue au moment ou on l'emprunte : le recit s'arreterait sans fin.
+  // A fully conditional chain may have no way out at the moment it is taken:
+  // the story would stop without reaching an ending.
   if (toChoice.length === 0 && !scene.ending && known.every((link) => link.condition)) {
     issues.push({
       severity: 'warning',
@@ -285,7 +285,7 @@ function checkLinkKinds(story: Story, scene: Scene): ValidationIssue[] {
   return issues;
 }
 
-/** Parcours en largeur depuis la scene de depart. */
+/** Breadth-first walk from the start scene. */
 export function findReachableScenes(story: Story): Set<SceneId> {
   const reachable = new Set<SceneId>();
   if (!story.scenes[story.startSceneId]) return reachable;
@@ -342,14 +342,14 @@ function checkVariables(story: Story): ValidationIssue[] {
   return issues;
 }
 
-/** Tous les liens du recit, avec la scene d'ou ils partent. */
+/** Every link of the story, paired with the scene it leaves from. */
 export function allLinks(story: Story): { scene: Scene; link: Link }[] {
   return Object.values(story.scenes).flatMap((scene) =>
     scene.next.map((link) => ({ scene, link })),
   );
 }
 
-/** Variables lues par une condition, en descendant les operateurs composites. */
+/** Variables read by a condition, descending through composite operators. */
 export function collectConditionVariables(condition: Condition): Set<VariableName> {
   const found = new Set<VariableName>();
   const walk = (node: Condition): void => {
@@ -375,7 +375,7 @@ export function collectConditionVariables(condition: Condition): Set<VariableNam
   return found;
 }
 
-/** Variables ecrites par une liste d'effets. */
+/** Variables written by a list of effects. */
 export function collectEffectVariables(effects: readonly Effect[]): Set<VariableName> {
   const found = new Set<VariableName>();
   for (const effect of effects) {
@@ -384,7 +384,7 @@ export function collectEffectVariables(effects: readonly Effect[]): Set<Variable
   return found;
 }
 
-/** Toutes les variables citees par le recit, lues comme ecrites. */
+/** Every variable the story mentions, read or written. */
 export function collectStoryVariables(story: Story): Set<VariableName> {
   const found = new Set<VariableName>(Object.keys(story.variables ?? {}));
   for (const { link } of allLinks(story)) {
@@ -396,12 +396,12 @@ export function collectStoryVariables(story: Story): Set<VariableName> {
   return found;
 }
 
-/** Anomalies rattachees a une scene — pour le badge d'erreur du studio. */
+/** Issues attached to a scene — for the studio error badge. */
 export function issuesForScene(result: ValidationResult, sceneId: SceneId): ValidationIssue[] {
   return result.issues.filter((issue) => issue.sceneId === sceneId);
 }
 
-/** Renvoie les scenes terminales du recit. */
+/** Returns the terminal scenes of the story. */
 export function findEndings(story: Story): Scene[] {
   return Object.values(story.scenes).filter((scene) => Boolean(scene.ending));
 }

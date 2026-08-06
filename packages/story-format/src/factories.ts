@@ -1,20 +1,20 @@
 /**
- * Fabriques de documents vierges. Le studio s'en sert pour creer un recit ou
- * une scene sans avoir a connaitre chaque champ obligatoire du format.
+ * Factories for blank documents. The studio uses them to create a story or a
+ * scene without having to know every required field of the format.
  */
 
 import { STORY_FORMAT_VERSION } from './types.js';
 import type { Link, Scene, SceneId, SceneKind, Story } from './types.js';
 
 /**
- * Genere un identifiant court, lisible et compatible avec le schema.
- * `random` est injectable pour rendre les tests deterministes.
+ * Generates a short, readable id that satisfies the schema. `random` is
+ * injectable to keep tests deterministic.
  */
 export function createId(prefix: string, random: () => number = Math.random): string {
   return `${prefix}-${random().toString(36).slice(2, 8)}`;
 }
 
-/** Reduit un titre libre en identifiant de scene stable. */
+/** Reduces a free-form title to a stable scene id. */
 export function slugify(input: string, fallback = 'scene'): string {
   const slug = input
     .normalize('NFD')
@@ -26,7 +26,7 @@ export function slugify(input: string, fallback = 'scene'): string {
   return slug.length > 0 ? slug : fallback;
 }
 
-/** Titre par defaut d'un noeud neuf, selon ce qu'il est. */
+/** Default title of a fresh node, per kind. */
 const kindTitles: Record<SceneKind, string> = {
   npc: 'Nouveau message',
   player: 'Nouvelle réplique',
@@ -41,7 +41,7 @@ export function createScene(overrides: Partial<Scene> & { id: SceneId; kind: Sce
     position: { x: 0, y: 0 },
     ...overrides,
   };
-  // Un choix sans libelle est une erreur de validation : autant en poser un.
+  // A choice without a label is a validation error, so give it one up front.
   if (scene.kind === 'choice' && !scene.label) scene.label = scene.title;
   return scene;
 }
@@ -50,7 +50,7 @@ export function createLink(overrides: Partial<Link> & { to: SceneId }): Link {
   return { id: createId('lien'), ...overrides };
 }
 
-/** Recit minimal mais deja valide : un message, un choix, une fin. */
+/** Minimal yet already valid story: one message, one choice, one ending. */
 export function createEmptyStory(overrides: Partial<Story> = {}): Story {
   const startId = 'depart';
   const choiceId = 'avancer';

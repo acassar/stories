@@ -1,8 +1,8 @@
 # Embranche
 
-Un jeu d'histoires interactives : un **studio** pour écrire des récits à embranchements sous forme de graphe, un **lecteur** mobile-first pour les jouer. Les deux partagent le même cœur.
+An interactive story game: a **studio** to write branching narratives as a graph, and a mobile-first **reader** to play them. Both share the same core.
 
-> Pensé comme un vieux livre qu'on tient encore chaud entre les mains, tramé de correspondances qu'on lit d'un doigt. Palette sobre, un seul mode de lecture — la conversation — et une bascule jour / nuit.
+> Designed like an old book still warm in your hands, woven into a correspondence you read with one thumb. A sober palette, a single reading mode — the conversation — and a light / dark toggle.
 
 ---
 
@@ -10,53 +10,53 @@ Un jeu d'histoires interactives : un **studio** pour écrire des récits à embr
 
 ```
 apps/
-  studio/          Créateur — éditeur visuel de graphe (React Flow). Desktop / tablette.
-  reader/          Lecteur — mobile-first, lecture en correspondance.
+  studio/          Author tool — visual graph editor (React Flow). Desktop / tablet.
+  reader/          Reader — mobile-first, reading as a conversation.
 packages/
-  story-format/    Schéma, types et validation du format d'histoire (JSON).
-  story-engine/    Moteur d'histoire. TypeScript pur.
-  design-tokens/   Palette, typographie, rayons — la peau des deux apps.
+  story-format/    Schema, types and validation of the story format (JSON).
+  story-engine/    Story engine. Pure TypeScript.
+  design-tokens/   Palette, typography, radii — the skin of both apps.
 ```
 
-### La règle qui structure tout
+### The rule that structures everything
 
-`story-engine` et `story-format` sont **agnostiques du framework UI** : pas de React, pas de DOM, pas d'I/O, pas de `localStorage`. Ils ne connaissent que des données et des événements.
+`story-engine` and `story-format` are **agnostic of the UI framework**: no React, no DOM, no I/O, no `localStorage`. They know only data and events.
 
-Ce n'est pas une intention, c'est vérifié :
+This is not an intention, it is enforced:
 
-- une règle ESLint (`no-restricted-imports` + `no-restricted-globals`) fait **échouer le lint** si un fichier du cœur importe React ou touche à `window` ;
-- leurs `tsconfig.json` déclarent `"types": []` et `"lib": ["ES2022"]` — sans `DOM`, `document` n'existe même pas pour le compilateur ;
-- leurs tests tournent dans l'environnement `node` de Vitest.
+- an ESLint rule (`no-restricted-imports` + `no-restricted-globals`) **fails the lint** if a core file imports React or touches `window`;
+- their `tsconfig.json` declare `"types": []` and `"lib": ["ES2022"]` — without `DOM`, `document` does not even exist for the compiler;
+- their tests run in Vitest's `node` environment.
 
-Conséquence pratique : passer d'une app web à Tauri ou Capacitor, ou remplacer React, ne touche pas une ligne du cœur.
+Practical consequence: moving from a web app to Tauri or Capacitor, or replacing React, does not touch a single line of the core.
 
-### Dépendances autorisées
+### Allowed dependencies
 
-| Paquet          | Dépend de                                       |
+| Package         | Depends on                                      |
 | --------------- | ----------------------------------------------- |
-| `story-format`  | `zod` uniquement                                |
+| `story-format`  | `zod` only                                      |
 | `story-engine`  | `story-format`                                  |
-| `design-tokens` | rien                                            |
+| `design-tokens` | nothing                                         |
 | `apps/*`        | `story-format`, `story-engine`, `design-tokens` |
 
 ---
 
-## Démarrer
+## Getting started
 
 ```bash
 pnpm install
 
-pnpm dev:studio    # http://localhost:5174 — le créateur
-pnpm dev:reader    # http://localhost:5173 — le lecteur
+pnpm dev:studio    # http://localhost:5174 — the author tool
+pnpm dev:reader    # http://localhost:5173 — the reader
 ```
 
-Le lecteur est mobile-first : ouvre-le dans l'inspecteur de ton navigateur en mode téléphone, ou depuis ton mobile — `vite` écoute sur le réseau local (`host: true`).
+The reader is mobile-first: open it in your browser inspector in phone mode, or from your phone — `vite` listens on the local network (`host: true`).
 
-### Vérifier
+### Checks
 
 ```bash
 pnpm verify        # lint + typecheck + tests
-pnpm test          # 129 tests
+pnpm test          # 166 tests
 pnpm lint
 pnpm typecheck
 pnpm format
@@ -64,9 +64,9 @@ pnpm format
 
 ---
 
-## Le format d'histoire
+## The story format
 
-C'est **le contrat** entre les deux apps : le studio écrit, le lecteur lit, aucune divergence de schéma.
+This is **the contract** between the two apps: the studio writes, the reader reads, no schema divergence.
 
 ```jsonc
 {
@@ -74,7 +74,7 @@ C'est **le contrat** entre les deux apps : le studio écrit, le lecteur lit, auc
   "id": "clairiere-lucioles",
   "title": "La Clairière aux Lucioles",
   "version": "2.0.0",
-  "theme": "fantasy", // teinte de reliure : fantasy | mystery | adventure | night
+  "theme": "fantasy", // binding tint: fantasy | mystery | adventure | night
   "narrator": { "name": "Elara", "status": "la voix de la clairière" },
   "startSceneId": "start",
   "variables": { "prudent": false },
@@ -83,7 +83,7 @@ C'est **le contrat** entre les deux apps : le studio écrit, le lecteur lit, auc
       "id": "start",
       "kind": "npc", // npc | player | choice
       "title": "Le sentier",
-      "position": { "x": 400, "y": 0 }, // position du nœud dans le studio
+      "position": { "x": 400, "y": 0 }, // node position in the studio
       "blocks": [{ "text": "Le sentier s'enfonce sous les fougères." }],
       "next": [
         {
@@ -98,8 +98,8 @@ C'est **le contrat** entre les deux apps : le studio écrit, le lecteur lit, auc
       "id": "c-lucioles",
       "kind": "choice",
       "title": "Suivre les lucioles",
-      "label": "Suivre les lucioles", // le texte du bouton
-      "blocks": [{ "text": "Je les suis." }], // ce que le joueur envoie vraiment
+      "label": "Suivre les lucioles", // the button text
+      "blocks": [{ "text": "Je les suis." }], // what the player actually sends
       "position": { "x": 190, "y": 160 },
       "next": [{ "id": "suite", "to": "lucioles" }],
     },
@@ -107,136 +107,136 @@ C'est **le contrat** entre les deux apps : le studio écrit, le lecteur lit, auc
 }
 ```
 
-### La règle qui remplace les choix
+### The rule that replaces choices
 
-Un nœud a un **type**, et c'est le type de ce qu'il vise qui décide de tout :
+A node has a **kind**, and the kind of what it points at decides everything:
 
-| Type     | Qui parle        | Ce qui se passe après                          |
-| -------- | ---------------- | ---------------------------------------------- |
-| `npc`    | l'interlocuteur  | le récit enchaîne seul                         |
-| `player` | le joueur        | le récit enchaîne seul                         |
-| `choice` | le joueur        | **le seul type qui arrête la lecture**         |
+| Kind     | Who speaks        | What happens next                    |
+| -------- | ----------------- | ------------------------------------ |
+| `npc`    | the correspondent | the story chains on by itself        |
+| `player` | the player        | the story chains on by itself        |
+| `choice` | the player        | **the only kind that stops reading** |
 
-> **Si les liens sortants visent des nœuds `choice`, on affiche des boutons ; sinon on enchaîne.**
+> **If the outgoing links point at `choice` nodes, buttons are displayed; otherwise the story chains on.**
 
-Il n'y a rien d'autre à savoir. `npc → npc`, `player → player`, `player → npc` : tout est permis, et tout s'enchaîne sans que le joueur ait à agir. Un nœud joueur peut donc rejoindre directement un nœud personnage, y compris à l'autre bout du graphe, sans passer par un faux choix « Continuer ».
+There is nothing else to know. `npc → npc`, `player → player`, `player → npc`: all are allowed, and all chain on without the player having to act. A player node can therefore reach a character node directly, including at the other end of the graph, without a fake "Continue" choice.
 
-La contrepartie est une règle d'homogénéité, vérifiée par `validateStory` : un nœud ne mélange pas des liens vers des choix et des liens d'enchaînement — sinon le lecteur ne saurait pas s'il doit attendre le joueur.
+The counterpart is a homogeneity rule, enforced by `validateStory`: a node does not mix links to choices with chaining links — otherwise the reader would not know whether to wait for the player.
 
-Quelques décisions et leurs raisons :
+A few decisions and their reasons:
 
-- **Un bloc de texte = un message.** Le lecteur n'a qu'un format de lecture, la correspondance : chaque bloc arrive comme un message, avec un temps de frappe. C'est ce qui fait que `blocks` est une liste et pas une chaîne.
-- **Un bloc ne dit pas qui parle — son nœud le dit.** Le format 1 avait un `speaker` par message ; deux sources de vérité pour la même question finissent par se contredire, et un nœud pouvait afficher ses messages du côté opposé à ce que sa couleur annonçait. Un changement de locuteur au milieu d'une scène s'écrit désormais avec ce que le format sait faire : un second nœud, enchaîné.
-- **La transition est un objet, pas un champ de la scène source.** C'est le `Link` qui porte `condition` et `effects`, parce qu'une même scène peut désormais être atteinte par plusieurs chemins : ranger les conséquences sur la scène les appliquerait quel que soit le chemin suivi.
-- **Le libellé du bouton et le message envoyé sont deux champs.** Un bouton peut annoncer « Mentir » quand la réplique partie est tout autre. Sans `blocks`, c'est le libellé qui part.
-- **Plusieurs liens d'enchaînement = un aiguillage.** Le premier lien dont la condition est remplie l'emporte. Le nœud « condition » sort gratuitement du modèle, sans nouveau type.
-- **Conditions et effets sont des données**, avec un vocabulaire fermé (`eq`, `gt`, `hasItem`, `visited`, `and`/`or`/`not`… et `set`, `inc`, `toggle`, `addItem`…). Aucun `eval`, aucun code arbitraire : un fichier d'histoire hostile ne peut rien exécuter.
-- **La position des nœuds vit dans le format.** Ouvrir un JSON exporté remet le graphe exactement comme l'auteur l'avait posé.
-- **Les champs média** (`backgroundImage`, `ambience`, `portrait`) sont déclarés mais **volontairement non exploités** — le contrat est figé, l'implémentation viendra.
+- **One text block = one message.** The reader has a single reading format, the conversation: each block arrives as a message, with a typing delay. That is why `blocks` is a list and not a string.
+- **A block does not say who speaks — its node does.** The node kind is the single source of truth for the speaker, so a node can never display its messages on the side opposite to what its color announces. A change of speaker in the middle of a scene is written as a second, chained node.
+- **A transition is an object, not a field of the source scene.** The `Link` carries `condition` and `effects`, because one scene can be reached through several paths: storing the consequences on the scene would apply them whichever path was taken.
+- **The button label and the message sent are two fields.** A button can read "Mentir" while the line that goes out says something else entirely. Without `blocks`, the label is what goes out.
+- **Several chaining links = a switch.** The first link whose condition holds wins. A "condition" node comes for free from the model, without a new kind.
+- **Conditions and effects are data**, with a closed vocabulary (`eq`, `gt`, `hasItem`, `visited`, `and`/`or`/`not`… and `set`, `inc`, `toggle`, `addItem`…). No `eval`, no arbitrary code: a hostile story file cannot execute anything.
+- **Node positions live in the format.** Opening an exported JSON puts the graph back exactly where the author left it.
+- **Media fields** (`backgroundImage`, `ambience`, `portrait`) are declared but **deliberately unused** — the contract is frozen, the implementation comes later.
 
-### Migration depuis le format 1
+### Migration from format 1
 
-`migrateStory` traduit un document d'hier, à chaque porte d'entrée (`parseStory`, la bibliothèque du lecteur, le rangement local du studio). Chaque ancienne scène devient un nœud `npc`, et chaque choix qu'elle portait devient un nœud `choice` intercalé :
+`migrateStory` translates an older document at every entry point (`parseStory`, the reader library, the studio local storage). Each legacy scene becomes an `npc` node, and each choice it carried becomes a `choice` node inserted in between:
 
 ```
-[scène] --choix--> [cible]           (format 1)
-[npc] --> [choice] --> [cible]       (format 2)
+[scene] --choice--> [target]         (format 1)
+[npc] --> [choice] --> [target]      (format 2)
 ```
 
-Le premier lien hérite de la condition et des effets du choix — c'est lui qu'on emprunte en appuyant sur le bouton. Aucun brouillon n'est perdu. Les **parties sauvegardées**, en revanche, ne survivent pas : l'historique est passé de `choiceId` à `linkId`.
+The first link inherits the condition and the effects of the choice — it is the one taken when the button is pressed. No draft is lost. **Saved runs**, on the other hand, do not survive: the history moved from `choiceId` to `linkId`.
 
-Une scène qui alternait les locuteurs message par message (`speaker`) est **éclatée en autant de nœuds que de changements de voix**, enchaînés automatiquement — le rendu est identique, le modèle devient honnête. Les liens sortants et la fin passent au dernier fragment. `migrateStory` répare aussi, au passage, un document déjà en v2 qui traînerait encore ce champ ; l'opération est idempotente et laisse intact ce qui n'a rien à corriger.
+A scene that alternated speakers message by message (`speaker`) is **split into as many nodes as there are voice changes**, chained automatically — the rendering is identical. `migrateStory` also repairs a document already in v2 that still carries that field; the operation is idempotent and leaves untouched whatever needs no fixing.
 
 ### Validation
 
-`validateStory` renvoie une liste d'anomalies typées, séparées en deux niveaux :
+`validateStory` returns a list of typed issues, split into two levels:
 
-- **`error`** — le récit n'est pas jouable : scène de départ absente, lien vers une scène inexistante, identifiants dupliqués, choix sans libellé, nœud qui mélange choix et enchaînement, **boucle d'enchaînements automatiques** dont la lecture ne sortirait jamais. Le studio bloque le playtest, le lecteur refuse le fichier.
-- **`warning`** — un problème d'écriture qui n'empêche pas de jouer : scène orpheline, cul-de-sac, fin qui garde des liens sortants, enchaînement dont tous les liens sont conditionnels, condition lisant une variable jamais écrite.
+- **`error`** — the story is not playable: missing start scene, link to a nonexistent scene, duplicate ids, choice without a label, node mixing choices and chaining, **automatic chaining loop** the reading would never leave. The studio blocks the playtest, the reader refuses the file.
+- **`warning`** — a writing problem that does not prevent playing: orphan scene, dead end, ending that keeps outgoing links, chaining whose links are all conditional, condition reading a variable that is never written.
 
-Le studio l'appelle à chaque frappe : les nœuds fautifs prennent un anneau rouge et la barre du bas liste les anomalies, cliquables.
+The studio calls it on every keystroke: offending nodes get a red ring, and the bottom bar lists the issues, clickable.
 
 ---
 
-## Le moteur
+## The engine
 
 ```ts
 import { StoryEngine } from '@embranche/story-engine';
 
 const engine = new StoryEngine(story);
 
-engine.getCurrentScene(); // texte + SEULS les choix dont la condition est remplie
-engine.choose('vers-lucioles'); // valide, applique les effets, avance
-engine.advance(); // poursuit d'un nœud quand le récit enchaîne seul
-engine.goBack(); // revient au choix précédent
-engine.serialize(); // sauvegarde (à ranger où tu veux)
+engine.getCurrentScene(); // text + ONLY the choices whose condition holds
+engine.choose('vers-lucioles'); // validates, applies the effects, moves on
+engine.advance(); // moves on one node when the story chains by itself
+engine.goBack(); // returns to the previous choice
+engine.serialize(); // save (store it wherever you like)
 
 engine.on('story:ended', ({ ending }) => console.log(ending.name));
-const unsubscribe = engine.subscribe(() => render()); // pour useSyncExternalStore
+const unsubscribe = engine.subscribe(() => render()); // for useSyncExternalStore
 ```
 
-Trois points qui méritent d'être connus :
+Three points worth knowing:
 
-- **`advance` ne déroule qu'un nœud à la fois.** Le moteur pourrait dérouler toute la chaîne d'un coup ; il ne le fait pas, parce que chaque nœud traversé doit pouvoir s'afficher à son rythme dans la correspondance. C'est l'UI qui rappelle, une fois les messages arrivés.
-- **`goBack` revient au dernier _choix_, pas au dernier nœud** — et il rejoue plutôt qu'il n'inverse. Reculer d'un seul cran reposerait le joueur devant une scène qui repartirait aussitôt toute seule. Quant à l'annulation d'un `toggle` ou d'un `set` qui a écrasé une valeur, elle est impossible par inversion : le moteur étant déterministe, il repart d'un état neuf et rejoue l'historique tronqué — c'est exact par construction.
-- **L'instantané a une référence stable** tant que l'état ne change pas. C'est le contrat exact de `useSyncExternalStore`, d'où un pont React de trente lignes (`useStory`) sans état dupliqué à resynchroniser.
+- **`advance` unrolls one node at a time.** The engine could unroll the whole chain at once; it does not, because each node walked through must be able to appear at its own pace in the conversation. The UI calls back once the messages have arrived.
+- **`goBack` returns to the last _choice_, not to the last node** — and it replays rather than inverts. Stepping back a single node would put the player in front of a scene that immediately moves on again. Undoing a `toggle` or a `set` that overwrote a value is impossible by inversion: the engine being deterministic, it starts from a fresh state and replays the truncated history — exact by construction.
+- **The snapshot has a stable reference** as long as the state does not change. That is exactly the contract of `useSyncExternalStore`, hence a thirty-line React bridge (`useStory`) with no duplicated state to resynchronize.
 
-Le moteur ne persiste rien. `serialize()` rend une chaîne, l'appelant décide de sa destination — c'est l'app qui appelle `localStorage`.
-
----
-
-## Le studio
-
-Deux écrans : le tableau de bord (créer, ouvrir, dupliquer, importer, exporter, supprimer) et l'éditeur de graphe.
-
-Sur le canvas, **la couleur d'un nœud est son type** — encre froide pour l'interlocuteur, vert pour la voix du joueur, prune pour une décision. C'est l'information la plus structurante du graphe, puisqu'elle dit si la lecture s'arrête là ou si elle continue seule ; elle doit donc se lire sans zoomer. Une étiquette la double en toutes lettres : la couleur ne porte jamais l'information toute seule.
-
-Une arête du canvas est exactement un `Link` du récit — plus rien n'est caché dans le nœud source. Tirer une arête crée un lien vers n'importe quel nœud déjà écrit, ce qui est tout le geste « rejoindre un nœud lointain ». Une connexion qui mélangerait choix et enchaînement est refusée au moment de la tracer, plutôt que signalée après coup.
-
-Trois boutons créent les trois types, colorés comme ce qu'ils produisent. Depuis un nœud sélectionné, ils créent la suite : le nœud **et** son lien, donc jamais de cible pendante.
-
-Le panneau de droite édite le type, le texte (bloc par bloc) et les liens sortants. Sur un nœud `choice`, il affiche aussi la condition et les effets de son lien entrant — pour l'auteur, « ce bouton n'apparaît que si… » est une propriété du bouton, même si la donnée vit sur l'arête.
-
-Les conditions se construisent ligne par ligne pour le cas courant — une liste de tests joints par ET ou OU. Une condition imbriquée, écrite à la main dans un JSON importé, bascule sur un champ JSON validé par le schéma : mieux vaut un champ austère qu'une réécriture qui perdrait de l'information.
-
-Le **playtest** lance le récit courant dans `story-engine`, sans quitter l'éditeur, avec le même moteur que le lecteur. Les choix dont la condition n'est pas remplie y sont grisés plutôt que masqués — c'est un outil de relecture, pas une partie.
-
-Le travail en cours est rangé dans `localStorage` (écriture différée de 400 ms, purgée avant fermeture d'onglet).
+The engine persists nothing. `serialize()` returns a string and the caller decides where it goes — the app is what calls `localStorage`.
 
 ---
 
-## Le lecteur
+## The studio
 
-Mobile d'abord, puis élargi : cibles tactiles d'au moins 48 px, choix en boutons pleine largeur atteignables au pouce, `env(safe-area-inset-*)` respecté, aucun survol requis, texte lisible sans zoom. Au-delà de 720 px, la lecture est recentrée en colonne plutôt qu'étirée.
+Two screens: the dashboard (create, open, duplicate, import, export, delete) and the graph editor.
 
-La lecture se fait en correspondance : les messages arrivent un à un avec un indicateur de frappe, la réponse choisie reste dans le fil. Taper dans la conversation saute l'attente. Une préférence système de mouvement réduit affiche la scène d'un bloc, sans rien changer au jeu.
+On the canvas, **the color of a node is its kind** — cold ink for the correspondent, green for the player's voice, plum for a decision. It is the most structuring information in the graph, since it says whether the reading stops there or carries on by itself; it must therefore read without zooming. A label spells it out as well: color never carries the information alone.
 
-Quand le nœud courant n'attend aucune décision, le récit poursuit de lui-même — mais seulement une fois ses messages arrivés, et après le même silence qu'entre deux messages. C'est ce qui fait qu'une réplique imposée du joueur, ou deux répliques d'affilée de l'interlocuteur, se lisent comme une vraie conversation plutôt que comme un bloc qui tombe d'un coup.
+An edge on the canvas is exactly a `Link` of the story — nothing is hidden in the source node. Dragging an edge creates a link to any node already written, which is the whole "reach a distant node" gesture. A connection that would mix choices and chaining is refused as it is drawn, rather than reported afterwards.
 
-Sauvegarde, palmarès des fins vues et mode jour/nuit vivent dans `localStorage`, branchés depuis l'app.
+Three buttons create the three kinds, colored like what they produce. From a selected node, they create the continuation: the node **and** its link, so never a dangling target.
 
-### Aller du studio au lecteur
+The right-hand panel edits the kind, the text (block by block) and the outgoing links. On a `choice` node it also shows the condition and the effects of its incoming link — for the author, "this button only appears if…" is a property of the button, even though the data lives on the edge.
 
-1. Studio → **Exporter JSON** (ou l'icône ⤓ du tableau de bord).
-2. Lecteur → **＋** en haut de la bibliothèque → choisir le fichier.
+Conditions are built row by row for the common case — a list of tests joined by AND or OR. A nested condition, hand-written in an imported JSON, falls back to a JSON field validated by the schema: an austere field beats a rewrite that would lose information.
 
-Le lecteur revalide le document et refuse net un récit incohérent.
+The **playtest** runs the current story through `story-engine`, without leaving the editor, with the same engine as the reader. Choices whose condition does not hold are greyed out rather than hidden — this is a proofreading tool, not a run.
+
+Work in progress is stored in `localStorage` (deferred write of 400 ms, flushed before the tab closes).
+
+---
+
+## The reader
+
+Mobile first, then widened: touch targets of at least 48 px, choices as full-width buttons reachable with the thumb, `env(safe-area-inset-*)` respected, no hover required, text readable without zooming. Beyond 720 px, the reading is recentered as a column rather than stretched.
+
+Reading happens as a conversation: messages arrive one by one with a typing indicator, and the chosen answer stays in the thread. Tapping the conversation skips the wait. A system reduced-motion preference displays the scene in one block, changing nothing to the game.
+
+When the current node awaits no decision, the story carries on by itself — but only once its messages have arrived, and after the same silence as between two messages. That is what makes a forced player line, or two lines in a row from the correspondent, read as a real conversation rather than as a block dropping all at once.
+
+Saves, the record of seen endings and the light/dark mode live in `localStorage`, wired from the app.
+
+### From the studio to the reader
+
+1. Studio → **Exporter JSON** (or the ⤓ icon on the dashboard).
+2. Reader → **＋** at the top of the library → pick the file.
+
+The reader revalidates the document and flatly refuses an inconsistent story.
 
 ---
 
 ## Tests
 
-162 tests, tous verts.
+166 tests, all green.
 
-| Suite          | Ce qu'elle couvre                                                                                    |
-| -------------- | ---------------------------------------------------------------------------------------------------- |
-| `story-format` | schéma, cohérence du graphe, migration 1 → 2, aller-retour JSON, cas d'erreur                          |
-| `story-engine` | progression, enchaînement automatique, conditions, effets, retour, sérialisation, événements           |
-| `studio`       | opérations d'édition, projection vers React Flow, persistance, import                                  |
-| `reader`       | partie complète jusqu'à une fin, choix conditionnel, reprise, correspondance                           |
+| Suite          | What it covers                                                                   |
+| -------------- | -------------------------------------------------------------------------------- |
+| `story-format` | schema, graph coherence, migration 1 → 2, JSON round-trip, error cases            |
+| `story-engine` | progression, automatic chaining, conditions, effects, going back, serialization, events |
+| `studio`       | editing operations, projection to React Flow, persistence, import                 |
+| `reader`       | full run to an ending, conditional choice, resume, conversation                   |
 
 ---
 
-## Ce qui n'est pas là
+## What is not here
 
-Voir [BACKLOG.md](BACKLOG.md). En résumé : pas de Tauri (les apps sont web autonomes et Tauri-ready, l'intégration viendra), pas de média, pas de compte, pas d'annulation dans le studio.
+See [BACKLOG.md](BACKLOG.md). In short: no Tauri (the apps are standalone web apps and Tauri-ready, the integration comes later), no media, no accounts, no undo in the studio.

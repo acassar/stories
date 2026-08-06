@@ -1,11 +1,10 @@
 /**
- * Recits d'exemple — bibliotheque de depart du lecteur et bac a sable des
- * tests.
+ * Sample stories — the reader's starting library and the test sandbox.
  *
- * Ils sont ecrits pour couvrir chaque forme du graphe : embranchement
- * (`npc` → plusieurs `choice`), enchainement automatique (`choice` → `player`,
- * `npc` → `npc`), convergence de plusieurs chemins sur un meme noeud, lien
- * conditionnel et effets. Ce qui casse ici casse le format.
+ * They are written to cover every shape of the graph: branching (`npc` →
+ * several `choice`), automatic chaining (`choice` → `player`, `npc` → `npc`),
+ * several paths converging on one node, conditional links and effects. What
+ * breaks here breaks the format.
  */
 
 import { STORY_FORMAT_VERSION } from './types.js';
@@ -77,8 +76,8 @@ export const clairiereStory: Story = {
         { id: 'vers-franchir', to: 'c-franchir' },
         { id: 'vers-attendre', to: 'c-attendre' },
         {
-          // N'apparait qu'au joueur passe par le chene puis redescendu : le
-          // detour prudent lui vaut un raccourci.
+          // Only shows for a player who went up to the oak and came back down:
+          // the cautious detour earns a shortcut.
           id: 'vers-elara',
           to: 'c-elara',
           condition: { op: 'eq', variable: 'prudent', value: true },
@@ -149,8 +148,8 @@ export const clairiereStory: Story = {
       blocks: [{ text: 'Non. Je redescends.' }],
       next: [{ id: 'suite', to: 'prudence' }],
     },
-    // Un noeud joueur qui ne demande rien : le joueur parle, puis le recit
-    // rejoint tout seul une scene deja ecrite, sans passer par un choix.
+    // A player node that asks for nothing: the player speaks, then the story
+    // reaches an already written scene on its own, without a choice.
     prudence: {
       id: 'prudence',
       kind: 'player',
@@ -323,7 +322,7 @@ export const verlaineStory: Story = {
       label: 'Continuer seul',
       position: { x: 520, y: 470 },
       blocks: [{ text: 'Personne. Je continue seul.' }],
-      // Deux chemins bien differents convergent sur le meme quai.
+      // Two very different paths converge on the same quay.
       next: [{ id: 'suite', to: 'port' }],
     },
 
@@ -481,7 +480,7 @@ export const cimesStory: Story = {
       title: 'Repartir',
       label: 'Repartir vers le sommet',
       position: { x: 380, y: 470 },
-      // Rejoint une scene deja visitee : le graphe n'est pas un arbre.
+      // Reaches an already visited scene: the graph is not a tree.
       blocks: [{ text: 'On repart. Le sommet nous attend.' }],
       next: [{ id: 'suite', to: 'sommet' }],
     },
@@ -696,7 +695,7 @@ export const inconnuStory: Story = {
       title: 'La voiture grise',
       position: { x: 0, y: 620 },
       blocks: [{ text: 'Tu la vois, la voiture grise en bas ?' }],
-      // Enchainement npc → npc : la suite arrive sans que le joueur agisse.
+      // npc → npc chaining: what follows arrives without the player acting.
       next: [{ id: 'suite', to: 'monte' }],
     },
     monte: {
@@ -719,7 +718,7 @@ export const inconnuStory: Story = {
       blocks: [{ text: "J'y vais." }],
       next: [{ id: 'suite', to: 'descente' }],
     },
-    // Une replique du joueur, puis le recit reprend la main tout seul.
+    // A line from the player, then the story takes over on its own.
     descente: {
       id: 'descente',
       kind: 'player',
@@ -782,8 +781,8 @@ export const inconnuStory: Story = {
   },
 };
 
-/** Bibliotheque livree avec l'app. */
+/** Library shipped with the app. */
 export const exampleStories: Story[] = [clairiereStory, verlaineStory, cimesStory, inconnuStory];
 
-/** Recit de reference des tests et du premier lancement. */
+/** Reference story for the tests and for the first launch. */
 export const exampleStory = clairiereStory;

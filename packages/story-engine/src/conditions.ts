@@ -1,14 +1,14 @@
 /**
- * Evaluation des conditions.
+ * Condition evaluation.
  *
- * Le vocabulaire est ferme et les conditions sont des donnees : il n'y a ni
- * `eval`, ni `new Function`, ni interpolation de chaine. Un fichier d'histoire
- * hostile ne peut rien executer — au pire, il decrit une condition fausse.
+ * The vocabulary is closed and conditions are data: there is no `eval`, no
+ * `new Function`, no string interpolation. A hostile story file cannot execute
+ * anything — at worst it describes a condition that is false.
  */
 
 import type { Condition, GameState, VariableValue } from '@embranche/story-format';
 
-/** Vue en lecture seule de l'etat, suffisante pour evaluer une condition. */
+/** Read-only view of the state, enough to evaluate a condition. */
 export interface ConditionContext {
   variables: Readonly<Record<string, VariableValue>>;
   inventory: Readonly<Record<string, number>>;
@@ -20,9 +20,9 @@ export function contextFromState(state: GameState): ConditionContext {
 }
 
 /**
- * Compare deux valeurs. `eq`/`neq` acceptent tous les types ; les comparaisons
- * d'ordre exigent deux nombres — comparer un nombre a une chaine est une erreur
- * d'ecriture, on renvoie `false` plutot que de bricoler une coercition.
+ * Compares two values. `eq`/`neq` accept every type; ordering comparisons
+ * require two numbers — comparing a number to a string is an authoring mistake,
+ * so it returns `false` rather than improvising a coercion.
  */
 function compare(
   op: 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte',
@@ -45,7 +45,7 @@ function compare(
   }
 }
 
-/** Vrai si la condition est satisfaite dans ce contexte. */
+/** True when the condition holds in this context. */
 export function evaluateCondition(condition: Condition, context: ConditionContext): boolean {
   switch (condition.op) {
     case 'always':
@@ -82,7 +82,7 @@ export function evaluateCondition(condition: Condition, context: ConditionContex
   }
 }
 
-/** Une condition absente vaut « toujours disponible ». */
+/** A missing condition means "always available". */
 export function isSatisfied(condition: Condition | undefined, context: ConditionContext): boolean {
   return condition === undefined || evaluateCondition(condition, context);
 }

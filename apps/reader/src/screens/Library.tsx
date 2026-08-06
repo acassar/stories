@@ -9,9 +9,9 @@ import { countEndings } from '../lib/library';
 
 interface Props {
   stories: Story[];
-  /** Fins deja vues, par recit. */
+  /** Endings already seen, per story. */
   endings: Record<string, string[]>;
-  /** Sauvegardes en cours, par recit. */
+  /** Runs in progress, per story. */
   saves: Record<string, GameState | null>;
   mode: ColorMode;
   onToggleMode: () => void;
@@ -19,7 +19,7 @@ interface Props {
   onImport: (file: File) => void;
 }
 
-/** Ecran d'accueil : l'ex-libris du lecteur. */
+/** Home screen: the reader's bookplate. */
 export function Library({ stories, endings, saves, mode, onToggleMode, onOpen, onImport }: Props) {
   const fileInput = useRef<HTMLInputElement>(null);
 

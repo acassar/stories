@@ -1,9 +1,9 @@
 /**
- * Moteur d'histoire — TypeScript pur, sans framework, sans DOM, sans I/O.
+ * Story engine — pure TypeScript, no framework, no DOM, no I/O.
  *
- * Il connait trois choses : un recit (immuable), un etat de partie (remplace a
- * chaque transition, jamais mute), et une liste d'abonnes qu'il previent quand
- * l'un des deux bouge. Toute UI qui sait s'abonner peut l'afficher.
+ * It knows three things: a story (immutable), a game state (replaced on every
+ * transition, never mutated), and a list of subscribers it notifies when either
+ * moves. Any UI able to subscribe can render it.
  */
 
 import {
@@ -34,35 +34,35 @@ import { createInitialState, serializeState, systemClock } from './state.js';
 import type { Clock } from './state.js';
 
 /**
- * Un choix tel que l'UI doit le voir. `id` est celui du *lien* emprunte, pas
- * du noeud vise : deux liens peuvent mener au meme noeud de choix.
+ * A choice as the UI should see it. `id` is that of the *link* taken, not of
+ * the target node: two links can lead to the same choice node.
  */
 export interface ResolvedChoice {
   id: LinkId;
   label: string;
   target: SceneId;
-  /** Faux quand la condition du lien n'est pas remplie. */
+  /** False when the link condition is not satisfied. */
   available: boolean;
 }
 
-/** La scene courante, deja resolue : plus rien a interpreter cote UI. */
+/** The current scene, already resolved: nothing left for the UI to interpret. */
 export interface ResolvedScene {
   id: SceneId;
   kind: SceneKind;
   title: string;
-  /** Ce que la scene envoie — le libelle d'un choix a defaut de corps. */
+  /** What the scene sends — a choice label when it has no body. */
   blocks: readonly TextBlock[];
-  /** Qui parle par defaut dans cette scene. */
+  /** Who speaks in this scene. */
   speaker: 'narrator' | 'player';
   /**
-   * Les choix a proposer, si la scene en attend un. Vide quand le recit
-   * enchaine seul : c'est `advance()` qui prend alors le relais.
+   * The choices to offer, when the scene awaits one. Empty when the story
+   * chains on by itself: `advance()` takes over then.
    */
   choices: readonly ResolvedChoice[];
   allChoices: readonly ResolvedChoice[];
-  /** Vrai si la lecture doit s'arreter ici en attendant une decision. */
+  /** True when the reading must stop here and wait for a decision. */
   awaitsChoice: boolean;
-  /** Vrai s'il reste un enchainement automatique praticable. */
+  /** True when a passable automatic chaining link remains. */
   canAdvance: boolean;
   isEnding: boolean;
   ending?: SceneEnding;
@@ -70,44 +70,44 @@ export interface ResolvedScene {
 }
 
 /**
- * Instantane complet. Sa reference ne change que si l'etat change — c'est le
- * contrat attendu par `useSyncExternalStore`.
+ * Full snapshot. Its reference only changes when the state changes — exactly
+ * the contract `useSyncExternalStore` expects.
  */
 export interface EngineSnapshot {
   state: GameState;
   scene: ResolvedScene;
   canGoBack: boolean;
-  /** Nombre de fins distinctes du recit, et celle qui vient d'etre atteinte. */
+  /** Number of distinct endings in the story. */
   endingCount: number;
   /**
-   * Decisions reellement prises par le joueur — a distinguer de la longueur de
-   * l'historique, qui compte aussi les noeuds traverses tout seuls.
+   * Decisions actually taken by the player — distinct from the history length,
+   * which also counts nodes walked through automatically.
    */
   decisions: number;
 }
 
 export interface EngineEvents {
-  /** Emis a chaque nouvel etat, quelle qu'en soit la cause. */
+  /** Emitted on every new state, whatever the cause. */
   'state:changed': { state: GameState; snapshot: EngineSnapshot };
-  /** Emis quand la scene courante change (choix, enchainement, retour, reprise). */
+  /** Emitted when the current scene changes (choice, chaining, back, resume). */
   'scene:changed': { scene: ResolvedScene; previousSceneId: SceneId | null };
   /**
-   * Emis apres application des effets d'un lien emprunte. `chosen` distingue
-   * la decision du joueur du simple enchainement.
+   * Emitted after applying the effects of a link that was taken. `chosen`
+   * distinguishes a player decision from plain chaining.
    */
   'link:followed': { link: Link; from: SceneId; to: SceneId; chosen: boolean };
-  /** Emis a l'arrivee sur une scene terminale. */
+  /** Emitted on arrival at a terminal scene. */
   'story:ended': { scene: ResolvedScene; ending: SceneEnding };
 }
 
 export interface StoryEngineOptions {
-  /** Etat de depart. Par defaut, une partie neuve sur la scene initiale. */
+  /** Starting state. Defaults to a fresh run on the initial scene. */
   state?: GameState;
-  /** Horloge injectable, pour des tests deterministes. */
+  /** Injectable clock, for deterministic tests. */
   now?: Clock;
   /**
-   * Valider le recit a la construction (defaut : `true`). Le studio le passe a
-   * `false` pendant l'edition, ou le graphe est transitoirement incoherent.
+   * Validate the story on construction (default: `true`). The studio sets it to
+   * `false` while editing, where the graph is transiently inconsistent.
    */
   validate?: boolean;
 }
@@ -118,7 +118,7 @@ export class StoryEngine {
   private readonly _story: Story;
   private _state: GameState;
   private _snapshot: EngineSnapshot;
-  /** Abonnes « bruts » de `subscribe()` — le pont vers useSyncExternalStore. */
+  /** Raw `subscribe()` listeners — the bridge to useSyncExternalStore. */
   private readonly subscribers = new Set<() => void>();
 
   constructor(story: Story, options: StoryEngineOptions = {}) {
@@ -137,13 +137,13 @@ export class StoryEngine {
     this._snapshot = this.buildSnapshot(state);
   }
 
-  /** Ouvre un recit depuis un JSON quelconque : il est valide au passage. */
+  /** Opens a story from arbitrary JSON, validating it along the way. */
   static fromJson(json: string, options: StoryEngineOptions = {}): StoryEngine {
     return new StoryEngine(JSON.parse(json) as Story, options);
   }
 
   // -------------------------------------------------------------------------
-  // Lecture
+  // Reading
   // -------------------------------------------------------------------------
 
   get story(): Story {
@@ -155,8 +155,9 @@ export class StoryEngine {
   }
 
   /**
-   * Instantane courant — reference stable tant que l'etat ne change pas.
-   * Liee a l'instance : `useSyncExternalStore` la recoit detachee du moteur.
+   * Current snapshot — stable reference as long as the state does not change.
+   * Bound to the instance: `useSyncExternalStore` receives it detached from the
+   * engine.
    */
   readonly getSnapshot = (): EngineSnapshot => this._snapshot;
 
@@ -164,7 +165,7 @@ export class StoryEngine {
     return this._snapshot.scene;
   }
 
-  /** Uniquement les choix dont la condition est remplie. */
+  /** Only the choices whose condition is satisfied. */
   getAvailableChoices(): readonly ResolvedChoice[] {
     return this._snapshot.scene.choices;
   }
@@ -173,7 +174,7 @@ export class StoryEngine {
     return this._snapshot.scene.choices.some((choice) => choice.id === linkId);
   }
 
-  /** Vrai si le recit peut poursuivre seul, sans decision du joueur. */
+  /** True when the story can carry on without a decision from the player. */
   canAdvance(): boolean {
     return this._snapshot.scene.canAdvance;
   }
@@ -191,10 +192,10 @@ export class StoryEngine {
   // -------------------------------------------------------------------------
 
   /**
-   * Retient un choix : verifie que le lien est proposable, applique ses effets,
-   * puis avance. Leve `EngineError` si le lien n'existe pas, ne mene pas a un
-   * noeud de choix, ou si sa condition n'est pas remplie — l'UI ne devrait
-   * jamais proposer un tel bouton.
+   * Takes a choice: checks the link can be offered, applies its effects, then
+   * moves on. Throws `EngineError` when the link does not exist, does not lead
+   * to a choice node, or when its condition is not satisfied — the UI should
+   * never offer such a button.
    */
   choose(linkId: LinkId): void {
     const from = this._state.currentSceneId;
@@ -220,13 +221,13 @@ export class StoryEngine {
   }
 
   /**
-   * Poursuit sans decision : emprunte le premier lien praticable vers un noeud
-   * qui n'est pas un choix. Renvoie faux quand il n'y a rien a enchainer — la
-   * scene attend le joueur, ou le recit est fini.
+   * Carries on without a decision: takes the first passable link to a node that
+   * is not a choice. Returns false when there is nothing to chain — the scene
+   * awaits the player, or the story is over.
    *
-   * C'est l'UI qui appelle, une etape a la fois, plutot que le moteur qui
-   * deroule la chaine d'un coup : chaque noeud traverse doit pouvoir s'afficher
-   * a son rythme dans la correspondance.
+   * The UI calls this one step at a time rather than letting the engine unroll
+   * the whole chain at once: every node walked through must be able to appear
+   * at its own pace in the conversation.
    */
   advance(): boolean {
     const from = this._state.currentSceneId;
@@ -243,13 +244,13 @@ export class StoryEngine {
     return true;
   }
 
-  /** Emprunte un lien : effets, deplacement, historique, evenements. */
+  /** Takes a link: effects, move, history, events. */
   private follow(link: Link, chosen: boolean): void {
     const from = this._state.currentSceneId;
     this.assertKnownScene(link.to);
 
-    // Les effets sont appliques avant l'arrivee : la scene cible et ses propres
-    // conditions voient deja le monde tel que le lien vient de le modifier.
+    // Effects are applied before arrival: the target scene and its own
+    // conditions already see the world as the link just changed it.
     let next = applyEffects(this._state, link.effects);
     next = {
       ...next,
@@ -269,16 +270,16 @@ export class StoryEngine {
   }
 
   /**
-   * Revient au dernier choix — pas au dernier noeud.
+   * Goes back to the last choice — not to the last node.
    *
-   * Les enchainements automatiques sont annules avec lui : reculer d'un seul
-   * cran reposerait le joueur devant une scene qui repartirait aussitot toute
-   * seule, et le bouton « revenir » ne ferait rien de visible.
+   * Automatic chaining is undone along with it: stepping back a single node
+   * would put the player in front of a scene that immediately moves on again,
+   * and the back button would do nothing visible.
    *
-   * L'etat est *rejoue* depuis le debut a partir de l'historique tronque,
-   * plutot que d'essayer d'inverser les effets : c'est la seule facon exacte
-   * d'annuler un `toggle` ou un `set` qui a ecrase une valeur. Le moteur etant
-   * deterministe, le rejeu redonne l'etat exact.
+   * The state is *replayed* from scratch using the truncated history rather
+   * than trying to invert the effects: that is the only exact way to undo a
+   * `toggle` or a `set` that overwrote a value. The engine being
+   * deterministic, the replay yields the exact state.
    */
   goBack(): void {
     if (this._state.history.length === 0) {
@@ -289,7 +290,7 @@ export class StoryEngine {
     this.commit(replayed, from);
   }
 
-  /** Rang, dans l'historique, du dernier lien retenu par le joueur. */
+  /** Index, in the history, of the last link the player chose. */
   private lastDecisionIndex(): number {
     for (let i = this._state.history.length - 1; i >= 0; i -= 1) {
       const entry = this._state.history[i];
@@ -298,13 +299,13 @@ export class StoryEngine {
     return 0;
   }
 
-  /** Repart de zero sur le meme recit. */
+  /** Starts over on the same story. */
   reset(): void {
     const from = this._state.currentSceneId;
     this.commit(createInitialState(this._story, this.clock), from);
   }
 
-  /** Reprend une partie sauvegardee. */
+  /** Resumes a saved run. */
   loadState(state: GameState): void {
     if (state.storyId !== this._story.id) {
       throw new EngineError(
@@ -318,7 +319,7 @@ export class StoryEngine {
   }
 
   // -------------------------------------------------------------------------
-  // Persistance (l'appelant decide ou ranger le resultat)
+  // Persistence (the caller decides where the result goes)
   // -------------------------------------------------------------------------
 
   serialize(): string {
@@ -326,12 +327,12 @@ export class StoryEngine {
   }
 
   // -------------------------------------------------------------------------
-  // Abonnement
+  // Subscription
   // -------------------------------------------------------------------------
 
   /**
-   * Abonnement sans charge utile, appele a chaque changement d'etat.
-   * Conçu pour `useSyncExternalStore(engine.subscribe, engine.getSnapshot)`.
+   * Payload-free subscription, called on every state change. Designed for
+   * `useSyncExternalStore(engine.subscribe, engine.getSnapshot)`.
    */
   readonly subscribe = (listener: () => void): Unsubscribe => {
     this.subscribers.add(listener);
@@ -340,7 +341,7 @@ export class StoryEngine {
     };
   };
 
-  /** Abonnement type, evenement par evenement. */
+  /** Typed subscription, one event at a time. */
   on<K extends keyof EngineEvents>(
     event: K,
     listener: (payload: EngineEvents[K]) => void,
@@ -359,14 +360,14 @@ export class StoryEngine {
     this.emitter.off(event, listener);
   }
 
-  /** Coupe tous les abonnements — a appeler quand l'UI se demonte. */
+  /** Drops every subscription — call it when the UI unmounts. */
   dispose(): void {
     this.emitter.removeAllListeners();
     this.subscribers.clear();
   }
 
   // -------------------------------------------------------------------------
-  // Interne
+  // Internals
   // -------------------------------------------------------------------------
 
   private commit(next: GameState, previousSceneId: SceneId | null): void {
@@ -380,7 +381,7 @@ export class StoryEngine {
     }
   }
 
-  /** Rejoue une suite de choix depuis un etat neuf. */
+  /** Replays a sequence of steps from a fresh state. */
   private replay(history: GameState['history']): GameState {
     let state = createInitialState(this._story, this.clock);
     state = { ...state, startedAt: this._state.startedAt };
@@ -388,8 +389,8 @@ export class StoryEngine {
     for (const entry of history) {
       const scene = this._story.scenes[entry.sceneId];
       const link = scene?.next.find((candidate) => candidate.id === entry.linkId);
-      // Un historique qui ne colle plus au recit (scene supprimee depuis) est
-      // tronque ici plutot que de faire planter la reprise.
+      // A history that no longer matches the story (a scene deleted since) is
+      // truncated here rather than breaking the resume.
       if (!link || !this._story.scenes[link.to]) break;
 
       state = applyEffects(state, link.effects);
@@ -413,7 +414,7 @@ export class StoryEngine {
     };
   }
 
-  /** Une etape de l'historique correspond-elle a un bouton effectivement presse ? */
+  /** Does this history entry correspond to a button the player pressed? */
   private isDecision(entry: GameState['history'][number]): boolean {
     const link = this._story.scenes[entry.sceneId]?.next.find((l) => l.id === entry.linkId);
     return Boolean(link && this._story.scenes[link.to]?.kind === 'choice');
@@ -422,7 +423,7 @@ export class StoryEngine {
   private resolveScene(state: GameState): ResolvedScene {
     const scene = this.requireScene(state.currentSceneId);
     const context = contextFromState(state);
-    // Une scene terminale ne mene nulle part, meme si des liens y trainent encore.
+    // A terminal scene leads nowhere, even if links are still hanging off it.
     const waits = !scene.ending && awaitsChoice(this._story, scene);
 
     const allChoices: ResolvedChoice[] = waits
@@ -456,7 +457,7 @@ export class StoryEngine {
     return resolved;
   }
 
-  /** Le texte du bouton d'un lien : celui du noeud de choix qu'il vise. */
+  /** The button text of a link: that of the choice node it points at. */
   private labelOf(link: Link): string {
     const target = this._story.scenes[link.to];
     return target ? choiceLabel(target) : link.to;
