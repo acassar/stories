@@ -9,7 +9,7 @@
  */
 
 import { MarkerType } from '@xyflow/react';
-import type { Edge, Node } from '@xyflow/react';
+import type { BuiltInEdge, Node } from '@xyflow/react';
 import type { Link, Scene, SceneId, Story, ValidationIssue } from '@embranche/story-format';
 
 import { kinds, studio } from '@embranche/design-tokens';
@@ -56,6 +56,69 @@ export function parseEdgeId(id: string): { sceneId: SceneId; linkId: string } | 
   const separator = id.indexOf(':');
   if (separator < 0) return null;
   return { sceneId: id.slice(0, separator), linkId: id.slice(separator + 1) };
+}
+
+// ---------------------------------------------------------------------------
+// Routing
+// ---------------------------------------------------------------------------
+
+/**
+ * The ports of a node.
+ *
+ * Top and bottom are the reading direction, and the only two the author can
+ * grab: a link is drawn downwards, like the story is read. The four side ports
+ * are for routing only — they carry the detours, so a link that climbs back up
+ * or runs across a rank no longer crosses the very cards it connects.
+ */
+export const PORT = {
+  in: 'in',
+  out: 'out',
+  inLeft: 'in-left',
+  inRight: 'in-right',
+  outLeft: 'out-left',
+  outRight: 'out-right',
+} as const;
+
+/** Card size, from the stylesheet — enough to tell "below" from "beside". */
+const NODE_HEIGHT = 96;
+
+export interface Route {
+  sourceHandle: string;
+  targetHandle: string;
+}
+
+/**
+ * Which side each end of a link leaves and enters by.
+ *
+ * With a single pair of ports every edge starts at a bottom edge and ends at a
+ * top one, so a link going back up is drawn *through* both nodes and a link
+ * across a rank makes a detour under them. Choosing the side from the relative
+ * position of the two cards is what keeps a path followable: falling straight
+ * down means going forward, and a bracket on the side means coming back.
+ */
+export function routeOf(from: { x: number; y: number }, to: { x: number; y: number }): Route {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+
+  // A node pointing at itself: a small bracket beside it, rather than a loop
+  // drawn across its own card.
+  if (dx === 0 && dy === 0) return { sourceHandle: PORT.outRight, targetHandle: PORT.inRight };
+
+  // Reading order: the target sits below, the link falls into it.
+  if (dy > NODE_HEIGHT * 0.6) return { sourceHandle: PORT.out, targetHandle: PORT.in };
+
+  // The target sits above: the link climbs back. It leaves and comes back by
+  // the same side, which draws a bracket walking around both cards.
+  if (dy < -NODE_HEIGHT * 0.6) {
+    return dx >= 0
+      ? { sourceHandle: PORT.outRight, targetHandle: PORT.inRight }
+      : { sourceHandle: PORT.outLeft, targetHandle: PORT.inLeft };
+  }
+
+  // Side by side: straight across, from one facing side to the other.
+  return dx >= 0
+    ? { sourceHandle: PORT.outRight, targetHandle: PORT.inLeft }
+    : { sourceHandle: PORT.outLeft, targetHandle: PORT.inRight };
 }
 
 // ---------------------------------------------------------------------------
@@ -196,15 +259,22 @@ export function toNodes(
  * displays it itself. The edge only says what the node cannot: which way it
  * goes, that it is conditional, and what it changes. Its color is that of the
  * kind it targets, so the nature of a transition reads before reaching its end.
+ *
+ * Its thickness says how far it is from the selection: the links touching the
+ * selected node are drawn heavier than the rest of its cone. On a long story
+ * the cone covers almost the whole graph, and lighting it evenly says little
+ * more than "everything is connected".
  */
 export function toEdges(
   story: Story,
   issues: ValidationIssue[],
   options: ProjectionOptions = {},
-): Edge[] {
+): BuiltInEdge[] {
   const focus = options.focus ?? EMPTY_FOCUS;
   const focusing = focus.selected.size > 0;
-  const edges: Edge[] = [];
+  // Two piles instead of one: see the return.
+  const dimmed: BuiltInEdge[] = [];
+  const edges: BuiltInEdge[] = [];
 
   for (const scene of Object.values(story.scenes)) {
     for (const link of scene.next) {
@@ -237,15 +307,31 @@ export function toEdges(
               ? studio.edgeBack
               : kinds[target.kind].border;
 
-      edges.push({
+      // Directly attached to the selection: the first step of the path, told
+      // apart from the rest of the cone.
+      const direct = focus.selected.has(scene.id) || focus.selected.has(link.to);
+
+      (lit ? edges : dimmed).push({
         id,
         source: scene.id,
         target: link.to,
+        ...routeOf(scene.position, target.position),
         label: edgeLabel(link),
         type: 'smoothstep',
+        // Rounder corners and a longer stub before the first turn: two edges
+        // leaving neighbouring nodes stop merging into one line.
+        pathOptions: { borderRadius: 14, offset: 24 },
         animated: conditional && lit && !dead,
-        // A lit edge is drawn over the dimmed ones, whatever the node order.
-        zIndex: lit && focusing ? 2 : 1,
+        /*
+         * Under the cards, never over them.
+         *
+         * React Flow puts a node at `z-index: 0` and gives every edge a layer
+         * of its own, so any positive z-index lifts the whole wiring above the
+         * text of the scenes — which is what turned a dense graph into a
+         * scribble. Flat at zero, the edges fall back behind the cards, and
+         * which edge covers which is settled by the drawing order instead.
+         */
+        zIndex: 0,
         markerEnd: {
           type: MarkerType.ArrowClosed,
           width: 16,
@@ -254,7 +340,7 @@ export function toEdges(
         },
         style: {
           stroke,
-          strokeWidth: role === 'downstream' || role === 'upstream' ? 2.6 : 2,
+          strokeWidth: direct ? 3.2 : role === 'downstream' || role === 'upstream' ? 2.4 : 2,
           strokeDasharray: conditional ? '5 6' : undefined,
           opacity: lit ? 1 : 0.16,
         },
@@ -270,7 +356,10 @@ export function toEdges(
       });
     }
   }
-  return edges;
+  // Dimmed first: sharing one layer, the edges are drawn in the order they are
+  // given, so the ones on the path of the selection come last and cover the
+  // others rather than being buried under them.
+  return [...dimmed, ...edges];
 }
 
 /** What an edge has worth saying — nothing, most of the time. */

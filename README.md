@@ -215,11 +215,17 @@ Work in progress is stored in `localStorage` (deferred write of 400 ms, flushed 
 
 A story is read as a path, so the canvas answers "what leads here" and "what follows" rather than merely "what is selected". Selecting a node lights its whole upstream in one tint and its whole downstream in another, and fades the rest — faded, not hidden: the shape of the story must stay legible while one branch is being looked at. The **Focus** button turns it off.
 
-Every edge is arrowed. A conditional link is dashed and animated; a broken one turns red; and when the dead-path analysis is on, a link no run can follow goes grey and still.
+Every edge is arrowed. A conditional link is dashed and animated; a broken one turns red; and when the dead-path analysis is on, a link no run can follow goes grey and still. The links touching the selected node are drawn heavier than the rest of its cone: on a long story that cone covers nearly the whole graph, and lighting it evenly would say little more than "everything is connected".
+
+Following one path among hundreds is a matter of what covers what. The wiring is drawn **behind** the cards — React Flow lifts an edge above them as soon as its z-index passes theirs, and a line across the text of a scene is what turns a dense graph into a scribble — and the edge under the cursor comes out full, whatever the focus is dimming.
+
+Where a link leaves and enters a node depends on the two positions. Falling from the bottom edge into the top one means going forward; a link that climbs back up, or runs across a rank, leaves through a side and brackets around the cards instead of being drawn over them. Those side ports are anchors, not affordances: they are invisible and cannot be grabbed, since only one gesture draws a link.
 
 **Chemins morts** answers a question the graph cannot: `findUnreachableScenes` looks for an arrow leading to a node, `exploreReachable` looks for a *run*. A choice conditioned on a variable no effect ever sets is an arrow that is never followed, and the scene behind it is an orphan only a state-space search reveals. That search is bounded — beyond its budget it says it could not conclude rather than passing a partial answer off as a verdict.
 
 **Ranger** lays the graph out in layers: rank by longest path, order by barycentric sweeps, then coordinates. Written in `lib/layout` rather than pulled from `dagre` or `elk` — a story graph is small and almost a tree, and the studio would gain a dependency for a hundred lines it can own and test.
+
+A link that skips ranks — the merge back to a crossroads, the shortcut to an ending — is cut into one virtual node per crossed rank so the ordering hears about it, since a barycentric sweep only ever looks at the rank above and the rank below. Those lanes are dropped before the coordinates: reserving a real corridor for them was tried and made the graph both wider and more tangled, every lane pushing its whole rank rightwards. Ordering alone takes a fifth off the links drawn over a card on the long sample story, which `layout.test` holds as a budget.
 
 ### Editing gestures
 

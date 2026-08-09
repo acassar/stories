@@ -9,6 +9,44 @@ function clone(story: Story): Story {
   return structuredClone(story);
 }
 
+/** Card size, from the studio stylesheet. */
+const CARD = { width: 190, height: 96 };
+
+/**
+ * How many cards a link is drawn over, once the story is laid out.
+ *
+ * A card counts when it stands wholly between the two ends of a link, inside
+ * the band the link spans — which is where the drawing can pass over it.
+ */
+function linksOverCards(story: Story): number {
+  const positions = layoutStory(story);
+  let count = 0;
+
+  for (const scene of Object.values(story.scenes)) {
+    for (const link of scene.next) {
+      const from = positions[scene.id];
+      const to = positions[link.to];
+      if (!from || !to) continue;
+
+      const top = Math.min(from.y, to.y) + CARD.height;
+      const bottom = Math.max(from.y, to.y);
+      const left = Math.min(from.x, to.x);
+      const right = Math.max(from.x, to.x) + CARD.width;
+
+      for (const [id, spot] of Object.entries(positions)) {
+        if (id === scene.id || id === link.to) continue;
+        const inside =
+          spot.y >= top &&
+          spot.y + CARD.height <= bottom &&
+          spot.x + CARD.width > left &&
+          spot.x < right;
+        if (inside) count += 1;
+      }
+    }
+  }
+  return count;
+}
+
 describe('layout', () => {
   it('puts the start scene on the first rank', () => {
     const positions = layoutStory(clairiereStory);
@@ -95,6 +133,22 @@ describe('layout', () => {
     const positions = layoutStory(kerlavenStory);
     const spots = new Set(Object.values(positions).map(({ x, y }) => `${x}:${y}`));
     expect(spots.size).toBe(Object.keys(kerlavenStory.scenes).length);
+  });
+
+  it('places the scenes and nothing else — the lanes are scaffolding', () => {
+    expect(Object.keys(layoutStory(kerlavenStory)).sort()).toEqual(
+      Object.keys(kerlavenStory.scenes).sort(),
+    );
+  });
+
+  /*
+   * A budget, not an exact figure. What makes a large story unreadable is the
+   * links drawn over the cards, and the count is the only thing that says
+   * whether the ordering still does its job. It was 325 before the long links
+   * got a say on the ranks they cross.
+   */
+  it('keeps the links of the long story off the cards', () => {
+    expect(linksOverCards(kerlavenStory)).toBeLessThan(280);
   });
 
   it('returns nothing for a story without a single scene', () => {

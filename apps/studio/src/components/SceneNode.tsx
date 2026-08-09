@@ -4,6 +4,7 @@ import type { NodeProps } from '@xyflow/react';
 import { kinds } from '@embranche/design-tokens';
 import { sceneMessages } from '@embranche/story-format';
 
+import { PORT } from '../lib/graph';
 import type { SceneFlowNode } from '../lib/graph';
 
 /**
@@ -14,8 +15,10 @@ import type { SceneFlowNode } from '../lib/graph';
  * that must read without zooming, because it says whether the reading stops
  * there or carries on by itself.
  *
- * A node has a single input handle and a single output handle: choices are not
- * rows inside the node, they are neighboring nodes.
+ * A node has a single grabbable input handle and a single grabbable output
+ * handle: choices are not rows inside the node, they are neighboring nodes. The
+ * side ports are not offered to the author — they exist so `routeOf` can send a
+ * link around the cards instead of across them.
  */
 export function SceneNode({ data, selected }: NodeProps<SceneFlowNode>) {
   const { scene, isStart, issues, awaitsChoice, focus, match, dead } = data;
@@ -49,7 +52,8 @@ export function SceneNode({ data, selected }: NodeProps<SceneFlowNode>) {
           : { background: palette.surface, borderColor: palette.border, color: palette.ink }
       }
     >
-      <Handle type="target" position={Position.Top} />
+      <Handle type="target" position={Position.Top} id={PORT.in} />
+      <SidePorts />
 
       <div className="scene-node__head">
         <span
@@ -105,7 +109,49 @@ export function SceneNode({ data, selected }: NodeProps<SceneFlowNode>) {
         </div>
       )}
 
-      <Handle type="source" position={Position.Bottom} />
+      <Handle type="source" position={Position.Bottom} id={PORT.out} />
     </div>
+  );
+}
+
+/**
+ * The four routing ports, invisible and not connectable.
+ *
+ * They are anchors, not affordances: showing them would suggest four ways of
+ * drawing a link where there is only one, and letting the author grab them
+ * would let the drawing decide the routing — which is the layout's job.
+ */
+function SidePorts() {
+  return (
+    <>
+      <Handle
+        type="target"
+        position={Position.Left}
+        id={PORT.inLeft}
+        className="scene-node__port"
+        isConnectable={false}
+      />
+      <Handle
+        type="target"
+        position={Position.Right}
+        id={PORT.inRight}
+        className="scene-node__port"
+        isConnectable={false}
+      />
+      <Handle
+        type="source"
+        position={Position.Left}
+        id={PORT.outLeft}
+        className="scene-node__port scene-node__port--out"
+        isConnectable={false}
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        id={PORT.outRight}
+        className="scene-node__port scene-node__port--out"
+        isConnectable={false}
+      />
+    </>
   );
 }

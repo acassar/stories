@@ -3,11 +3,13 @@ import { describe, expect, it } from 'vitest';
 import { clairiereStory, validateStory } from '@embranche/story-format';
 
 import {
+  PORT,
   childPosition,
   edgeId,
   focusOn,
   nextScenePosition,
   parseEdgeId,
+  routeOf,
   toEdges,
   toNodes,
 } from './graph';
@@ -99,6 +101,55 @@ describe('graph', () => {
   });
 });
 
+describe('routing', () => {
+  it('falls straight into a node sitting below', () => {
+    expect(routeOf({ x: 0, y: 0 }, { x: 40, y: 200 })).toEqual({
+      sourceHandle: PORT.out,
+      targetHandle: PORT.in,
+    });
+  });
+
+  it('walks around the cards when the link climbs back up', () => {
+    // Same side at both ends: the path brackets past the two nodes instead of
+    // being drawn across them.
+    expect(routeOf({ x: 0, y: 400 }, { x: 300, y: 0 })).toEqual({
+      sourceHandle: PORT.outRight,
+      targetHandle: PORT.inRight,
+    });
+    expect(routeOf({ x: 300, y: 400 }, { x: 0, y: 0 })).toEqual({
+      sourceHandle: PORT.outLeft,
+      targetHandle: PORT.inLeft,
+    });
+  });
+
+  it('goes straight across between two nodes of the same rank', () => {
+    expect(routeOf({ x: 0, y: 200 }, { x: 300, y: 200 })).toEqual({
+      sourceHandle: PORT.outRight,
+      targetHandle: PORT.inLeft,
+    });
+  });
+
+  it('brackets a node that points at itself beside its own card', () => {
+    expect(routeOf({ x: 50, y: 50 }, { x: 50, y: 50 })).toEqual({
+      sourceHandle: PORT.outRight,
+      targetHandle: PORT.inRight,
+    });
+  });
+
+  it('routes every edge from the positions of the story', () => {
+    const back = structuredClone(clairiereStory);
+    // `portail` is an ending at the bottom of the graph: pointing it back at
+    // the opening is the textbook climbing link.
+    back.scenes.portail!.next = [{ id: 'recommencer', to: 'start' }];
+    delete back.scenes.portail!.ending;
+    const edge = toEdges(back, validateStory(back).issues).find(
+      (item) => item.id === 'portail:recommencer',
+    );
+    expect(edge?.sourceHandle).toBe(PORT.outRight);
+    expect(edge?.targetHandle).toBe(PORT.inRight);
+  });
+});
+
 describe('focus', () => {
   it('tells apart what leads to a node and what follows from it', () => {
     const focus = focusOn(clairiereStory, ['c-lucioles']);
@@ -141,6 +192,20 @@ describe('focus', () => {
     const looping = structuredClone(clairiereStory);
     looping.scenes.start!.next.push({ id: 'boucle', to: 'start' });
     expect(() => focusOn(looping, ['start'])).not.toThrow();
+  });
+
+  it('draws the links touching the selection heavier than the rest of the cone', () => {
+    const edges = toEdges(clairiereStory, issues, {
+      focus: focusOn(clairiereStory, ['c-lucioles']),
+    });
+    const touching = edges.find((edge) => edge.id === 'start:vers-lucioles');
+    const further = edges.find((edge) => edge.id === 'c-lucioles:suite');
+    const beyond = edges.find((edge) => edge.id === 'lucioles:vers-elara');
+
+    expect(touching?.style?.strokeWidth).toBe(further?.style?.strokeWidth);
+    expect(Number(touching?.style?.strokeWidth)).toBeGreaterThan(
+      Number(beyond?.style?.strokeWidth),
+    );
   });
 
   it('dims what the selection neither reaches nor comes from', () => {

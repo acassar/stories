@@ -787,9 +787,44 @@ body {
     background 0.12s ease,
     transform 0.12s ease;
 }
-.scene-node:hover .react-flow__handle {
+.scene-node:hover .react-flow__handle:not(.scene-node__port) {
   background: var(--st-selected);
   transform: scale(1.18);
+}
+
+/*
+  Routing ports. A link that climbs back up leaves through them instead of
+  crossing its own card — but they are anchors, not affordances: nothing to see,
+  nothing to grab. Incoming and outgoing are set slightly apart so a link that
+  arrives and one that leaves on the same side do not share a single point.
+*/
+.scene-node__port {
+  width: 1px;
+  height: 1px;
+  min-width: 0;
+  min-height: 0;
+  border: none;
+  opacity: 0;
+  pointer-events: none;
+  top: 38%;
+}
+.scene-node__port--out {
+  top: 62%;
+}
+
+/*
+  Following one path among two hundred: the edge under the cursor comes out
+  full, whatever the focus is currently dimming.
+*/
+.react-flow__edge:hover .react-flow__edge-path {
+  stroke-width: 4.5 !important;
+  opacity: 1 !important;
+}
+.react-flow__edge:hover .react-flow__edge-textbg {
+  fill-opacity: 1 !important;
+}
+.react-flow__edge:hover .react-flow__edge-text {
+  opacity: 1 !important;
 }
 
 /* -------------------------------------------------------------- inspector */
