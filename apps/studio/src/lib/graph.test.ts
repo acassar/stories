@@ -27,6 +27,16 @@ describe('graph', () => {
     expect(start?.selected).toBe(true);
   });
 
+  it('carries the measured card sizes back onto the nodes', () => {
+    // React Flow hides a node of unknown size, so the projection must hand back
+    // what has already been measured rather than start over.
+    const sizes = new Map([['start', { width: 190, height: 96 }]]);
+    const nodes = toNodes(clairiereStory, issues, [], { sizes });
+
+    expect(nodes.find((node) => node.id === 'start')?.measured).toEqual({ width: 190, height: 96 });
+    expect(nodes.find((node) => node.id === 'prudence')?.measured).toBeUndefined();
+  });
+
   it('marks the nodes that stop the reading to await a decision', () => {
     const nodes = toNodes(clairiereStory, issues, []);
     // `start` offers choices; `prudence` is a line that chains on its own.

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { clairiereStory } from '@embranche/story-format';
@@ -24,6 +24,64 @@ function currentStory(): Story {
 
 function sceneCount(): number {
   return Object.keys(currentStory().scenes).length;
+}
+
+/**
+ * A `ResizeObserver` the test fires by hand.
+ *
+ * jsdom never lays anything out, so the setup file installs an inert stub and
+ * React Flow never learns how big the cards are. This one records what it
+ * observes and reports on demand, which is what makes the measurement — and its
+ * absence — observable in a test.
+ */
+class ManualResizeObserver {
+  static instances: ManualResizeObserver[] = [];
+
+  private readonly targets = new Set<Element>();
+
+  constructor(private readonly callback: ResizeObserverCallback) {
+    ManualResizeObserver.instances.push(this);
+  }
+
+  observe(target: Element): void {
+    this.targets.add(target);
+  }
+
+  unobserve(target: Element): void {
+    this.targets.delete(target);
+  }
+
+  disconnect(): void {
+    this.targets.clear();
+  }
+
+  /** Reports the size of everything observed so far, as a browser would. */
+  static measureAll(): void {
+    for (const observer of ManualResizeObserver.instances) {
+      const entries = [...observer.targets].map(
+        (target) =>
+          ({
+            target,
+            // React Flow reads the box from the entry for the pane, and from
+            // the element itself for the cards. Both are stubbed in `setup`.
+            contentRect: { width: 900, height: 600 },
+          }) as ResizeObserverEntry,
+      );
+      if (entries.length > 0) observer.callback(entries, observer as unknown as ResizeObserver);
+    }
+  }
+}
+
+/** Runs the body with measurement under the test's control. */
+function withManualMeasurement(body: () => void): void {
+  const previous = window.ResizeObserver;
+  ManualResizeObserver.instances = [];
+  Object.defineProperty(window, 'ResizeObserver', { writable: true, value: ManualResizeObserver });
+  try {
+    body();
+  } finally {
+    Object.defineProperty(window, 'ResizeObserver', { writable: true, value: previous });
+  }
 }
 
 describe('Editor', () => {
@@ -95,6 +153,28 @@ describe('Editor', () => {
     expect(Object.keys(story.scenes)).toHaveLength(before + 1);
     // The link is born with its target: never a dangling one.
     expect(story.scenes.start?.next.some((link) => link.to.startsWith('choix'))).toBe(true);
+  });
+
+  /*
+   * React Flow renders `visibility: hidden` any node whose size it does not
+   * know, and it reads that size back from the objects the projection hands it.
+   * Rebuilding those objects on every edit — which is what `toNodes` does —
+   * therefore used to blank the whole canvas until a new measurement came in.
+   */
+  it('keeps the cards drawn after an edit, without a fresh measurement', () => {
+    withManualMeasurement(() => {
+      render(<Harness />);
+      act(() => ManualResizeObserver.measureAll());
+
+      const card = () => document.querySelector('.react-flow__node[data-id="start"]');
+      expect(card()).toBeVisible();
+
+      // Any edit rebuilds the whole projection. Nothing measures anything
+      // afterwards: the cards must stand on the sizes already known.
+      fireEvent.click(screen.getByRole('button', { name: '＋ Choix' }));
+
+      expect(card()).toBeVisible();
+    });
   });
 
   it('takes an edit back, then puts it forward again (STU-7)', () => {

@@ -87,6 +87,21 @@ function EditorCanvas({ story, onChange, onBack }: Props) {
   const [issuesOpen, setIssuesOpen] = useState(false);
 
   const clipboard = useRef<SceneClipboard | null>(null);
+  /*
+   * The card sizes React Flow has measured.
+   *
+   * React Flow measures the nodes in the DOM, then hands the result back as
+   * `dimensions` changes and reads it from the objects it is given on the next
+   * render. `toNodes` builds those objects from the story, so unless the
+   * measurements are kept here and put back, every reprojection tells React
+   * Flow it no longer knows how big anything is — and a node of unknown size is
+   * rendered `visibility: hidden`. That is a blank canvas, one commit after a
+   * drag.
+   *
+   * A ref rather than state: the sizes are an answer *about* the render, not an
+   * input to it. Storing them in state would loop.
+   */
+  const sizes = useRef(new Map<SceneId, { width: number; height: number }>());
   const { setCenter, fitView } = useReactFlow();
 
   // A single selected node is *the* selected node — that is what the inspector
@@ -130,7 +145,7 @@ function EditorCanvas({ story, onChange, onBack }: Props) {
   const selectedLinks = useMemo(() => new Set(selectedLinkIds), [selectedLinkIds]);
 
   const projection = useMemo(
-    () => ({ focus, matches, dead, deadLinks, selectedLinks }),
+    () => ({ focus, matches, dead, deadLinks, selectedLinks, sizes: sizes.current }),
     [focus, matches, dead, deadLinks, selectedLinks],
   );
 
@@ -161,7 +176,11 @@ function EditorCanvas({ story, onChange, onBack }: Props) {
       const current = new Set(selectedIds);
 
       for (const change of changes) {
-        if (change.type === 'position' && change.position) {
+        if (change.type === 'dimensions') {
+          // Not an edit of the story: how big the card came out on screen. It
+          // is kept aside and handed back on the next projection — see `sizes`.
+          if (change.dimensions) sizes.current.set(change.id, change.dimensions);
+        } else if (change.type === 'position' && change.position) {
           next = moveScene(next, change.id, change.position);
         } else if (change.type === 'select') {
           // Box selection sends one change per node: the batch is applied to
@@ -172,6 +191,7 @@ function EditorCanvas({ story, onChange, onBack }: Props) {
         } else if (change.type === 'remove') {
           next = removeScene(next, change.id);
           current.delete(change.id);
+          sizes.current.delete(change.id);
           selection = [...current];
         }
       }

@@ -226,6 +226,15 @@ export interface ProjectionOptions {
   deadLinks?: Set<string>;
   /** Links the author has picked on the canvas, keyed like edge ids. */
   selectedLinks?: Set<string>;
+  /**
+   * Card sizes React Flow has measured, by scene id.
+   *
+   * React Flow hides any node whose size it does not know, and it reads that
+   * size back from the node object it is handed. This projection builds fresh
+   * objects every time, so without the measurements carried over here, a single
+   * reprojection blanks the whole canvas — see `Editor`.
+   */
+  sizes?: Map<SceneId, { width: number; height: number }>;
 }
 
 export function toNodes(
@@ -242,6 +251,7 @@ export function toNodes(
     type: 'scene',
     position: scene.position,
     selected: selected.has(scene.id),
+    measured: options.sizes?.get(scene.id),
     data: {
       scene,
       isStart: scene.id === story.startSceneId,
