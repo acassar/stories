@@ -820,6 +820,17 @@ body {
   stroke-width: 4.5 !important;
   opacity: 1 !important;
 }
+
+/*
+  A picked link. It has to be unmistakable, because the next key pressed may
+  well be Suppr — so it takes the selection colour outright rather than merely
+  thickening, which is what the hover already does.
+*/
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: var(--st-selected) !important;
+  stroke-width: 4.5 !important;
+  opacity: 1 !important;
+}
 .react-flow__edge:hover .react-flow__edge-textbg {
   fill-opacity: 1 !important;
 }

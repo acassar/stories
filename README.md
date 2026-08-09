@@ -199,11 +199,13 @@ On the canvas, **the color of a node is its kind** — cold ink for the correspo
 
 An edge on the canvas is exactly a `Link` of the story — nothing is hidden in the source node. Dragging an edge creates a link to any node already written, which is the whole "reach a distant node" gesture. A connection that would mix choices and chaining is refused as it is drawn, rather than reported afterwards.
 
+A link is selected and cut on the canvas like a node is: clicking it turns it the selection colour, and **Suppr** removes it. React Flow is controlled here, so an edge is selected because the projection says so — an editor that drops the selection change leaves the delete key with nothing to remove.
+
 Three buttons create the three kinds, colored like what they produce. From a selected node, they create the continuation: the node **and** its link, so never a dangling target. They obey the same rule as the drag, and go out when the kind they produce could not be linked — a toolbar that offers what the canvas will refuse teaches the wrong thing about the format.
 
 The badge next to the title carries the state of health of the story, in three states because there are three: **injouable** (blocking errors), **jouable, à revoir** (warnings only — a draft is allowed to be halfway), **cohérent**. Pressing it unfolds the list of what is left. Only the first state blocks the playtest.
 
-The right-hand panel edits the kind, the text (block by block) and the outgoing links. On a `choice` node it also shows the condition and the effects of its incoming link — for the author, "this button only appears if…" is a property of the button, even though the data lives on the edge.
+The right-hand panel edits the kind, the text (block by block) and the outgoing links. On a `choice` node it also shows the condition and the effects of its incoming link — for the author, "this button only appears if…" is a property of the button, even though the data lives on the edge — and lets it be cut from there, since reading a link from one end and having to go find its other end to remove it is a detour the panel can spare.
 
 Conditions are built row by row for the common case — a list of tests joined by AND or OR. A nested condition, hand-written in an imported JSON, falls back to a JSON field validated by the schema: an austere field beats a rewrite that would lose information.
 

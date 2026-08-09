@@ -75,6 +75,9 @@ function EditorCanvas({ story, onChange, onBack }: Props) {
   const [selectedIds, setSelectedIds] = useState<SceneId[]>(() =>
     story.scenes[story.startSceneId] ? [story.startSceneId] : [],
   );
+  // Picked links, by edge id. A link is a first-class object of the story, so
+  // it is selected and deleted on the canvas like a node is.
+  const [selectedLinkIds, setSelectedLinkIds] = useState<string[]>([]);
   const [playtestFrom, setPlaytestFrom] = useState<SceneId | null | undefined>(undefined);
   const [showVariables, setShowVariables] = useState(false);
   const [query, setQuery] = useState('');
@@ -124,9 +127,11 @@ function EditorCanvas({ story, onChange, onBack }: Props) {
     return unused;
   }, [reach, story]);
 
+  const selectedLinks = useMemo(() => new Set(selectedLinkIds), [selectedLinkIds]);
+
   const projection = useMemo(
-    () => ({ focus, matches, dead, deadLinks }),
-    [focus, matches, dead, deadLinks],
+    () => ({ focus, matches, dead, deadLinks, selectedLinks }),
+    [focus, matches, dead, deadLinks, selectedLinks],
   );
 
   const nodes = useMemo(
@@ -180,14 +185,29 @@ function EditorCanvas({ story, onChange, onBack }: Props) {
   const onEdgesChange = useCallback(
     (changes: EdgeChange[]) => {
       let next = story;
+      let selection: string[] | null = null;
+      const current = new Set(selectedLinkIds);
+
       for (const change of changes) {
-        if (change.type !== 'remove') continue;
-        const parsed = parseEdgeId(change.id);
-        if (parsed) next = removeLink(next, parsed.sceneId, parsed.linkId);
+        if (change.type === 'select') {
+          // Same contract as the nodes: React Flow announces the selection, the
+          // projection carries it back. Dropping it — as this handler used to —
+          // left the delete key with nothing selected to remove.
+          if (change.selected) current.add(change.id);
+          else current.delete(change.id);
+          selection = [...current];
+        } else if (change.type === 'remove') {
+          const parsed = parseEdgeId(change.id);
+          if (parsed) next = removeLink(next, parsed.sceneId, parsed.linkId);
+          current.delete(change.id);
+          selection = [...current];
+        }
       }
+
+      if (selection) setSelectedLinkIds(selection);
       if (next !== story) commit(next);
     },
-    [story, commit],
+    [story, commit, selectedLinkIds],
   );
 
   /**
@@ -346,7 +366,10 @@ function EditorCanvas({ story, onChange, onBack }: Props) {
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
               isValidConnection={isValidConnection}
-              onPaneClick={() => setSelectedIds([])}
+              onPaneClick={() => {
+                setSelectedIds([]);
+                setSelectedLinkIds([]);
+              }}
               fitView
               minZoom={0.15}
               maxZoom={1.8}

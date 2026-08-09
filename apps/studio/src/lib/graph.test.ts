@@ -226,6 +226,16 @@ describe('projection flags', () => {
     expect(nodes.find((node) => node.id === 'lucioles')?.data.match).toBe(false);
   });
 
+  it('carries the picked links down to the edges', () => {
+    // React Flow is controlled: without this the click on a link never took,
+    // and the delete key had nothing selected to remove.
+    const edges = toEdges(clairiereStory, issues, {
+      selectedLinks: new Set(['start:vers-lucioles']),
+    });
+    expect(edges.find((edge) => edge.id === 'start:vers-lucioles')?.selected).toBe(true);
+    expect(edges.find((edge) => edge.id === 'start:vers-arbre')?.selected).toBe(false);
+  });
+
   it('carries the dead paths down to the nodes and the edges', () => {
     const nodes = toNodes(clairiereStory, issues, [], { dead: new Set(['lucioles']) });
     expect(nodes.find((node) => node.id === 'lucioles')?.data.dead).toBe(true);

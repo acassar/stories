@@ -224,6 +224,8 @@ export interface ProjectionOptions {
   dead?: Set<SceneId>;
   /** Links no run can follow, keyed like edge ids. */
   deadLinks?: Set<string>;
+  /** Links the author has picked on the canvas, keyed like edge ids. */
+  selectedLinks?: Set<string>;
 }
 
 export function toNodes(
@@ -316,6 +318,13 @@ export function toEdges(
         source: scene.id,
         target: link.to,
         ...routeOf(scene.position, target.position),
+        /*
+         * React Flow is controlled here: an edge is selected because the
+         * projection says so, not because it was clicked. Without this the
+         * click never took, and the delete key had nothing to remove — a link
+         * could only be cut from the panel of the node that owns it.
+         */
+        selected: options.selectedLinks?.has(id) ?? false,
         label: edgeLabel(link),
         type: 'smoothstep',
         // Rounder corners and a longer stub before the first turn: two edges

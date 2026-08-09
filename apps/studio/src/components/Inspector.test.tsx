@@ -95,4 +95,18 @@ describe('Inspector', () => {
     expect(within(panel).getByText('Quand ce bouton apparaît')).toBeInTheDocument();
     expect(within(panel).getByLabelText('Variable')).toHaveValue('prudent');
   });
+
+  it('cuts the incoming link from the choice it leads to', () => {
+    render(<Harness selectedIds={['c-elara']} />);
+    const source = clairiereStory.scenes.lucioles!;
+    const link = source.next.find((item) => item.to === 'c-elara')!;
+
+    fireEvent.click(
+      screen.getByRole('button', { name: `Supprimer le lien depuis ${source.title}` }),
+    );
+
+    // The link is gone from the node that owned it; the choice itself stays.
+    expect(currentStory().scenes.lucioles?.next.some((item) => item.id === link.id)).toBe(false);
+    expect(currentStory().scenes['c-elara']).toBeDefined();
+  });
 });

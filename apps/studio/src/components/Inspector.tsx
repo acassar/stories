@@ -766,7 +766,29 @@ function IncomingLinkPanel({
 
   return (
     <div className="section">
-      <span className="field__label">Quand ce bouton apparaît</span>
+      {/*
+        The link belongs to the node upstream, but it is read from here — "this
+        button only appears if…". Cutting it should not mean going to look for
+        its owner first, so the same panel that edits it can also remove it.
+      */}
+      <div className="row-between">
+        <span className="field__label" style={{ margin: 0 }}>
+          Lien depuis « {nodeName(story, incoming.sceneId)} »
+        </span>
+        <button
+          type="button"
+          className="btn btn--icon btn--danger"
+          onClick={() => onChange(removeLink(story, incoming.sceneId, incoming.link.id))}
+          title={`Supprimer le lien depuis « ${nodeName(story, incoming.sceneId)} »`}
+          aria-label={`Supprimer le lien depuis ${nodeName(story, incoming.sceneId)}`}
+        >
+          ✕
+        </button>
+      </div>
+
+      <span className="field__label" style={{ marginTop: 12 }}>
+        Quand ce bouton apparaît
+      </span>
       <ConditionEditor
         value={incoming.link.condition}
         knownVariables={knownVariables}
