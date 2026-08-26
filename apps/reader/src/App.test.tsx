@@ -6,14 +6,17 @@ import { App } from './App';
 import { loadSave } from './lib/library';
 
 /**
- * The layout is read from `matchMedia`, which jsdom stubs to "no match": tests
- * run on the phone layout unless they ask for the wide one.
+ * Both the layout and the pace of the messages are read from `matchMedia`.
+ * Tests run on the phone, with the animation off, unless they say otherwise —
+ * reading a scene should not mean driving timers.
  */
-function setViewport(wide: boolean) {
+function setMedia({ wide = false, reducedMotion = true } = {}) {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
     value: (query: string) => ({
-      matches: query.includes('prefers-reduced-motion') || (wide && query.includes('min-width')),
+      matches: query.includes('prefers-reduced-motion')
+        ? reducedMotion
+        : wide && query.includes('min-width'),
       media: query,
       onchange: null,
       addEventListener: () => {},
@@ -25,8 +28,12 @@ function setViewport(wide: boolean) {
   });
 }
 
-const widenViewport = () => setViewport(true);
-const narrowViewport = () => setViewport(false);
+const widenViewport = () => setMedia({ wide: true });
+const animateMessages = () => setMedia({ reducedMotion: false });
+const resetMedia = () => setMedia();
+
+/** Long enough for a whole scene to type itself out. */
+const TYPED = { timeout: 4000 };
 
 /**
  * End-to-end walkthrough of the reader, on the `story-format` JSON shipped with
@@ -38,7 +45,7 @@ describe('Embranche reader', () => {
   });
 
   afterEach(() => {
-    narrowViewport();
+    resetMedia();
   });
 
   async function openClairiere(user: ReturnType<typeof userEvent.setup>) {
@@ -159,6 +166,28 @@ describe('Embranche reader', () => {
     // It leads back to the story it belongs to.
     await user.click(resume);
     expect(screen.getByRole('heading', { name: 'La Clairière aux Lucioles' })).toBeInTheDocument();
+  });
+
+  it('picks a run up again without typing the scene out a second time', async () => {
+    animateMessages();
+    const user = userEvent.setup();
+    await openClairiere(user);
+    await user.click(screen.getByRole('button', { name: 'Commencer l’aventure' }));
+
+    // A scene being discovered arrives one message at a time.
+    expect(screen.getByLabelText('En train d’écrire')).toBeInTheDocument();
+    await screen.findByText(/fougères plus hautes que toi/, undefined, TYPED);
+
+    await user.click(await screen.findByRole('button', { name: 'Suivre les lucioles' }, TYPED));
+    await screen.findByText(/porte de lumière/, undefined, TYPED);
+
+    // Leave, then pick the run up again.
+    await user.click(screen.getByRole('button', { name: 'Retour à la fiche du récit' }));
+    await user.click(await screen.findByRole('button', { name: 'Reprendre la partie' }));
+
+    // The scene stopped on is already there, whole, and nobody is typing.
+    expect(screen.getByText(/porte de lumière/)).toBeInTheDocument();
+    expect(screen.queryByLabelText('En train d’écrire')).not.toBeInTheDocument();
   });
 
   it('toggles light / dark', async () => {

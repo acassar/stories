@@ -1,0 +1,31 @@
+# The guard rail the repository already had a name for: `pnpm verify` is the
+# same command that is run locally — lint, types, then the whole test suite.
+# Nothing is defined twice here, so the two can never drift apart.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  # A new push supersedes the run in flight for the same branch.
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The pnpm version comes from `packageManager` in package.json.
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm verify

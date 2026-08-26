@@ -76,9 +76,17 @@ Livré avec, sur le même canevas : mise en relief de l'amont et de l'aval du n�
 | RD-6  | Écran « fins découvertes »                 | P1       | M      | Le palmarès est déjà stocké ; il lui manque un écran, avec les fins non trouvées en silhouette.               |
 | RD-7  | Étagère (2ᵉ disposition de bibliothèque)   | P2       | S      | Prévue dans la maquette : rayonnages horizontaux par genre, en alternative aux cartes.                        |
 | RD-8  | Sons                                      | P2       | M      | La maquette prévoit un clic discret à chaque choix et un interrupteur son.                                     |
-| RD-9  | Passe d'accessibilité                      | P0       | M      | Audit lecteur d'écran sur le fil `aria-live`, ordre de tabulation, contrastes AA dans les deux modes.          |
-| RD-10 | Reprise de lecture à la bonne position     | P2       | S      | Rouvrir une partie en cours doit rendre le fil déjà déroulé, pas rejouer l'animation de frappe.                |
+| RD-9  | Passe d'accessibilité                      | P0       | S      | Contrastes AA dans les deux modes, anneaux de focus et ordre de tabulation : faits avec la refonte du front. Reste l'audit au lecteur d'écran sur le fil `aria-live`. |
+| RD-10 | Reprise de lecture à la bonne position     | ✅       | S      | La scène reprise arrive d'un bloc ; elle retape normalement si on y revient plus tard par « Revenir en arrière ». |
 | RD-11 | Hors-ligne (service worker)                | P2       | M      | Une histoire ouverte doit rester lisible dans le métro.                                                        |
+
+---
+
+## Studio
+
+| ID     | Item                                    | Priorité | Taille | Détail                                                                                                                                                       |
+| ------ | --------------------------------------- | -------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| STU-15 | Aligner le studio sur le nouveau dessin  | P2       | S      | Le tableau de bord garde les dégradés de reliure (`accents[].grad`) que le lecteur a abandonnés au profit des aplats teintés : les deux apps ont l'air d'être de deux époques. |
 
 ---
 
@@ -88,9 +96,9 @@ Livré avec, sur le même canevas : mise en relief de l'amont et de l'aval du n�
 | ------ | ----------------------------------- | -------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------- |
 | PLAT-1 | Empaquetage Tauri                    | P2       | L      | Volontairement **hors périmètre** de l'itération 1. Les deux apps sont des sites statiques autonomes : rien ne bloque.               |
 | PLAT-2 | Persistance par fichiers             | P2       | M      | Sous Tauri, remplacer `lib/storage` (studio) et `lib/library` (lecteur) par un accès disque. Aucun autre fichier à toucher.          |
-| PLAT-3 | CI (lint + typecheck + tests)        | P0       | S      | `pnpm verify` existe déjà ; il manque le workflow.                                                                                  |
+| PLAT-3 | CI (lint + typecheck + tests)        | ✅       | S      | `.github/workflows/ci.yml` lance `pnpm verify` sur `main` et sur chaque PR — la même commande qu'en local, jamais définie deux fois. |
 | PLAT-4 | Publication des deux apps            | P1       | S      | Deux `vite build`, deux sites statiques.                                                                                            |
-| PLAT-5 | Couverture de tests mesurée          | P1       | S      | Seuil sur `story-engine` et `story-format`, qui doivent rester au plus haut.                                                        |
+| PLAT-5 | Couverture de tests mesurée          | ✅       | S      | Mesurée sur le cœur seul, seuils dans `vitest.config.ts`, calés juste sous l'existant (99,7 / 89,8 / 97,3). `pnpm verify` échoue si ça glisse. |
 | PLAT-6 | Test bout-en-bout studio → lecteur   | P1       | M      | Un test qui exporte depuis le studio et rejoue le fichier dans le lecteur : c'est le contrat entre les deux apps, il mérite un garde-fou. |
 
 ---
@@ -106,5 +114,8 @@ Ce n'est pas de l'oubli, ce sont des choix.
 | L'analyse des chemins morts est bornée                     | Elle explore l'espace des états atteignables, qui est exponentiel dans le pire des cas. Au-delà de son plafond, elle le dit et ne conclut pas, plutôt que de présenter une réponse partielle comme un verdict. |
 | Le presse-papiers du studio vit en mémoire                 | Copier un fragment dans un onglet et le coller dans un autre demanderait de sérialiser vers le presse-papiers système, donc de gérer un format d'échange et du texte hostile. Le geste courant — dupliquer une branche dans le même récit — n'en a pas besoin. |
 | Le tableau de bord n'a pas de compteur de lectures         | La maquette en montre un. Il suppose un backend ; sans compte ni serveur, l'afficher serait mentir.                                                                    |
+| Le lecteur n'affiche pas d'avancement pendant la lecture   | La maquette montre une barre « Choix N ». Dans un récit à embranchements on ne sait pas combien de choix restent : selon la réponse donnée il peut en rester deux ou quinze. Une barre remplie à un pourcentage inventé mentirait, comme le compteur ci-dessus. |
+| Le lecteur desktop n'a pas de panneau de droite            | La maquette y loge le fil des choix et la liste des fins. Sans lui, la bibliothèque et la fiche ne sont jamais affichées ensemble : la machine à écrans reste valable et il n'y a pas de `lib/trail` à écrire. Le « revenir en arrière » qui y vivait est passé au-dessus des réponses. |
+| Le rail desktop n'a ni menu ni collections                 | Le lecteur n'a qu'une destination, sa bibliothèque — un menu à une entrée n'est pas un menu. Et les collections n'existent pas dans le format : il faudrait les fabriquer en regroupant par genre, pour des étiquettes qui ne filtrent rien. |
 | Le format ne gère qu'une langue                            | Aucune demande de traduction pour l'instant. Le jour venu : `blocks[].text` devient une carte langue → texte, avec migration `formatVersion`.                          |
 | Les parties sauvegardées ne survivent pas au passage en format 2 | Les récits, eux, sont migrés (`migrateStory`). Mais l'historique d'une partie est passé de `choiceId` à `linkId` : le traduire demanderait de rejouer chaque partie contre l'ancien graphe pour retrouver le lien correspondant. Pour des sauvegardes locales de quelques minutes de lecture, le coût dépassait le service rendu. |

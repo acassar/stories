@@ -49,7 +49,23 @@ export function Reading({
   });
 
   const reduceMotion = usePrefersReducedMotion();
-  const reveal = useReveal(scene.id, scene.blocks.length, !reduceMotion);
+
+  /**
+   * Picking a run up again.
+   *
+   * The scene the reader stopped on has already been read: typing it out a
+   * second time would make the story look as if it were starting over. It is
+   * therefore the only scene of the session to arrive in one block — and only
+   * on the way in. Coming back to it later, through `goBack`, it types itself
+   * out like any other.
+   */
+  const resumedSceneId = useRef(initialState?.currentSceneId ?? null);
+  const resuming = resumedSceneId.current === scene.id;
+  useEffect(() => {
+    if (resumedSceneId.current !== scene.id) resumedSceneId.current = null;
+  }, [scene.id]);
+
+  const reveal = useReveal(scene.id, scene.blocks.length, !reduceMotion && !resuming);
   const thread = useRef<HTMLUListElement>(null);
 
   /**

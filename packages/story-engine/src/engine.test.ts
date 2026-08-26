@@ -660,11 +660,17 @@ describe('StoryEngine — the long sample story', () => {
     throw new Error('la lecture ne se termine pas');
   }
 
-  it('reaches each of its endings, and never gets stuck', () => {
-    const reached = new Set<string>();
-    for (let seed = 1; seed <= 1000; seed += 1) reached.add(randomWalk(seed));
+  it(
+    'reaches each of its endings, and never gets stuck',
+    () => {
+      const reached = new Set<string>();
+      for (let seed = 1; seed <= 1000; seed += 1) reached.add(randomWalk(seed));
 
-    const declared = findEndings(kerlavenStory).map((scene) => scene.id);
-    expect(declared.filter((id) => !reached.has(id))).toEqual([]);
-  });
+      const declared = findEndings(kerlavenStory).map((scene) => scene.id);
+      expect(declared.filter((id) => !reached.has(id))).toEqual([]);
+    },
+    // A thousand walks through the long story: under coverage instrumentation
+    // it runs several times slower than the default allowance.
+    20_000,
+  );
 });
