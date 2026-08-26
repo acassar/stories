@@ -98,3 +98,18 @@ describe('buildTranscript', () => {
     expect(new Set(messages.map((m) => m.key)).size).toBe(messages.length);
   });
 });
+
+describe('buildTranscript — variables inside the text', () => {
+  it('fills the messages already sent, not only the scene being played', () => {
+    // The engine fills the current scene; the past is this module's job.
+    const story = JSON.parse(JSON.stringify(clairiereStory)) as typeof clairiereStory;
+    story.scenes.start!.blocks[0]!.text = 'Prudent : {{ prudent }}.';
+
+    const e = new StoryEngine(story);
+    play(e, 'vers-arbre');
+    const messages = buildTranscript(story, e.state, e.getCurrentScene(), { revealed: 2 });
+
+    expect(messages[0]?.text).toBe('Prudent : false.');
+    expect(messages.every((m) => !m.text.includes('{{'))).toBe(true);
+  });
+});

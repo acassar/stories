@@ -660,17 +660,79 @@ describe('StoryEngine — the long sample story', () => {
     throw new Error('la lecture ne se termine pas');
   }
 
-  it(
-    'reaches each of its endings, and never gets stuck',
-    () => {
-      const reached = new Set<string>();
-      for (let seed = 1; seed <= 1000; seed += 1) reached.add(randomWalk(seed));
+  it('reaches each of its endings, and never gets stuck', () => {
+    const reached = new Set<string>();
+    for (let seed = 1; seed <= 1000; seed += 1) reached.add(randomWalk(seed));
 
-      const declared = findEndings(kerlavenStory).map((scene) => scene.id);
-      expect(declared.filter((id) => !reached.has(id))).toEqual([]);
+    const declared = findEndings(kerlavenStory).map((scene) => scene.id);
+    expect(declared.filter((id) => !reached.has(id))).toEqual([]);
+  }, // A thousand walks through the long story: under coverage instrumentation
+  // it runs several times slower than the default allowance.
+  20_000);
+});
+
+describe('StoryEngine — variables inside the text', () => {
+  /** Same sandbox, but writing what it holds instead of describing it. */
+  const spokenStory: Story = {
+    ...testStory,
+    id: 'test-interpolation',
+    variables: { cle: false, or: 0 },
+    scenes: {
+      ...testStory.scenes,
+      hall: {
+        ...testStory.scenes.hall!,
+        blocks: [{ text: 'Tu as {{ or }} pieces.' }],
+      },
+      'c-payer': {
+        ...testStory.scenes['c-payer']!,
+        label: 'Payer les {{ or }} pieces',
+      },
+      dehors: {
+        ...testStory.scenes.dehors!,
+        ending: {
+          type: 'Fin',
+          name: 'Dehors avec {{ or }} pieces',
+          blurb: 'Tu ressors avec {{ or }} pieces en poche.',
+        },
+      },
     },
-    // A thousand walks through the long story: under coverage instrumentation
-    // it runs several times slower than the default allowance.
-    20_000,
-  );
+  };
+
+  it('fills the messages of the scene being played', () => {
+    const e = new StoryEngine(spokenStory);
+    expect(e.getCurrentScene().blocks[0]?.text).toBe('Tu as 0 pieces.');
+
+    play(e, 'soulever');
+    expect(e.getCurrentScene().blocks[0]?.text).toBe('Tu as 10 pieces.');
+  });
+
+  it('fills the label of a button', () => {
+    const e = new StoryEngine(spokenStory);
+    play(e, 'soulever');
+    play(e, 'ouvrir');
+
+    expect(e.getCurrentScene().choices.map((choice) => choice.label)).toEqual([
+      'Payer les 10 pieces',
+    ]);
+  });
+
+  it('fills the ending, which is read after the last effect has applied', () => {
+    const e = new StoryEngine(spokenStory);
+    play(e, 'soulever');
+    play(e, 'ouvrir');
+    play(e, 'payer');
+
+    const scene = e.getCurrentScene();
+    expect(scene.ending?.name).toBe('Dehors avec 0 pieces');
+    expect(scene.ending?.blurb).toBe('Tu ressors avec 0 pieces en poche.');
+  });
+
+  it('does not touch the story it was given', () => {
+    const e = new StoryEngine(spokenStory);
+    play(e, 'soulever');
+
+    // The document stays the document: only what is handed to the UI is filled.
+    expect(spokenStory.scenes.hall?.blocks[0]?.text).toBe('Tu as {{ or }} pieces.');
+    expect(e.story.scenes.hall?.blocks[0]?.text).toBe('Tu as {{ or }} pieces.');
+  });
 });

@@ -201,6 +201,35 @@ describe('validateStory — graph coherence', () => {
     expect(issue?.message).toContain('karma');
   });
 
+  it('warns about a text calling a variable the story never sets', () => {
+    const story = clone(clairiereStory);
+    story.scenes.start!.blocks[0]!.text = 'Bonjour {{ prenom }}, la nuit tombe.';
+    const issue = validateStory(story).issues.find((i) => i.code === 'unknown-variable-in-text');
+    expect(issue?.severity).toBe('warning');
+    expect(issue?.sceneId).toBe('start');
+    expect(issue?.message).toContain('prenom');
+  });
+
+  it('says nothing about a text calling a variable the story does set', () => {
+    const story = clone(clairiereStory);
+    // `prudent` is initialized by the story: naming it in the text is legitimate.
+    story.scenes.start!.blocks[0]!.text = 'Tu avances, prudent : {{ prudent }}.';
+    expect(validateStory(story).issues.some((i) => i.code === 'unknown-variable-in-text')).toBe(
+      false,
+    );
+  });
+
+  it('looks inside a button label and an ending as well as the body', () => {
+    const story = clone(clairiereStory);
+    story.scenes['c-lucioles']!.label = 'Suivre les {{ lueurs }}';
+    story.scenes.portail!.ending!.blurb = 'Tu franchis avec {{ courage }}.';
+    const codes = validateStory(story)
+      .issues.filter((i) => i.code === 'unknown-variable-in-text')
+      .map((i) => i.sceneId);
+    expect(codes).toContain('c-lucioles');
+    expect(codes).toContain('portail');
+  });
+
   it('does not warn when the variable is written by an effect elsewhere', () => {
     // `prudent` is initialized by the story and set by an effect: nothing to report.
     const result = validateStory(clairiereStory);

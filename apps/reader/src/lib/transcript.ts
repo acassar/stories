@@ -7,7 +7,7 @@
  * A pure function, so directly testable.
  */
 
-import { sceneMessages, speakerOf } from '@embranche/story-format';
+import { interpolate, sceneMessages, speakerOf } from '@embranche/story-format';
 import type { GameState, Story } from '@embranche/story-format';
 import type { ResolvedScene } from '@embranche/story-engine';
 
@@ -39,7 +39,14 @@ export function buildTranscript(
     if (!past) return;
     const fromPlayer = speakerOf(past) === 'player';
     sceneMessages(past).forEach((block, index) => {
-      messages.push({ key: `${step}-${entry.sceneId}-${index}`, text: block.text, fromPlayer });
+      messages.push({
+        key: `${step}-${entry.sceneId}-${index}`,
+        // Past messages are filled in here — the engine only fills the scene
+        // being played. They are given today's values, not those they were
+        // sent with, which the state does not keep.
+        text: interpolate(block.text, state.variables),
+        fromPlayer,
+      });
     });
   });
 

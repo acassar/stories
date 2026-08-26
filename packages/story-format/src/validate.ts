@@ -6,6 +6,7 @@
  * malformed document outright.
  */
 
+import { textTokens } from './interpolate.js';
 import { migrateStory } from './migrate.js';
 import { findAutoLoops } from './scenes.js';
 import { gameStateSchema, storySchema } from './schema.js';
@@ -339,6 +340,28 @@ function checkVariables(story: Story): ValidationIssue[] {
       }
     }
   }
+
+  /*
+   * A token in the text is a read like any other. Left unreported it is the
+   * kind of mistake that travels all the way to a reader, who is shown the
+   * braces themselves — a mistyped name has no other symptom.
+   */
+  for (const scene of Object.values(story.scenes)) {
+    const texts = scene.blocks.map((block) => block.text);
+    if (scene.label) texts.push(scene.label);
+    if (scene.ending) texts.push(scene.ending.name, scene.ending.blurb);
+
+    for (const name of new Set(texts.flatMap(textTokens))) {
+      if (declared.has(name)) continue;
+      issues.push({
+        severity: 'warning',
+        code: 'unknown-variable-in-text',
+        sceneId: scene.id,
+        message: `Le texte de « ${scene.title || scene.id} » appelle « ${name} », qui n'est jamais initialisee ni ecrite : le lecteur affichera les accolades telles quelles.`,
+      });
+    }
+  }
+
   return issues;
 }
 

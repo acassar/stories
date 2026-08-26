@@ -239,6 +239,8 @@ export type IssueCode =
   | 'ending-with-links'
   | 'dead-end'
   | 'unknown-variable'
+  /** A `{{ token }}` in the text names a variable the story never sets. */
+  | 'unknown-variable-in-text'
   | 'empty-scene'
   | 'no-ending'
   /** A `choice` node without a label: the button would be empty. */

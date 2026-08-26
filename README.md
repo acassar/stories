@@ -161,6 +161,26 @@ The first link inherits the condition and the effects of the choice — it is th
 
 A scene that alternated speakers message by message (`speaker`) is **split into as many nodes as there are voice changes**, chained automatically — the rendering is identical. `migrateStory` also repairs a document already in v2 that still carries that field; the operation is idempotent and leaves untouched whatever needs no fixing.
 
+### Variables inside the text
+
+A line of a scene, a button label and an ending can all name a variable, and the reader puts
+its current value in place before displaying:
+
+```json
+{ "text": "Il te reste {{ nuit }} nuits avant la releve." }
+```
+
+Without it, saying three different things means writing three near-identical scenes behind three
+conditions — which stops being writable somewhere around the fifth variable.
+
+**Substitution, never evaluation.** What sits between the braces is the name of a variable and
+nothing else: no expression, no comparison, no call. A story is a JSON file that may come from
+anywhere, and opening one must never mean running its author code. `interpolate` is twenty lines
+long for that reason, and it reads only what the state itself holds — never what it inherits.
+
+A name the story never sets is left standing, braces included, and reported as a warning: a
+mistyped variable has no other symptom.
+
 ### The shipped library
 
 `exampleStories` holds the five stories both apps start with — the studio seeds them into its dashboard, the reader into its library. Four are short and each isolates one shape of the graph.
@@ -172,7 +192,7 @@ The fifth, **« La Fréquence Kerlaven »**, is the long one: 229 nodes, 9 endin
 `validateStory` returns a list of typed issues, split into two levels:
 
 - **`error`** — the story is not playable: missing start scene, link to a nonexistent scene, duplicate ids, choice without a label, node mixing choices and chaining, **automatic chaining loop** the reading would never leave. The studio blocks the playtest, the reader refuses the file.
-- **`warning`** — a writing problem that does not prevent playing: orphan scene, dead end, ending that keeps outgoing links, chaining whose links are all conditional, condition reading a variable that is never written.
+- **`warning`** — a writing problem that does not prevent playing: orphan scene, dead end, ending that keeps outgoing links, chaining whose links are all conditional, condition reading a variable that is never written, **token in the text naming a variable the story never sets**.
 
 The studio calls it on every keystroke: offending nodes get a red ring, and the bottom bar lists the issues, clickable.
 

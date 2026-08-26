@@ -137,3 +137,33 @@ describe('scenesTestedByConditions', () => {
     expect(scenesTestedByConditions(createEmptyStory()).size).toBe(0);
   });
 });
+
+/** A sample story is frozen shared data: these tests rewrite their own copy. */
+function clone(story: Story): Story {
+  return JSON.parse(JSON.stringify(story)) as Story;
+}
+
+describe('analyzeStory — variables named in the text', () => {
+  it('counts a token in the body as a read', () => {
+    const story = clone(clairiereStory);
+    story.scenes.start!.blocks[0]!.text = 'Il te reste {{ prudent }} a perdre.';
+
+    const usage = analyzeStory(story).variables.find((v) => v.name === 'prudent');
+    const site = usage?.reads.find((r) => r.sceneId === 'start');
+    expect(site).toBeDefined();
+    // A read in the text belongs to the scene, not to a link out of it.
+    expect(site?.linkId).toBeUndefined();
+  });
+
+  it('stops a variable read only in the text from passing for dead weight', () => {
+    const story = clone(clairiereStory);
+    // Nothing tests it any more: the text is its only reader.
+    for (const scene of Object.values(story.scenes)) {
+      for (const link of scene.next) delete link.condition;
+    }
+    story.scenes.start!.blocks[0]!.text = 'Prudent : {{ prudent }}.';
+
+    const usage = analyzeStory(story).variables.find((v) => v.name === 'prudent');
+    expect(isDeadWeight(usage!)).toBe(false);
+  });
+});

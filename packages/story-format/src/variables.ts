@@ -10,6 +10,7 @@
  * authoring question, and because a story rarely uses one without the other.
  */
 
+import { textTokens } from './interpolate.js';
 import type {
   Condition,
   Effect,
@@ -20,14 +21,21 @@ import type {
   VariableValue,
 } from './types.js';
 
-/** Where a read or a write happens: always on a link, never on a scene. */
+/**
+ * Where a read or a write happens.
+ *
+ * A write is always on a link — it is the path that has consequences. A read
+ * used to be too, until a variable could be named in the body of a scene: such
+ * a read belongs to the scene itself, and carries no link.
+ */
 export interface UsageSite {
   sceneId: SceneId;
   /** Title of the source scene, so the table reads without a second lookup. */
   sceneTitle: string;
-  linkId: string;
-  /** Scene the link leads to. */
-  targetId: SceneId;
+  /** Absent when the read is a token in the text of the scene. */
+  linkId?: string;
+  /** Scene the link leads to. Absent for the same reason. */
+  targetId?: SceneId;
 }
 
 export interface WriteSite extends UsageSite {
@@ -104,6 +112,14 @@ export function analyzeStory(story: Story): StoryUsage {
   }
 
   for (const scene of Object.values(story.scenes)) {
+    // A variable named in the text is read by the scene, without any link.
+    const texts = scene.blocks.map((block) => block.text);
+    if (scene.label) texts.push(scene.label);
+    if (scene.ending) texts.push(scene.ending.name, scene.ending.blurb);
+    for (const name of new Set(texts.flatMap(textTokens))) {
+      variableEntry(name).reads.push({ sceneId: scene.id, sceneTitle: scene.title || scene.id });
+    }
+
     for (const link of scene.next) {
       const site: UsageSite = {
         sceneId: scene.id,

@@ -9,6 +9,7 @@
 import {
   awaitsChoice,
   choiceLabel,
+  interpolate,
   parseStory,
   sceneMessages,
   speakerOf,
@@ -429,7 +430,7 @@ export class StoryEngine {
     const allChoices: ResolvedChoice[] = waits
       ? scene.next.map((link) => ({
           id: link.id,
-          label: this.labelOf(link),
+          label: interpolate(this.labelOf(link), state.variables),
           target: link.to,
           available: isSatisfied(link.condition, context),
         }))
@@ -439,7 +440,7 @@ export class StoryEngine {
       id: scene.id,
       kind: scene.kind,
       title: scene.title,
-      blocks: sceneMessages(scene),
+      blocks: this.fill(sceneMessages(scene), state),
       speaker: speakerOf(scene),
       choices: allChoices.filter((choice) => choice.available),
       allChoices,
@@ -452,9 +453,25 @@ export class StoryEngine {
         ),
       isEnding: Boolean(scene.ending),
     };
-    if (scene.ending) resolved.ending = scene.ending;
+    if (scene.ending) {
+      resolved.ending = {
+        ...scene.ending,
+        name: interpolate(scene.ending.name, state.variables),
+        blurb: interpolate(scene.ending.blurb, state.variables),
+      };
+    }
     if (scene.media) resolved.media = scene.media;
     return resolved;
+  }
+
+  /**
+   * Puts the variables into the text, right before it is handed out.
+   *
+   * Here rather than in the reader: the studio playtest reads the same
+   * snapshot, and an author must see what a player would see.
+   */
+  private fill(blocks: readonly TextBlock[], state: GameState): readonly TextBlock[] {
+    return blocks.map((block) => ({ ...block, text: interpolate(block.text, state.variables) }));
   }
 
   /** The button text of a link: that of the choice node it points at. */
