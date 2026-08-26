@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import type { ColorMode } from '@embranche/design-tokens';
 import type { GameState, Story } from '@embranche/story-format';
@@ -97,7 +97,20 @@ export function Reading({
     // `onEndingReached` is stable on the App side; only the scene should trigger.
   }, [reachedEnding, scene.id, onEndingReached]);
 
-  if (scene.isEnding && scene.ending && reveal.done) {
+  /*
+   * The ending screen is opened, never imposed.
+   *
+   * The last message of a story is still a message: swapping the screen the
+   * instant it lands means nobody ever reads it. The reader presses when they
+   * have finished reading, and can come back to the conversation afterwards —
+   * an ending is a place one leaves from, not a door that locks.
+   */
+  const [showEnding, setShowEnding] = useState(false);
+  useEffect(() => {
+    if (!scene.isEnding) setShowEnding(false);
+  }, [scene.id, scene.isEnding]);
+
+  if (scene.isEnding && scene.ending && showEnding) {
     return (
       <Ending
         story={story}
@@ -106,6 +119,7 @@ export function Reading({
         steps={decisions}
         mode={mode}
         onRestart={restart}
+        onReread={() => setShowEnding(false)}
         onLibrary={onLeave}
       />
     );
@@ -189,6 +203,12 @@ export function Reading({
           {reveal.done && canGoBack && (
             <button type="button" className="undo" onClick={goBack}>
               ↩ Revenir en arrière
+            </button>
+          )}
+
+          {reveal.done && scene.isEnding && scene.ending && (
+            <button type="button" className="cta" onClick={() => setShowEnding(true)}>
+              Voir la fin
             </button>
           )}
 

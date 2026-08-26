@@ -14,6 +14,7 @@ import {
   loadLibrary,
   loadSave,
   recordEnding,
+  removeStory,
   saveImportedStory,
   writeSave,
 } from './lib/library';
@@ -92,6 +93,18 @@ export function App() {
     setScreen('read');
   };
 
+  const handleRemove = (storyId: string) => {
+    const story = stories.find((item) => item.id === storyId);
+    removeStory(storyId);
+    const library = loadLibrary();
+    setStories(library);
+    setSaves(readSaves(library));
+    setEndings(loadEndings());
+    setActiveId(null);
+    setScreen('library');
+    setToast(`« ${story?.title ?? 'Ce récit'} » a quitté ta bibliothèque.`);
+  };
+
   const handleImport = async (file: File) => {
     let data: unknown;
     try {
@@ -148,6 +161,7 @@ export function App() {
             onBack={() => setScreen('library')}
             onResume={() => start(false)}
             onStart={() => start(true)}
+            onRemove={() => handleRemove(story.id)}
           />
         )}
 

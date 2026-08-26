@@ -13,11 +13,22 @@ interface Props {
   steps: number;
   mode: ColorMode;
   onRestart: () => void;
+  /** Back to the conversation, which is still there behind this screen. */
+  onReread: () => void;
   onLibrary: () => void;
 }
 
 /** Ending screen: what the player takes away from the run. */
-export function Ending({ story, ending, endingsSeen, steps, mode, onRestart, onLibrary }: Props) {
+export function Ending({
+  story,
+  ending,
+  endingsSeen,
+  steps,
+  mode,
+  onRestart,
+  onReread,
+  onLibrary,
+}: Props) {
   const theme = (story.theme ?? 'night') as StoryTheme;
   const tokens = resolveTokens(theme, mode);
 
@@ -54,6 +65,9 @@ export function Ending({ story, ending, endingsSeen, steps, mode, onRestart, onL
       <div className="ending__actions">
         <button type="button" className="cta" onClick={onRestart}>
           Rejouer ce récit
+        </button>
+        <button type="button" className="cta cta--quiet" onClick={onReread}>
+          Relire la correspondance
         </button>
         <button type="button" className="cta cta--quiet" onClick={onLibrary}>
           Retour à la bibliothèque

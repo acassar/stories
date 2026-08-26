@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 import { resolveTokens } from '@embranche/design-tokens';
 import type { ColorMode, StoryTheme } from '@embranche/design-tokens';
 import type { Story } from '@embranche/story-format';
@@ -17,6 +19,8 @@ interface Props {
   onBack: () => void;
   onResume: () => void;
   onStart: () => void;
+  /** Puts the story away, along with everything played on it. */
+  onRemove: () => void;
 }
 
 /** Story sheet: what is known before opening the book. */
@@ -30,9 +34,11 @@ export function Detail({
   onBack,
   onResume,
   onStart,
+  onRemove,
 }: Props) {
   const theme = (story.theme ?? 'night') as StoryTheme;
   const tokens = resolveTokens(theme, mode);
+  const [confirming, setConfirming] = useState(false);
 
   return (
     <div className="scroll">
@@ -100,6 +106,30 @@ export function Detail({
             <button type="button" className={hasSave ? 'cta cta--quiet' : 'cta'} onClick={onStart}>
               {endingsSeen > 0 || hasSave ? 'Recommencer l’aventure' : 'Commencer l’aventure'}
             </button>
+          </div>
+
+          {/* Asked for twice: nothing here can be undone, and the second press
+              is the only thing standing between a thumb and a lost run. */}
+          <div className="detail__remove">
+            {confirming ? (
+              <>
+                <p className="detail__remove-warning">
+                  Ce récit quitte ta bibliothèque, avec la partie en cours et les fins trouvées.
+                </p>
+                <div className="detail__remove-actions">
+                  <button type="button" className="danger" onClick={onRemove}>
+                    Retirer définitivement
+                  </button>
+                  <button type="button" className="undo" onClick={() => setConfirming(false)}>
+                    Annuler
+                  </button>
+                </div>
+              </>
+            ) : (
+              <button type="button" className="quiet-link" onClick={() => setConfirming(true)}>
+                Retirer ce récit de ma bibliothèque
+              </button>
+            )}
           </div>
         </div>
       </div>

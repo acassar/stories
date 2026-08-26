@@ -16,6 +16,12 @@ import type { GameState, Story } from '@embranche/story-format';
 const IMPORTED_KEY = 'embranche.reader.stories.v1';
 const SAVES_KEY = 'embranche.reader.saves.v1';
 const ENDINGS_KEY = 'embranche.reader.endings.v1';
+/**
+ * Stories the reader has put away. Only the samples shipped with the app need
+ * to be remembered here — an imported story is removed outright, but a sample
+ * would come back on the next load if nothing recorded that it was dismissed.
+ */
+const REMOVED_KEY = 'embranche.reader.removed.v1';
 
 function read<T>(storage: Storage, key: string, fallback: T): T {
   const raw = storage.getItem(key);
@@ -40,12 +46,35 @@ export function loadLibrary(storage: Storage = window.localStorage): Story[] {
   const byId = new Map<string, Story>();
   for (const story of exampleStories) byId.set(story.id, story);
   for (const story of imported) byId.set(story.id, story);
-  return [...byId.values()];
+  const removed = new Set(read<string[]>(storage, REMOVED_KEY, []));
+  return [...byId.values()].filter((story) => !removed.has(story.id));
 }
 
 export function saveImportedStory(story: Story, storage: Storage = window.localStorage): void {
   const imported = read<Story[]>(storage, IMPORTED_KEY, []).filter((item) => item.id !== story.id);
   storage.setItem(IMPORTED_KEY, JSON.stringify([...imported, story]));
+  // Importing a story is the plainest way of saying one wants it back.
+  const removed = read<string[]>(storage, REMOVED_KEY, []).filter((id) => id !== story.id);
+  storage.setItem(REMOVED_KEY, JSON.stringify(removed));
+}
+
+/**
+ * Puts a story away: it leaves the library, and with it the run in progress and
+ * the endings found. Removing a story is not hiding it — what was played on it
+ * goes too, so re-importing it later starts from a blank page.
+ */
+export function removeStory(storyId: string, storage: Storage = window.localStorage): void {
+  const imported = read<Story[]>(storage, IMPORTED_KEY, []).filter((item) => item.id !== storyId);
+  storage.setItem(IMPORTED_KEY, JSON.stringify(imported));
+
+  const removed = new Set(read<string[]>(storage, REMOVED_KEY, []));
+  removed.add(storyId);
+  storage.setItem(REMOVED_KEY, JSON.stringify([...removed]));
+
+  clearSave(storyId, storage);
+  const endings = loadEndings(storage);
+  delete endings[storyId];
+  storage.setItem(ENDINGS_KEY, JSON.stringify(endings));
 }
 
 // --------------------------------------------------------------------- saves

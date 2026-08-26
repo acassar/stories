@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { App } from './App';
@@ -84,10 +84,21 @@ describe('Embranche reader', () => {
     expect(screen.getByText('Je les suis.')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Franchir le portail' }));
+
+    // The last message of the story is a message like the others: it is read in
+    // the conversation, and the ending screen is opened on purpose.
+    expect(await screen.findByRole('button', { name: 'Voir la fin' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Voir la fin' }));
+
     expect(await screen.findByRole('heading', { name: 'Le Royaume Lumière' })).toBeInTheDocument();
     expect(screen.getByText('Fin lumineuse')).toBeInTheDocument();
     // Two buttons pressed: nodes walked through automatically do not count.
     expect(screen.getByText('2')).toBeInTheDocument();
+
+    // And the conversation is still there behind it.
+    await user.click(screen.getByRole('button', { name: 'Relire la correspondance' }));
+    expect(screen.getByText('Je les suis.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Voir la fin' })).toBeInTheDocument();
   });
 
   it('only shows the conditional choice once its condition holds', async () => {
@@ -188,6 +199,45 @@ describe('Embranche reader', () => {
     // The scene stopped on is already there, whole, and nobody is typing.
     expect(screen.getByText(/porte de lumière/)).toBeInTheDocument();
     expect(screen.queryByLabelText('En train d’écrire')).not.toBeInTheDocument();
+  });
+
+  it('removes a story, and everything played on it', async () => {
+    const user = userEvent.setup();
+    await openClairiere(user);
+    await user.click(screen.getByRole('button', { name: 'Commencer l’aventure' }));
+    await user.click(screen.getByRole('button', { name: 'Grimper au vieux chêne' }));
+    await user.click(await screen.findByRole('button', { name: 'Retour à la fiche du récit' }));
+
+    // It takes two presses: the first only asks.
+    await user.click(screen.getByRole('button', { name: /Retirer ce récit/ }));
+    expect(screen.queryByRole('heading', { name: /Que vas-tu vivre/ })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Retirer définitivement' }));
+
+    // Back in a library that no longer holds it, and neither does the storage.
+    expect(await screen.findByRole('heading', { name: /Que vas-tu vivre/ })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /La Clairière aux Lucioles/ }),
+    ).not.toBeInTheDocument();
+    expect(loadSave('clairiere-lucioles')).toBeNull();
+
+    // And it does not come back on the next visit.
+    cleanup();
+    render(<App />);
+    expect(
+      screen.queryByRole('button', { name: /La Clairière aux Lucioles/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('lets the reader change their mind before removing', async () => {
+    const user = userEvent.setup();
+    await openClairiere(user);
+    await user.click(screen.getByRole('button', { name: /Retirer ce récit/ }));
+    await user.click(screen.getByRole('button', { name: 'Annuler' }));
+
+    expect(screen.getByRole('button', { name: /Retirer ce récit/ })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Retirer définitivement' }),
+    ).not.toBeInTheDocument();
   });
 
   it('toggles light / dark', async () => {

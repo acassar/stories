@@ -10,6 +10,7 @@ import {
   loadLibrary,
   loadSave,
   recordEnding,
+  removeStory,
   saveImportedStory,
   writeSave,
 } from './library';
@@ -122,5 +123,44 @@ describe('record', () => {
 
   it('counts the endings of the story', () => {
     expect(countEndings(clairiereStory)).toBe(3);
+  });
+});
+
+describe('removeStory', () => {
+  it('takes a sample out of the library, for good', () => {
+    expect(loadLibrary(storage).map((s) => s.id)).toContain('clairiere-lucioles');
+
+    removeStory('clairiere-lucioles', storage);
+
+    // A sample is shipped with the app: without a record of the dismissal it
+    // would simply reappear on the next load.
+    expect(loadLibrary(storage).map((s) => s.id)).not.toContain('clairiere-lucioles');
+  });
+
+  it('takes the run and the endings found with it', () => {
+    const engine = new StoryEngine(clairiereStory);
+    play(engine, 'vers-arbre');
+    writeSave(engine.state, storage);
+    recordEnding('clairiere-lucioles', 'portail', storage);
+
+    removeStory('clairiere-lucioles', storage);
+
+    expect(loadSave('clairiere-lucioles', storage)).toBeNull();
+    expect(loadEndings(storage)['clairiere-lucioles']).toBeUndefined();
+  });
+
+  it('brings the story back when it is imported again', () => {
+    removeStory('clairiere-lucioles', storage);
+    saveImportedStory(clairiereStory, storage);
+
+    expect(loadLibrary(storage).map((s) => s.id)).toContain('clairiere-lucioles');
+  });
+
+  it('leaves the other stories alone', () => {
+    removeStory('clairiere-lucioles', storage);
+
+    const left = loadLibrary(storage).map((s) => s.id);
+    expect(left).toHaveLength(exampleStories.length - 1);
+    expect(left).not.toContain('clairiere-lucioles');
   });
 });
