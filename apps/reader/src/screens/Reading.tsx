@@ -101,11 +101,13 @@ export function Reading({
   return (
     <div className="reading">
       <header className="reading__head">
+        {/* Leaving and undoing are two different intentions: this one always
+            closes the story, whatever has been played. */}
         <button
           type="button"
           className="icon-btn"
-          onClick={() => (canGoBack ? goBack() : onLeave())}
-          aria-label={canGoBack ? 'Revenir au choix précédent' : 'Retour à la fiche du récit'}
+          onClick={onLeave}
+          aria-label="Retour à la fiche du récit"
         >
           <BackIcon />
         </button>
@@ -166,6 +168,14 @@ export function Reading({
       <div className="answers">
         {/* The answers keep the same column as the conversation above them. */}
         <div className="answers__column">
+          {/* Undoing the last choice — the story steps back one bifurcation,
+              it does not start over. */}
+          {reveal.done && canGoBack && (
+            <button type="button" className="undo" onClick={goBack}>
+              ↩ Revenir en arrière
+            </button>
+          )}
+
           {reveal.done && scene.choices.length > 0 && (
             <>
               <div className="answers__label">Répondre</div>

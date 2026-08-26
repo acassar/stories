@@ -94,7 +94,7 @@ describe('Embranche reader', () => {
     expect(screen.queryByRole('button', { name: /Demander à Elara/ })).not.toBeInTheDocument();
 
     // Cautious detour through the oak: the `prudent = true` condition is set.
-    await user.click(screen.getByRole('button', { name: 'Revenir au choix précédent' }));
+    await user.click(screen.getByRole('button', { name: /Revenir en arrière/ }));
     await user.click(await screen.findByRole('button', { name: 'Grimper au vieux chêne' }));
     await user.click(await screen.findByRole('button', { name: 'Redescendre vers les lueurs' }));
     expect(await screen.findByRole('button', { name: /Demander à Elara/ })).toBeInTheDocument();
@@ -111,13 +111,12 @@ describe('Embranche reader', () => {
     const saved = loadSave('clairiere-lucioles');
     expect(saved?.currentSceneId).toBe('arbre');
 
-    // Back to the sheet: resuming is offered.
-    await user.click(screen.getByRole('button', { name: 'Revenir au choix précédent' }));
-    await user.click(
-      await screen.findByRole('button', { name: /Retour à la fiche|Revenir au choix/ }),
-    );
+    // Leaving does not unwind what has been played: one press on the arrow
+    // closes the story, and the run is still there to be picked up.
+    await user.click(screen.getByRole('button', { name: 'Retour à la fiche du récit' }));
     const resume = await screen.findByRole('button', { name: 'Reprendre la partie' });
     expect(resume).toBeInTheDocument();
+    expect(loadSave('clairiere-lucioles')?.currentSceneId).toBe('arbre');
   });
 
   it('reads on a wide screen, with the rail instead of the topbar', async () => {
@@ -137,7 +136,7 @@ describe('Embranche reader', () => {
     // Going back stays reachable without the right-hand panel of the mockup.
     await user.click(screen.getByRole('button', { name: 'Suivre les lucioles' }));
     expect(await screen.findByText(/porte de lumière/)).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Revenir au choix précédent' }));
+    await user.click(screen.getByRole('button', { name: /Revenir en arrière/ }));
     expect(await screen.findByRole('button', { name: 'Suivre les lucioles' })).toBeInTheDocument();
   });
 
@@ -149,15 +148,13 @@ describe('Embranche reader', () => {
     expect(await screen.findByText(/château flotte entre les nuages/)).toBeInTheDocument();
 
     // Back to the library: the run comes first, with what it is worth so far.
-    await user.click(screen.getByRole('button', { name: 'Revenir au choix précédent' }));
-    await user.click(
-      await screen.findByRole('button', { name: /Retour à la fiche|Revenir au choix/ }),
-    );
-    await user.click(screen.getByRole('button', { name: 'Retour à la bibliothèque' }));
+    await user.click(screen.getByRole('button', { name: 'Retour à la fiche du récit' }));
+    await user.click(await screen.findByRole('button', { name: 'Retour à la bibliothèque' }));
 
     const resume = await screen.findByRole('button', { name: /Reprendre la lecture/ });
     expect(resume).toHaveTextContent('La Clairière aux Lucioles');
-    expect(resume).toHaveTextContent('0/3 fins');
+    // One choice pressed, and French counts from two: "fait", not "faits".
+    expect(resume).toHaveTextContent('1 choix fait · 0/3 fins');
 
     // It leads back to the story it belongs to.
     await user.click(resume);

@@ -78,6 +78,18 @@ describe('buildTranscript', () => {
     expect(messages.map((m) => m.fromPlayer)).toEqual([true, true]);
   });
 
+  it('keeps the key of a message when its scene falls into the history', () => {
+    const e = engine();
+    const before = buildTranscript(clairiereStory, e.state, e.getCurrentScene(), { revealed: 2 });
+
+    play(e, 'vers-lucioles');
+    const after = buildTranscript(clairiereStory, e.state, e.getCurrentScene(), { revealed: 2 });
+
+    // Same bubbles, same identity: the arrival animation must not replay on
+    // messages that are already on screen.
+    expect(after.slice(0, before.length).map((m) => m.key)).toEqual(before.map((m) => m.key));
+  });
+
   it('gives each message a unique key, even when the text repeats', () => {
     const e = engine();
     play(e, 'vers-arbre');
