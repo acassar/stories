@@ -65,7 +65,11 @@ export function Reading({
     if (resumedSceneId.current !== scene.id) resumedSceneId.current = null;
   }, [scene.id]);
 
-  const reveal = useReveal(scene.id, scene.blocks.length, !reduceMotion && !resuming);
+  const reveal = useReveal(
+    scene.id,
+    scene.blocks.map((block) => block.text),
+    !reduceMotion && !resuming,
+  );
   const thread = useRef<HTMLUListElement>(null);
 
   /**

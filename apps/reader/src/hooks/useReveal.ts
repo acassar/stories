@@ -2,13 +2,32 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 /** Pace at which messages arrive, in milliseconds. */
 export const REVEAL_TIMING = {
-  /** Typing time before the very first message of a scene. */
-  first: 600,
-  /** Typing time before the following ones. */
-  next: 700,
+  /** Time to settle in before any line, whatever its length. */
+  base: 320,
+  /** Time spent per character of the line being written. */
+  perCharacter: 26,
+  /**
+   * A guard against an outlier, not a working value. Set too low it flattens
+   * the top of the range — every long line arriving at the same speed as a
+   * merely long one, which is the opposite of what the delay is for. On the
+   * stories shipped, it catches the longest two percent.
+   */
+  ceiling: 3800,
   /** Silence between a displayed message and the start of the next typing. */
   pause: 320,
 } as const;
+
+/**
+ * How long the correspondent is shown writing a given line.
+ *
+ * A four-word line and a five-line paragraph used to take exactly the same
+ * time, which is the one thing a real conversation never does: the length of
+ * the silence is what announces the size of what is coming.
+ */
+export function typingDelay(text: string): number {
+  const written = REVEAL_TIMING.base + text.length * REVEAL_TIMING.perCharacter;
+  return Math.min(written, REVEAL_TIMING.ceiling);
+}
 
 export interface Reveal {
   /** Number of messages already displayed for the current scene. */
@@ -29,10 +48,19 @@ export interface Reveal {
  * reduced-motion preference) shows the scene in one block, changing nothing to
  * the game.
  */
-export function useReveal(sceneId: string, total: number, animate = true): Reveal {
+export function useReveal(sceneId: string, texts: readonly string[], animate = true): Reveal {
+  const total = texts.length;
   const [revealed, setRevealed] = useState(animate ? 0 : total);
   const [typing, setTyping] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  /*
+   * The lines are read through a ref, so that a caller rebuilding its array on
+   * every render — which is what any caller does — cannot restart the arrival
+   * of a scene halfway through it.
+   */
+  const textsRef = useRef(texts);
+  textsRef.current = texts;
 
   const clearTimers = useCallback(() => {
     for (const timer of timers.current) clearTimeout(timer);
@@ -72,7 +100,7 @@ export function useReveal(sceneId: string, total: number, animate = true): Revea
               );
             }
           },
-          index === 0 ? REVEAL_TIMING.first : REVEAL_TIMING.next,
+          typingDelay(textsRef.current[index] ?? ''),
         ),
       );
     };
