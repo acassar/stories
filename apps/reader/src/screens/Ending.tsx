@@ -1,5 +1,5 @@
-import { accents } from '@embranche/design-tokens';
-import type { StoryTheme } from '@embranche/design-tokens';
+import { resolveTokens } from '@embranche/design-tokens';
+import type { ColorMode, StoryTheme } from '@embranche/design-tokens';
 import type { SceneEnding, Story } from '@embranche/story-format';
 
 import { StarIcon } from '../components/Icons';
@@ -11,17 +11,26 @@ interface Props {
   endingsSeen: number;
   /** Number of choices made to get here. */
   steps: number;
+  mode: ColorMode;
   onRestart: () => void;
   onLibrary: () => void;
 }
 
 /** Ending screen: what the player takes away from the run. */
-export function Ending({ story, ending, endingsSeen, steps, onRestart, onLibrary }: Props) {
+export function Ending({ story, ending, endingsSeen, steps, mode, onRestart, onLibrary }: Props) {
   const theme = (story.theme ?? 'night') as StoryTheme;
+  const tokens = resolveTokens(theme, mode);
 
   return (
     <div className="ending">
-      <div className="ending__seal" style={{ background: accents[theme].grad }}>
+      <div
+        className="ending__seal"
+        style={{
+          background: tokens.accentText,
+          borderColor: tokens.hard,
+          color: tokens.onAccent,
+        }}
+      >
         <StarIcon />
       </div>
 

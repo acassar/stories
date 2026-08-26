@@ -5,6 +5,7 @@ import type { GameState, Story } from '@embranche/story-format';
 
 import { BackIcon, MoonIcon, SunIcon } from '../components/Icons';
 import { usePrefersReducedMotion } from '../hooks/useColorMode';
+import type { LayoutKind } from '../hooks/useLayoutKind';
 import { REVEAL_TIMING, useReveal } from '../hooks/useReveal';
 import { useStory } from '../hooks/useStory';
 import { buildTranscript } from '../lib/transcript';
@@ -16,6 +17,7 @@ interface Props {
   initialState: GameState | null;
   endingsSeen: number;
   mode: ColorMode;
+  layout: LayoutKind;
   onToggleMode: () => void;
   onLeave: () => void;
   onStateChange: (state: GameState) => void;
@@ -34,6 +36,7 @@ export function Reading({
   initialState,
   endingsSeen,
   mode,
+  layout,
   onToggleMode,
   onLeave,
   onStateChange,
@@ -85,6 +88,7 @@ export function Reading({
         ending={scene.ending}
         endingsSeen={endingsSeen}
         steps={decisions}
+        mode={mode}
         onRestart={restart}
         onLibrary={onLeave}
       />
@@ -114,14 +118,16 @@ export function Reading({
             {reveal.typing ? 'écrit…' : (narrator?.status ?? story.tag ?? '')}
           </div>
         </div>
-        <button
-          type="button"
-          className="icon-btn"
-          onClick={onToggleMode}
-          aria-label={mode === 'light' ? 'Passer en mode nuit' : 'Passer en mode jour'}
-        >
-          {mode === 'light' ? <SunIcon /> : <MoonIcon />}
-        </button>
+        {layout === 'mobile' && (
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={onToggleMode}
+            aria-label={mode === 'light' ? 'Passer en mode nuit' : 'Passer en mode jour'}
+          >
+            {mode === 'light' ? <SunIcon /> : <MoonIcon />}
+          </button>
+        )}
       </header>
 
       <ul
@@ -158,31 +164,34 @@ export function Reading({
       </ul>
 
       <div className="answers">
-        {reveal.done && scene.choices.length > 0 && (
-          <>
-            <div className="answers__label">Répondre</div>
-            {scene.choices.map((choice) => (
-              <button
-                key={choice.id}
-                type="button"
-                className="answer"
-                onClick={() => choose(choice.id)}
-              >
-                {choice.label}
-              </button>
-            ))}
-          </>
-        )}
+        {/* The answers keep the same column as the conversation above them. */}
+        <div className="answers__column">
+          {reveal.done && scene.choices.length > 0 && (
+            <>
+              <div className="answers__label">Répondre</div>
+              {scene.choices.map((choice) => (
+                <button
+                  key={choice.id}
+                  type="button"
+                  className="answer"
+                  onClick={() => choose(choice.id)}
+                >
+                  {choice.label}
+                </button>
+              ))}
+            </>
+          )}
 
-        {/*
+          {/*
           A true dead end: no choice to offer, no chaining to follow, no
           declared ending. A chaining node shows nothing — it moves on.
         */}
-        {reveal.done && !scene.awaitsChoice && !scene.canAdvance && !scene.isEnding && (
-          <div className="answers__label">
-            Cette scène ne mène nulle part — le récit s’arrête ici.
-          </div>
-        )}
+          {reveal.done && !scene.awaitsChoice && !scene.canAdvance && !scene.isEnding && (
+            <div className="answers__label">
+              Cette scène ne mène nulle part — le récit s’arrête ici.
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

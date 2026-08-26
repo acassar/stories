@@ -101,3 +101,28 @@ export function recordEnding(
 export function countEndings(story: Story): number {
   return Object.values(story.scenes).filter((scene) => scene.ending).length;
 }
+
+/**
+ * Choices actually made in a saved run — nodes walked through automatically do
+ * not count, exactly as the engine counts them during a run.
+ */
+export function countDecisions(story: Story, state: GameState): number {
+  return state.history.filter((entry) => story.scenes[entry.sceneId]?.kind === 'choice').length;
+}
+
+/**
+ * The run to offer picking up again: the one touched last. Anything else would
+ * make the reader look for it.
+ */
+export function latestRun(
+  stories: Story[],
+  saves: Record<string, GameState | null>,
+): { story: Story; state: GameState } | null {
+  let latest: { story: Story; state: GameState } | null = null;
+  for (const story of stories) {
+    const state = saves[story.id];
+    if (!state) continue;
+    if (!latest || state.updatedAt > latest.state.updatedAt) latest = { story, state };
+  }
+  return latest;
+}

@@ -1,5 +1,54 @@
 /** Reader pictograms, taken from the Embranche mockup. */
 
+import type { StoryTheme } from '@embranche/design-tokens';
+
+/**
+ * The drawing a story wears on its cover.
+ *
+ * One per binding, and nothing else: the format carries no icon of its own, so
+ * the ambience is what a story is illustrated by. A story that declares no
+ * binding falls back on `night`, as everywhere else in the reader.
+ */
+const themeIcons: Record<StoryTheme, string[]> = {
+  // Fantasy: a leaf lit from below.
+  fantasy: ['M12 20c0-6.5 3.2-10.5 8.5-11.5C20.5 15 17 20 12 20Z', 'M12 20c0-3.2-1.2-5.4-3.4-6.6'],
+  // Mystery: the magnifying glass of the file.
+  mystery: ['M10.8 4.2a6.4 6.4 0 1 0 0 12.8 6.4 6.4 0 0 0 0-12.8Z', 'm15.6 15.6 4.4 4.4'],
+  // Adventure: the ridge line.
+  adventure: ['M2.5 18.5 9 8l3.8 5.8L15.4 10l6.1 8.5Z', 'M9 8l1.6 2.6'],
+  // Night: the correspondence read after dark.
+  night: [
+    'M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z',
+    'M4.5 5.5h.01',
+    'M7.5 3.2h.01',
+    'M3.4 9h.01',
+  ],
+};
+
+interface ThemeIconProps {
+  theme: StoryTheme;
+  size: number;
+  /** Thinner as the drawing grows, so the line keeps the same weight. */
+  strokeWidth?: number;
+}
+
+export function ThemeIcon({ theme, size, strokeWidth = 1.6 }: ThemeIconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      {themeIcons[theme].map((d) => (
+        <path
+          key={d}
+          d={d}
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      ))}
+    </svg>
+  );
+}
+
 export function BackIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">

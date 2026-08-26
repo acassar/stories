@@ -33,10 +33,15 @@
   --emb-rule: rgba(60, 45, 20, 0.05);
   --emb-ink: #332920;
   --emb-sub: #8a7d64;
-  --emb-accent: #22344f;
-  --emb-accent-paper: #22344f;
+  --emb-accent: #2b46cc;
+  --emb-accent-text: #2b46cc;
   --emb-on-accent: #f6f0e2;
   --emb-grad: linear-gradient(160deg, #16202f, #3a4f6e);
+  --emb-tint: #dde2fa;
+  --emb-wash: #b3bdf0;
+  --emb-hard: #2a2115;
+  --emb-hard-shadow-sm: 2px 2px 0 rgba(42, 33, 21, 0.18);
+  --emb-hard-shadow: 4px 4px 0 rgba(42, 33, 21, 0.22);
 }
 
 * {

@@ -1,9 +1,32 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { App } from './App';
 import { loadSave } from './lib/library';
+
+/**
+ * The layout is read from `matchMedia`, which jsdom stubs to "no match": tests
+ * run on the phone layout unless they ask for the wide one.
+ */
+function setViewport(wide: boolean) {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: (query: string) => ({
+      matches: query.includes('prefers-reduced-motion') || (wide && query.includes('min-width')),
+      media: query,
+      onchange: null,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      addListener: () => {},
+      removeListener: () => {},
+      dispatchEvent: () => false,
+    }),
+  });
+}
+
+const widenViewport = () => setViewport(true);
+const narrowViewport = () => setViewport(false);
 
 /**
  * End-to-end walkthrough of the reader, on the `story-format` JSON shipped with
@@ -12,6 +35,10 @@ import { loadSave } from './lib/library';
 describe('Embranche reader', () => {
   beforeEach(() => {
     window.localStorage.clear();
+  });
+
+  afterEach(() => {
+    narrowViewport();
   });
 
   async function openClairiere(user: ReturnType<typeof userEvent.setup>) {
@@ -91,6 +118,50 @@ describe('Embranche reader', () => {
     );
     const resume = await screen.findByRole('button', { name: 'Reprendre la partie' });
     expect(resume).toBeInTheDocument();
+  });
+
+  it('reads on a wide screen, with the rail instead of the topbar', async () => {
+    widenViewport();
+    const user = userEvent.setup();
+    render(<App />);
+
+    // The rail carries the settings; the phone topbar is gone.
+    expect(screen.getByRole('button', { name: 'Passer en mode nuit' })).toBeInTheDocument();
+    expect(screen.getByText('Embranche')).toBeInTheDocument();
+
+    // Same walkthrough as on the phone, right up to the ending.
+    await user.click(screen.getByRole('button', { name: /La Clairière aux Lucioles/ }));
+    await user.click(screen.getByRole('button', { name: 'Commencer l’aventure' }));
+    expect(await screen.findByText(/fougères plus hautes que toi/)).toBeInTheDocument();
+
+    // Going back stays reachable without the right-hand panel of the mockup.
+    await user.click(screen.getByRole('button', { name: 'Suivre les lucioles' }));
+    expect(await screen.findByText(/porte de lumière/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Revenir au choix précédent' }));
+    expect(await screen.findByRole('button', { name: 'Suivre les lucioles' })).toBeInTheDocument();
+  });
+
+  it('offers the run in progress at the top of the library', async () => {
+    const user = userEvent.setup();
+    await openClairiere(user);
+    await user.click(screen.getByRole('button', { name: 'Commencer l’aventure' }));
+    await user.click(screen.getByRole('button', { name: 'Grimper au vieux chêne' }));
+    expect(await screen.findByText(/château flotte entre les nuages/)).toBeInTheDocument();
+
+    // Back to the library: the run comes first, with what it is worth so far.
+    await user.click(screen.getByRole('button', { name: 'Revenir au choix précédent' }));
+    await user.click(
+      await screen.findByRole('button', { name: /Retour à la fiche|Revenir au choix/ }),
+    );
+    await user.click(screen.getByRole('button', { name: 'Retour à la bibliothèque' }));
+
+    const resume = await screen.findByRole('button', { name: /Reprendre la lecture/ });
+    expect(resume).toHaveTextContent('La Clairière aux Lucioles');
+    expect(resume).toHaveTextContent('0/3 fins');
+
+    // It leads back to the story it belongs to.
+    await user.click(resume);
+    expect(screen.getByRole('heading', { name: 'La Clairière aux Lucioles' })).toBeInTheDocument();
   });
 
   it('toggles light / dark', async () => {

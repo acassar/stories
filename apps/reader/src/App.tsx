@@ -5,7 +5,9 @@ import type { StoryTheme } from '@embranche/design-tokens';
 import { validateStory } from '@embranche/story-format';
 import type { GameState, Story } from '@embranche/story-format';
 
+import { Rail } from './components/Rail';
 import { useColorMode } from './hooks/useColorMode';
+import { useLayoutKind } from './hooks/useLayoutKind';
 import {
   clearSave,
   loadEndings,
@@ -29,6 +31,7 @@ type Screen = 'library' | 'detail' | 'read';
  */
 export function App() {
   const [mode, toggleMode] = useColorMode();
+  const layout = useLayoutKind();
   const [stories, setStories] = useState<Story[]>(() => loadLibrary());
   const [endings, setEndings] = useState<Record<string, string[]>>(() => loadEndings());
   const [screen, setScreen] = useState<Screen>('library');
@@ -113,48 +116,57 @@ export function App() {
 
   return (
     <div
-      className="screen"
+      className={`screen screen--${layout}`}
       style={{ ...tokensToCssVars(tokens), background: tokens.bg, color: tokens.ink }}
     >
-      {screen === 'library' && (
-        <Library
-          stories={stories}
-          endings={endings}
-          saves={saves}
-          mode={mode}
-          onToggleMode={toggleMode}
-          onOpen={openStory}
-          onImport={(file) => void handleImport(file)}
-        />
+      {layout === 'desktop' && (
+        <Rail mode={mode} onToggleMode={toggleMode} onImport={(file) => void handleImport(file)} />
       )}
 
-      {screen === 'detail' && story && (
-        <Detail
-          story={story}
-          endingsSeen={endings[story.id]?.length ?? 0}
-          hasSave={Boolean(saves[story.id])}
-          mode={mode}
-          onToggleMode={toggleMode}
-          onBack={() => setScreen('library')}
-          onResume={() => start(false)}
-          onStart={() => start(true)}
-        />
-      )}
+      <main className="panel">
+        {screen === 'library' && (
+          <Library
+            stories={stories}
+            endings={endings}
+            saves={saves}
+            mode={mode}
+            layout={layout}
+            onToggleMode={toggleMode}
+            onOpen={openStory}
+            onImport={(file) => void handleImport(file)}
+          />
+        )}
 
-      {screen === 'read' && story && (
-        <Reading
-          // Remounting the component per session guarantees a fresh engine.
-          key={`${story.id}-${session}`}
-          story={story}
-          initialState={resumeState}
-          endingsSeen={endings[story.id]?.length ?? 0}
-          mode={mode}
-          onToggleMode={toggleMode}
-          onLeave={() => setScreen('detail')}
-          onStateChange={handleStateChange}
-          onEndingReached={handleEndingReached}
-        />
-      )}
+        {screen === 'detail' && story && (
+          <Detail
+            story={story}
+            endingsSeen={endings[story.id]?.length ?? 0}
+            hasSave={Boolean(saves[story.id])}
+            mode={mode}
+            layout={layout}
+            onToggleMode={toggleMode}
+            onBack={() => setScreen('library')}
+            onResume={() => start(false)}
+            onStart={() => start(true)}
+          />
+        )}
+
+        {screen === 'read' && story && (
+          <Reading
+            // Remounting the component per session guarantees a fresh engine.
+            key={`${story.id}-${session}`}
+            story={story}
+            initialState={resumeState}
+            endingsSeen={endings[story.id]?.length ?? 0}
+            mode={mode}
+            layout={layout}
+            onToggleMode={toggleMode}
+            onLeave={() => setScreen('detail')}
+            onStateChange={handleStateChange}
+            onEndingReached={handleEndingReached}
+          />
+        )}
+      </main>
 
       {toast && (
         <div className="toast" role="status">
