@@ -1,0 +1,68 @@
+# Publication of the two apps as one static site on GitHub Pages:
+# the reader at the root, the studio one level below.
+#
+# It waits for CI rather than repeating it: a build is published only if the
+# very commit it comes from passed lint, types and the whole test suite.
+name: Publication
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  # Publishing by hand, without waiting for a commit.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  # Never two deployments at once, and never cancel one under way: a half
+  # written site is worse than an old one.
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Each app is told where it will be served from; without it every asset
+      # would be looked up at the root of the domain, and nothing would load.
+      - name: Build both apps
+        run: |
+          EMBRANCHE_BASE=/stories/ pnpm --filter @embranche/reader build
+          EMBRANCHE_BASE=/stories/studio/ pnpm --filter @embranche/studio build
+
+      - name: Assemble the site
+        run: |
+          mkdir -p site/studio
+          cp -r apps/reader/dist/. site/
+          cp -r apps/studio/dist/. site/studio/
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

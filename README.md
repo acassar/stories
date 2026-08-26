@@ -41,6 +41,19 @@ Practical consequence: moving from a web app to Tauri or Capacitor, or replacing
 
 ---
 
+## Online
+
+Both apps are published as one static site, from `main`, once CI is green:
+
+| | |
+| --- | --- |
+| Reader | <https://acassar.github.io/stories/> |
+| Studio | <https://acassar.github.io/stories/studio/> |
+
+Everything is stored in the browser of whoever opens them — there is no server and no account.
+
+---
+
 ## Getting started
 
 ```bash
@@ -56,7 +69,8 @@ The reader is mobile-first: open it in your browser inspector in phone mode, or 
 
 ```bash
 pnpm verify        # lint + typecheck + tests
-pnpm test          # 254 tests
+pnpm test          # 281 tests
+pnpm test:coverage # the same, with the thresholds on the core
 pnpm lint
 pnpm typecheck
 pnpm format
