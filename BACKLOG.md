@@ -97,7 +97,7 @@ Livré avec, sur le même canevas : mise en relief de l'amont et de l'aval du n�
 | PLAT-1 | Empaquetage Tauri                    | P2       | L      | Volontairement **hors périmètre** de l'itération 1. Les deux apps sont des sites statiques autonomes : rien ne bloque.               |
 | PLAT-2 | Persistance par fichiers             | P2       | M      | Sous Tauri, remplacer `lib/storage` (studio) et `lib/library` (lecteur) par un accès disque. Aucun autre fichier à toucher.          |
 | PLAT-3 | CI (lint + typecheck + tests)        | ✅       | S      | `.github/workflows/ci.yml` lance `pnpm verify` sur `main` et sur chaque PR — la même commande qu'en local, jamais définie deux fois. |
-| PLAT-4 | Publication des deux apps            | P1       | S      | Deux `vite build`, deux sites statiques.                                                                                            |
+| PLAT-4 | Publication des deux apps            | ✅       | S      | Un seul site sur GitHub Pages : lecteur à la racine, studio sous `/studio/`. Publié sur une CI verte, jamais autrement.              |
 | PLAT-5 | Couverture de tests mesurée          | ✅       | S      | Mesurée sur le cœur seul, seuils dans `vitest.config.ts`, calés juste sous l'existant (99,7 / 89,8 / 97,3). `pnpm verify` échoue si ça glisse. |
 | PLAT-6 | Test bout-en-bout studio → lecteur   | P1       | M      | Un test qui exporte depuis le studio et rejoue le fichier dans le lecteur : c'est le contrat entre les deux apps, il mérite un garde-fou. |
 
