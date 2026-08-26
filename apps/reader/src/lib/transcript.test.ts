@@ -107,9 +107,16 @@ describe('buildTranscript — variables inside the text', () => {
 
     const e = new StoryEngine(story);
     play(e, 'vers-arbre');
+    // The link out of the oak is the one that sets `prudent`.
+    play(e, 'vers-redescendre');
     const messages = buildTranscript(story, e.state, e.getCurrentScene(), { revealed: 2 });
 
     expect(messages[0]?.text).toBe('Prudent : false.');
+
+    // The detour through the oak sets `prudent`: today it reads true, but the
+    // opening line was sent before that and must keep saying false.
+    expect(e.state.variables.prudent).toBe(true);
+    expect(messages[0]?.text).not.toContain('true');
     expect(messages.every((m) => !m.text.includes('{{'))).toBe(true);
   });
 });

@@ -27,6 +27,8 @@ export type { ConditionContext } from './conditions.js';
 export { applyEffects, applyEffectsToSlice } from './effects.js';
 export type { MutableSlice } from './effects.js';
 
+export { variablesAlong } from './replay.js';
+
 export { DEFAULT_MAX_STATES, exploreReachable, findDeadScenes, linkKey } from './reachability.js';
 export type { ReachabilityOptions, ReachabilityReport } from './reachability.js';
 

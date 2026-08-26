@@ -9,6 +9,7 @@
 
 import { interpolate, sceneMessages, speakerOf } from '@embranche/story-format';
 import type { GameState, Story } from '@embranche/story-format';
+import { variablesAlong } from '@embranche/story-engine';
 import type { ResolvedScene } from '@embranche/story-engine';
 
 export interface Message {
@@ -33,6 +34,9 @@ export function buildTranscript(
   { revealed }: TranscriptOptions,
 ): Message[] {
   const messages: Message[] = [];
+  // The engine fills the scene being played; the messages already sent are
+  // filled here, each with the values that were in force when it was sent.
+  const before = variablesAlong(story, state);
 
   state.history.forEach((entry, step) => {
     const past = story.scenes[entry.sceneId];
@@ -41,10 +45,7 @@ export function buildTranscript(
     sceneMessages(past).forEach((block, index) => {
       messages.push({
         key: `${step}-${entry.sceneId}-${index}`,
-        // Past messages are filled in here — the engine only fills the scene
-        // being played. They are given today's values, not those they were
-        // sent with, which the state does not keep.
-        text: interpolate(block.text, state.variables),
+        text: interpolate(block.text, before[step] ?? state.variables),
         fromPlayer,
       });
     });

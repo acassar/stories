@@ -178,6 +178,11 @@ nothing else: no expression, no comparison, no call. A story is a JSON file that
 anywhere, and opening one must never mean running its author code. `interpolate` is twenty lines
 long for that reason, and it reads only what the state itself holds — never what it inherits.
 
+A message already sent keeps the value it was sent with. The save does not store the variables
+step by step — it stores the starting values and the ordered list of links taken, and every link
+carries its effects, so `variablesAlong` replays them the way a chess score is replayed to find
+the board at the twelfth move. Nothing is added to the format, nothing is stored twice.
+
 A name the story never sets is left standing, braces included, and reported as a warning: a
 mistyped variable has no other symptom.
 
