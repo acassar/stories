@@ -33,7 +33,7 @@ const animateMessages = () => setMedia({ reducedMotion: false });
 const resetMedia = () => setMedia();
 
 /** Long enough for a whole scene to type itself out. */
-const TYPED = { timeout: 4000 };
+const TYPED = { timeout: 8000 };
 
 /**
  * End-to-end walkthrough of the reader, on the `story-format` JSON shipped with
@@ -199,7 +199,11 @@ describe('Embranche reader', () => {
     // The scene stopped on is already there, whole, and nobody is typing.
     expect(screen.getByText(/porte de lumière/)).toBeInTheDocument();
     expect(screen.queryByLabelText('En train d’écrire')).not.toBeInTheDocument();
-  });
+    // This is the one test that waits on the real clock — two scenes typing
+    // themselves out, some three seconds of deliberate silence. It needs room
+    // to breathe on a build machine, which is slower than a desk and runs it
+    // under coverage instrumentation on top.
+  }, 30_000);
 
   it('removes a story, and everything played on it', async () => {
     const user = userEvent.setup();

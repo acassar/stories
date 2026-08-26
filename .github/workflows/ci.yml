@@ -22,9 +22,11 @@ jobs:
       # The pnpm version comes from `packageManager` in package.json.
       - uses: pnpm/action-setup@v4
 
+      # 24, as on the machine this is developed on. Not lower: pnpm 11 reaches
+      # for `node:sqlite`, which does not exist before 22.13.
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
