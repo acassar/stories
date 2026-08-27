@@ -709,6 +709,10 @@ body {
   background: var(--st-ending-badge);
   color: var(--st-ending-ink);
 }
+.scene-node__badge--wait {
+  background: #d9e6f2;
+  color: #29506f;
+}
 .scene-node__badge--start {
   background: #ded4f6;
   color: #4c2f8f;

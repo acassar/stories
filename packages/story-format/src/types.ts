@@ -156,6 +156,21 @@ export interface Scene {
   next: Link[];
   /** Node position on the studio canvas; persisted in the format. */
   position: { x: number; y: number };
+  /**
+   * Real-world minutes the correspondent stays silent before the messages of
+   * this scene arrive. Absent or zero: they answer straight away.
+   *
+   * It sits on the scene rather than on the link because it is the length of a
+   * silence, not a consequence of a choice: a night lasts a night whichever way
+   * the player got there, and a quarter of the waited scenes of a real story
+   * are reached by more than one path. A wait that genuinely depends on the
+   * road taken is written the way the format already allows — an intermediate
+   * node on that road, carrying its own.
+   *
+   * The reader divides it by the pace its owner chose; nothing here knows about
+   * that, and nothing here should.
+   */
+  waitMinutes?: number;
   ending?: SceneEnding;
   media?: SceneMedia;
   /** Free-form labels, for filtering on the studio side. */
@@ -167,6 +182,11 @@ export interface Narrator {
   name: string;
   /** Status line under the name: « la voix de la clairiere », « en ligne »... */
   status?: string;
+  /**
+   * Status line while the correspondent is waiting out a `waitMinutes`:
+   * « hors ligne », « en plongee »... Each story words its own absence.
+   */
+  awayStatus?: string;
 }
 
 export interface StoryMeta {
@@ -220,6 +240,25 @@ export interface GameState {
   /** ISO 8601 timestamps — strings, to stay serializable. */
   startedAt: string;
   updatedAt: string;
+  /**
+   * When the wait of the current scene started. Absent: nothing is pending.
+   *
+   * The *start* is recorded, never the deadline: the deadline depends on the
+   * pace the reader chose, and a stored deadline would freeze a pace they are
+   * free to change in the middle of a wait. Recomputing it from here costs one
+   * subtraction and is always right — including after the app was closed for
+   * longer than the wait itself.
+   */
+  awaitingSince?: string;
+  /**
+   * Scenes whose wait has already been imposed once.
+   *
+   * Kept because `goBack` replays the run from its history: without it, undoing
+   * a choice would make the player sit through a night they have already lived.
+   * Like `startedAt`, it survives that replay — both are facts about the person
+   * reading, not about the story.
+   */
+  waitsDone?: SceneId[];
 }
 
 // ---------------------------------------------------------------------------
@@ -247,6 +286,8 @@ export type IssueCode =
   | 'choice-without-label'
   /** A node mixes links to choices with automatic chaining links. */
   | 'mixed-links'
+  /** A wait on a `choice` node: the player does not keep themselves waiting. */
+  | 'wait-on-choice'
   /** Automatic chaining whose links are all conditional. */
   | 'no-default-link'
   /** Automatic chaining loop: the reading would never stop. */

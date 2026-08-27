@@ -2,10 +2,11 @@ import { Handle, Position } from '@xyflow/react';
 import type { NodeProps } from '@xyflow/react';
 
 import { kinds } from '@embranche/design-tokens';
-import { sceneMessages } from '@embranche/story-format';
+import { sceneMessages, waitMinutesOf } from '@embranche/story-format';
 
 import { PORT } from '../lib/graph';
 import type { SceneFlowNode } from '../lib/graph';
+import { formatWait } from '../lib/values';
 
 /**
  * Canvas node.
@@ -25,6 +26,7 @@ export function SceneNode({ data, selected }: NodeProps<SceneFlowNode>) {
   const hasError = issues.some((issue) => issue.severity === 'error');
   const hasWarning = !hasError && issues.length > 0;
   const palette = kinds[scene.kind];
+  const wait = waitMinutesOf(scene);
   const preview = sceneMessages(scene)
     .map((block) => block.text)
     .join(' ');
@@ -66,6 +68,19 @@ export function SceneNode({ data, selected }: NodeProps<SceneFlowNode>) {
         <div className="scene-node__title" title={scene.title}>
           {scene.kind === 'choice' ? scene.label || scene.title : scene.title || scene.id}
         </div>
+        {/*
+          A wait belongs on the card, not behind a panel one has to open: a
+          night the reader will actually sit through is the kind of thing an
+          author must see while looking at the shape of their story.
+        */}
+        {wait > 0 && (
+          <span
+            className="scene-node__badge scene-node__badge--wait"
+            title={`Le correspondant se tait ${formatWait(wait)} avant ce message`}
+          >
+            ⏱ {formatWait(wait)}
+          </span>
+        )}
         {isStart && <span className="scene-node__badge scene-node__badge--start">DÉPART</span>}
         {scene.ending && <span className="scene-node__badge scene-node__badge--ending">FIN</span>}
       </div>

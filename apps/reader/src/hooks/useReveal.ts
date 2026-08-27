@@ -47,8 +47,18 @@ export interface Reveal {
  * everything. Turning the animation off (`animate = false`, or a system
  * reduced-motion preference) shows the scene in one block, changing nothing to
  * the game.
+ *
+ * `hold` is the one exception, and it is not staging: while the correspondent
+ * is away, nothing of the scene has been written yet. So it does not merely
+ * pause the animation — it withholds the lines, and `skip` cannot buy them
+ * back. A silence one can tap through is not a silence.
  */
-export function useReveal(sceneId: string, texts: readonly string[], animate = true): Reveal {
+export function useReveal(
+  sceneId: string,
+  texts: readonly string[],
+  animate = true,
+  hold = false,
+): Reveal {
   const total = texts.length;
   const [revealed, setRevealed] = useState(animate ? 0 : total);
   const [typing, setTyping] = useState(false);
@@ -68,13 +78,22 @@ export function useReveal(sceneId: string, texts: readonly string[], animate = t
   }, []);
 
   const skip = useCallback(() => {
+    if (hold) return;
     clearTimers();
     setRevealed(total);
     setTyping(false);
-  }, [clearTimers, total]);
+  }, [clearTimers, hold, total]);
 
   useEffect(() => {
     clearTimers();
+
+    // Nothing has arrived, so nothing is shown and nobody is typing. When the
+    // wait runs out this effect runs again and the scene arrives normally.
+    if (hold) {
+      setRevealed(0);
+      setTyping(false);
+      return;
+    }
 
     if (!animate || total === 0) {
       setRevealed(total);
@@ -107,7 +126,7 @@ export function useReveal(sceneId: string, texts: readonly string[], animate = t
     step(0);
 
     return clearTimers;
-  }, [sceneId, total, animate, clearTimers]);
+  }, [sceneId, total, animate, hold, clearTimers]);
 
-  return { revealed, typing, done: revealed >= total, skip };
+  return { revealed, typing, done: !hold && revealed >= total, skip };
 }

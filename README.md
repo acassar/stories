@@ -89,7 +89,11 @@ This is **the contract** between the two apps: the studio writes, the reader rea
   "title": "La Clairière aux Lucioles",
   "version": "2.0.0",
   "theme": "fantasy", // binding tint: fantasy | mystery | adventure | night
-  "narrator": { "name": "Elara", "status": "la voix de la clairière" },
+  "narrator": {
+    "name": "Elara",
+    "status": "la voix de la clairière",
+    "awayStatus": "hors ligne", // while a wait is running
+  },
   "startSceneId": "start",
   "variables": { "prudent": false },
   "scenes": {
@@ -98,6 +102,7 @@ This is **the contract** between the two apps: the studio writes, the reader rea
       "kind": "npc", // npc | player | choice
       "title": "Le sentier",
       "position": { "x": 400, "y": 0 }, // node position in the studio
+      "waitMinutes": 720, // real minutes of silence before this scene speaks
       "blocks": [{ "text": "Le sentier s'enfonce sous les fougères." }],
       "next": [
         {
@@ -161,6 +166,45 @@ The first link inherits the condition and the effects of the choice — it is th
 
 A scene that alternated speakers message by message (`speaker`) is **split into as many nodes as there are voice changes**, chained automatically — the rendering is identical. `migrateStory` also repairs a document already in v2 that still carries that field; the operation is idempotent and leaves untouched whatever needs no fixing.
 
+### Waiting for real
+
+A scene may declare `waitMinutes`: the correspondent goes quiet for that long, in real time, before
+its messages arrive. Twelve hours means twelve hours — the app can be closed and reopened, and the
+silence is where it was left. A story that declares none behaves exactly as before.
+
+**The state records when a silence began, never when it ends.** The end depends on the pace its
+reader chose, and that pace is a setting they can move mid-wait; a stored deadline would freeze it
+with nothing left to recompute from. `waitStatus(story, state, pace, now)` does the subtraction at
+the moment of display, so the pace never enters the state, the engine or the format — it is a lens,
+like `interpolate`.
+
+Two consequences fall out for free: an app closed for longer than the wait finds it already over,
+and moving the dial during a silence lengthens or shortens it on the spot with nothing to
+reschedule.
+
+```
+awaitingSince = when the silence started      (in the save)
+waitMinutes   = how long it lasts             (in the story)
+pace          = how fast this reader lives it (in their settings, never in the save)
+```
+
+**It sits on the scene, not on the link.** `condition` and `effects` belong to the link because they
+are consequences of a choice, and because they apply on the way *out*; a wait is the length of a
+silence and applies on the way *in*. A night lasts a night whichever road led there — and in a real
+story a quarter of the waited scenes have more than one road in, so a wait on the link would mean
+writing the same number twice with nothing able to tell the two apart once they drift. A wait that
+genuinely depends on the road taken is written the way the format already allows: an intermediate
+node on that road, carrying its own.
+
+The reader offers a pace from real time to « sans attente », and the studio shows the wait as a
+badge on the card, because a twelve-hour night one cannot see while looking at the graph is a trap.
+The playtest ignores waits outright: an authoring tool that made its author sit out a night would
+not be used.
+
+Notifications are deliberately **not** part of this: nothing on the web can wake a sleeping browser
+from the inside, so telling someone their correspondent is back needs a push service, and that is a
+platform decision this feature does not depend on.
+
 ### Variables inside the text
 
 A line of a scene, a button label and an ending can all name a variable, and the reader puts
@@ -197,7 +241,7 @@ The fifth, **« La Fréquence Kerlaven »**, is the long one: 229 nodes, 9 endin
 `validateStory` returns a list of typed issues, split into two levels:
 
 - **`error`** — the story is not playable: missing start scene, link to a nonexistent scene, duplicate ids, choice without a label, node mixing choices and chaining, **automatic chaining loop** the reading would never leave. The studio blocks the playtest, the reader refuses the file.
-- **`warning`** — a writing problem that does not prevent playing: orphan scene, dead end, ending that keeps outgoing links, chaining whose links are all conditional, condition reading a variable that is never written, **token in the text naming a variable the story never sets**.
+- **`warning`** — a writing problem that does not prevent playing: orphan scene, dead end, ending that keeps outgoing links, chaining whose links are all conditional, condition reading a variable that is never written, **token in the text naming a variable the story never sets**, wait declared on a `choice` node — where the player is the one writing, and nobody keeps themselves waiting.
 
 The studio calls it on every keystroke: offending nodes get a red ring, and the bottom bar lists the issues, clickable.
 

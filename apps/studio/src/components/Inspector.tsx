@@ -17,6 +17,7 @@ import {
   updateScene,
   updateStory,
 } from '../lib/storyDoc';
+import { formatWait } from '../lib/values';
 import { ConditionEditor } from './ConditionEditor';
 import { EffectEditor } from './EffectEditor';
 
@@ -256,12 +257,39 @@ function StoryPanel({ story, onChange }: { story: Story; onChange: (story: Story
             placeholder="en ligne"
             onChange={(event) =>
               set({
-                narrator: { name: story.narrator?.name ?? '', status: event.target.value },
+                narrator: {
+                  ...story.narrator,
+                  name: story.narrator?.name ?? '',
+                  status: event.target.value,
+                },
               })
             }
           />
         </label>
       </div>
+
+      <label className="field">
+        <span className="field__label">Statut pendant une attente</span>
+        <input
+          className="input"
+          value={story.narrator?.awayStatus ?? ''}
+          placeholder="hors ligne"
+          aria-describedby="emb-away-hint"
+          onChange={(event) =>
+            set({
+              narrator: {
+                ...story.narrator,
+                name: story.narrator?.name ?? '',
+                awayStatus: event.target.value,
+              },
+            })
+          }
+        />
+        <span className="field__hint" id="emb-away-hint">
+          Ce que le lecteur lit sous le nom tant que ton personnage n’a pas répondu. Chaque récit
+          dit son absence à sa façon : « hors ligne », « en plongée », « injoignable ».
+        </span>
+      </label>
 
       <label className="field">
         <span className="field__label">Publication</span>
@@ -384,6 +412,34 @@ function ScenePanel({
       </label>
 
       <SceneIdField story={story} scene={scene} onChange={onChange} onSelect={onSelect} />
+
+      {/*
+        Offered on everything but a choice: there, the player is the one
+        writing, and nobody keeps themselves waiting.
+      */}
+      {scene.kind !== 'choice' && (
+        <label className="field">
+          <span className="field__label">Attente avant ce message (min)</span>
+          <input
+            className="input"
+            type="number"
+            min={0}
+            step={1}
+            value={scene.waitMinutes ?? 0}
+            aria-describedby="emb-wait-hint"
+            onChange={(event) => {
+              const minutes = Math.max(0, Math.round(Number(event.target.value) || 0));
+              // Zero is the absence of a wait, so it is written as an absence:
+              // the field would otherwise appear in every exported scene.
+              set({ waitMinutes: minutes === 0 ? undefined : minutes });
+            }}
+          />
+          <span className="field__hint" id="emb-wait-hint">
+            Du temps réel : {formatWait(Math.max(1, scene.waitMinutes ?? 0))} avant que ce message
+            n’arrive. Chaque lecteur peut l’accélérer depuis ses réglages, jamais le rallonger.
+          </span>
+        </label>
+      )}
 
       {scene.kind === 'choice' && (
         <IncomingLinkPanel

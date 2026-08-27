@@ -31,7 +31,7 @@ import { applyEffects } from './effects.js';
 import { Emitter } from './emitter.js';
 import type { Unsubscribe } from './emitter.js';
 import { EngineError } from './errors.js';
-import { createInitialState, serializeState, systemClock } from './state.js';
+import { createInitialState, enterScene, serializeState, systemClock } from './state.js';
 import type { Clock } from './state.js';
 
 /**
@@ -260,6 +260,10 @@ export class StoryEngine {
       visited: next.visited.includes(link.to) ? next.visited : [...next.visited, link.to],
       updatedAt: this.clock(),
     };
+    // Starts the silence of the scene being entered, or ends the previous one.
+    // The engine only ever stamps the moment: how long that silence lasts is
+    // read off later, at a pace it knows nothing about.
+    next = enterScene(this._story, next, this.clock);
 
     this.commit(next, from);
     this.emitter.emit('link:followed', { link, from, to: link.to, chosen });
@@ -385,7 +389,14 @@ export class StoryEngine {
   /** Replays a sequence of steps from a fresh state. */
   private replay(history: GameState['history']): GameState {
     let state = createInitialState(this._story, this.clock);
+    /*
+     * `startedAt` and `waitsDone` cross the replay untouched: they record what
+     * the person reading has lived through, not what the story has. Rebuilding
+     * the run must not rewind their evening — and above all must not hand them
+     * back a twelve-hour night they have already sat through.
+     */
     state = { ...state, startedAt: this._state.startedAt };
+    if (this._state.waitsDone) state = { ...state, waitsDone: this._state.waitsDone };
 
     for (const entry of history) {
       const scene = this._story.scenes[entry.sceneId];
@@ -402,7 +413,10 @@ export class StoryEngine {
         visited: state.visited.includes(link.to) ? state.visited : [...state.visited, link.to],
       };
     }
-    return { ...state, updatedAt: this.clock() };
+    // Through `enterScene` like any other arrival — which, every wait of the
+    // run being already in `waitsDone`, drops the pending one instead of
+    // opening a new.
+    return enterScene(this._story, { ...state, updatedAt: this.clock() }, this.clock);
   }
 
   private buildSnapshot(state: GameState): EngineSnapshot {

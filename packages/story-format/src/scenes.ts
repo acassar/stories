@@ -49,6 +49,25 @@ export function outgoing(story: Story, scene: Scene): { link: Link; target: Scen
   return scene.next.map((link) => ({ link, target: story.scenes[link.to] }));
 }
 
+/**
+ * How long the correspondent stays silent before this scene speaks, in real
+ * minutes. Zero for a `choice` node whatever it declares: the player is the one
+ * writing there, and nobody keeps themselves waiting.
+ */
+export function waitMinutesOf(scene: Scene): number {
+  if (scene.kind === 'choice') return 0;
+  return Math.max(0, scene.waitMinutes ?? 0);
+}
+
+/**
+ * True when the story makes the player wait at all — which is what tells a
+ * conversation read in one sitting from one spread over days. Derived, never
+ * declared: a flag beside the scenes could disagree with them.
+ */
+export function hasWaits(story: Story): boolean {
+  return Object.values(story.scenes).some((scene) => waitMinutesOf(scene) > 0);
+}
+
 /** True when the scene ends the story — no link is ever followed out of it. */
 export function isTerminal(scene: Scene): boolean {
   return Boolean(scene.ending);

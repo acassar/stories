@@ -21,6 +21,19 @@ export function formatVariableValue(value: VariableValue): string {
   return String(value);
 }
 
+/**
+ * A wait, as short as it can be said: « 45 min », « 12 h », « 2 h 30 ».
+ *
+ * Minutes are what the format stores, because that is what an author thinks in.
+ * Hours are what they read back once the number grows, for the same reason.
+ */
+export function formatWait(minutes: number): string {
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return rest === 0 ? `${hours} h` : `${hours} h ${rest}`;
+}
+
 /** Conditions the structured editor can display line by line. */
 export type LeafCondition = Exclude<Condition, { op: 'and' } | { op: 'or' } | { op: 'not' }>;
 

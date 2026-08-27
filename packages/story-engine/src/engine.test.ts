@@ -666,9 +666,7 @@ describe('StoryEngine — the long sample story', () => {
 
     const declared = findEndings(kerlavenStory).map((scene) => scene.id);
     expect(declared.filter((id) => !reached.has(id))).toEqual([]);
-  }, // A thousand walks through the long story: under coverage instrumentation
-  // it runs several times slower than the default allowance.
-  20_000);
+  }, 20_000); // it runs several times slower than the default allowance. // A thousand walks through the long story: under coverage instrumentation
 });
 
 describe('StoryEngine — variables inside the text', () => {
@@ -734,5 +732,149 @@ describe('StoryEngine — variables inside the text', () => {
     // The document stays the document: only what is handed to the UI is filled.
     expect(spokenStory.scenes.hall?.blocks[0]?.text).toBe('Tu as {{ or }} pieces.');
     expect(e.story.scenes.hall?.blocks[0]?.text).toBe('Tu as {{ or }} pieces.');
+  });
+});
+
+/**
+ * A story that keeps the reader waiting: one choice, and behind it a scene the
+ * correspondent takes an hour to send.
+ */
+const waitingStory: Story = {
+  formatVersion: STORY_FORMAT_VERSION,
+  id: 'attente',
+  title: 'Attente',
+  version: '1.0.0',
+  startSceneId: 'start',
+  scenes: {
+    start: {
+      id: 'start',
+      kind: 'npc',
+      title: 'Le seuil',
+      blocks: [{ text: 'Reste la.' }],
+      next: [
+        { id: 'vers-patienter', to: 'c-patienter' },
+        { id: 'vers-partir', to: 'c-partir' },
+      ],
+      position: { x: 0, y: 0 },
+    },
+    'c-patienter': {
+      id: 'c-patienter',
+      kind: 'choice',
+      title: 'Patienter',
+      label: 'Je patiente',
+      blocks: [],
+      next: [{ id: 'suite', to: 'nuit' }],
+      position: { x: 0, y: 120 },
+    },
+    'c-partir': {
+      id: 'c-partir',
+      kind: 'choice',
+      title: 'Partir',
+      label: 'Je pars',
+      blocks: [],
+      next: [{ id: 'suite', to: 'fin' }],
+      position: { x: 200, y: 120 },
+    },
+    nuit: {
+      id: 'nuit',
+      kind: 'npc',
+      title: 'La nuit',
+      blocks: [{ text: 'Me revoila.' }],
+      waitMinutes: 60,
+      next: [{ id: 'suite', to: 'fin' }],
+      position: { x: 0, y: 240 },
+    },
+    fin: {
+      id: 'fin',
+      kind: 'npc',
+      title: 'Fin',
+      blocks: [{ text: 'Voila.' }],
+      next: [],
+      position: { x: 100, y: 360 },
+      ending: { type: 'Fin', name: 'Fin', blurb: 'Voila.' },
+    },
+  },
+};
+
+describe('StoryEngine — waits', () => {
+  it('stamps the start of the silence on arrival, and clears it on leaving', () => {
+    const clock = fakeClock();
+    const e = new StoryEngine(waitingStory, { now: clock.now });
+
+    expect(e.state.awaitingSince).toBeUndefined();
+
+    e.choose('vers-patienter');
+    e.advance();
+    expect(e.state.currentSceneId).toBe('nuit');
+    expect(e.state.awaitingSince).toBe(clock.now());
+    expect(e.state.waitsDone).toEqual(['nuit']);
+
+    // The engine records the moment; it never decides that the wait is over.
+    e.advance();
+    expect(e.state.currentSceneId).toBe('fin');
+    expect(e.state.awaitingSince).toBeUndefined();
+  });
+
+  /*
+   * The trap this guards: `goBack` rebuilds the run by replaying its history,
+   * which would hand a twelve-hour night straight back to someone who only
+   * wanted to change their mind.
+   */
+  it('does not impose a wait twice when a choice is undone', () => {
+    const e = new StoryEngine(waitingStory, { now: fakeClock().now });
+
+    e.choose('vers-patienter');
+    e.advance();
+    expect(e.state.awaitingSince).toBeDefined();
+
+    e.goBack();
+    expect(e.state.currentSceneId).toBe('start');
+    expect(e.state.awaitingSince).toBeUndefined();
+    // The night is remembered as lived, so walking back into it is silent.
+    expect(e.state.waitsDone).toEqual(['nuit']);
+
+    e.choose('vers-patienter');
+    e.advance();
+    expect(e.state.currentSceneId).toBe('nuit');
+    expect(e.state.awaitingSince).toBeUndefined();
+  });
+
+  it('starts a fresh run with its waits intact', () => {
+    const e = new StoryEngine(waitingStory, { now: fakeClock().now });
+    e.choose('vers-patienter');
+    e.advance();
+
+    e.reset();
+    expect(e.state.waitsDone).toBeUndefined();
+
+    e.choose('vers-patienter');
+    e.advance();
+    expect(e.state.awaitingSince).toBeDefined();
+  });
+
+  it('carries the wait through a save and back', () => {
+    const clock = fakeClock();
+    const e = new StoryEngine(waitingStory, { now: clock.now });
+    e.choose('vers-patienter');
+    e.advance();
+
+    // The round-trip goes through the schema, which strips what it ignores:
+    // a field forgotten there would disappear right here.
+    const back = deserializeState(e.serialize());
+    expect(back.awaitingSince).toBe(clock.now());
+    expect(back.waitsDone).toEqual(['nuit']);
+  });
+
+  it('opens on a silence when the story starts with one', () => {
+    const clock = fakeClock();
+    const opening: Story = {
+      ...waitingStory,
+      scenes: {
+        ...waitingStory.scenes,
+        start: { ...waitingStory.scenes.start!, waitMinutes: 5 },
+      },
+    };
+    const e = new StoryEngine(opening, { now: clock.now });
+    expect(e.state.awaitingSince).toBe(clock.now());
   });
 });

@@ -4,7 +4,7 @@ import type { GameState, Story } from '@embranche/story-format';
 
 import { ImportButton } from '../components/ImportButton';
 import { StoryCover } from '../components/StoryCover';
-import { BrandMark, MoonIcon, SunIcon } from '../components/Icons';
+import { BrandMark, MoonIcon, PaceIcon, SunIcon } from '../components/Icons';
 import type { LayoutKind } from '../hooks/useLayoutKind';
 import { countDecisions, countEndings, latestRun } from '../lib/library';
 
@@ -17,6 +17,7 @@ interface Props {
   mode: ColorMode;
   layout: LayoutKind;
   onToggleMode: () => void;
+  onSettings: () => void;
   onOpen: (storyId: string) => void;
   onImport: (file: File) => void;
 }
@@ -29,6 +30,7 @@ export function Library({
   mode,
   layout,
   onToggleMode,
+  onSettings,
   onOpen,
   onImport,
 }: Props) {
@@ -58,6 +60,9 @@ export function Library({
             aria-label={mode === 'light' ? 'Passer en mode nuit' : 'Passer en mode jour'}
           >
             {mode === 'light' ? <SunIcon /> : <MoonIcon />}
+          </button>
+          <button type="button" className="icon-btn" onClick={onSettings} aria-label="Réglages">
+            <PaceIcon />
           </button>
         </header>
       )}

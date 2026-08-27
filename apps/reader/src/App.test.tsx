@@ -2,8 +2,10 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
+import type { Story } from '@embranche/story-format';
+
 import { App } from './App';
-import { loadSave } from './lib/library';
+import { loadSave, saveImportedStory } from './lib/library';
 
 /**
  * Both the layout and the pace of the messages are read from `matchMedia`.
@@ -250,5 +252,103 @@ describe('Embranche reader', () => {
     await user.click(screen.getByRole('button', { name: 'Passer en mode nuit' }));
     expect(screen.getByRole('button', { name: 'Passer en mode jour' })).toBeInTheDocument();
     expect(window.localStorage.getItem('embranche.reader.mode')).toBe('dark');
+  });
+});
+
+/**
+ * A story that keeps its reader waiting: one choice, and behind it a message
+ * the correspondent takes an hour to send.
+ */
+const waitingStory = {
+  formatVersion: 2,
+  id: 'la-veille',
+  title: 'La Veille',
+  version: '1.0.0',
+  status: 'published',
+  narrator: { name: 'Pierre', status: 'en ligne', awayStatus: 'hors ligne' },
+  startSceneId: 'start',
+  scenes: {
+    start: {
+      id: 'start',
+      kind: 'npc',
+      title: 'Le seuil',
+      blocks: [{ text: 'Je descends voir.' }],
+      next: [{ id: 'vers-attendre', to: 'c-attendre' }],
+      position: { x: 0, y: 0 },
+    },
+    'c-attendre': {
+      id: 'c-attendre',
+      kind: 'choice',
+      title: 'Attendre',
+      label: 'Je t’attends',
+      blocks: [],
+      next: [{ id: 'suite', to: 'retour' }],
+      position: { x: 0, y: 120 },
+    },
+    retour: {
+      id: 'retour',
+      kind: 'npc',
+      title: 'Le retour',
+      blocks: [{ text: 'Me revoilà, désolé pour le temps.' }],
+      waitMinutes: 60,
+      next: [],
+      position: { x: 0, y: 240 },
+      ending: { type: 'Fin', name: 'Le retour', blurb: 'Il est remonté.' },
+    },
+  },
+};
+
+describe('Embranche reader — real-time waits', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    saveImportedStory(waitingStory as unknown as Story);
+  });
+
+  async function waitOnPierre(user: ReturnType<typeof userEvent.setup>) {
+    render(<App />);
+    await user.click(screen.getByRole('button', { name: /La Veille/ }));
+    await user.click(screen.getByRole('button', { name: 'Commencer l’aventure' }));
+    await user.click(await screen.findByRole('button', { name: 'Je t’attends' }, TYPED));
+  }
+
+  it('holds the message back and says who is away, for how long', async () => {
+    const user = userEvent.setup();
+    await waitOnPierre(user);
+
+    expect(await screen.findByText(/Pierre est hors ligne/, {}, TYPED)).toBeInTheDocument();
+    expect(screen.getByText(/de retour dans 1 h/)).toBeInTheDocument();
+    // The line has not been written yet, so it is nowhere on screen.
+    expect(screen.queryByText(/Me revoilà/)).not.toBeInTheDocument();
+    // Nor can it be tapped out of: a silence one skips is not a silence.
+    await user.click(screen.getByLabelText('Correspondance'));
+    expect(screen.queryByText(/Me revoilà/)).not.toBeInTheDocument();
+  });
+
+  /*
+   * The whole point of storing when a silence began rather than when it ends:
+   * the same save, read at the same instant, answers differently the moment the
+   * reader moves the dial. Nothing is rescheduled, nothing is rewritten.
+   */
+  it('lets the reader change the pace in the middle of a wait', async () => {
+    const user = userEvent.setup();
+    await waitOnPierre(user);
+    expect(await screen.findByText(/Pierre est hors ligne/, {}, TYPED)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Réglages' }));
+    await user.click(screen.getByRole('radio', { name: 'Sans attente' }));
+    await user.click(screen.getByRole('button', { name: 'C’est noté' }));
+
+    expect(await screen.findByText(/Me revoilà/, {}, TYPED)).toBeInTheDocument();
+    expect(screen.queryByText(/Pierre est hors ligne/)).not.toBeInTheDocument();
+  });
+
+  it('tells the story sheet that the correspondent has not come back', async () => {
+    const user = userEvent.setup();
+    await waitOnPierre(user);
+    await screen.findByText(/Pierre est hors ligne/, {}, TYPED);
+
+    await user.click(screen.getByLabelText('Retour à la fiche du récit'));
+    expect(screen.getByRole('button', { name: 'Reprendre la partie' })).toBeInTheDocument();
+    expect(screen.getByText(/Pierre est hors ligne — de retour dans/)).toBeInTheDocument();
   });
 });

@@ -151,6 +151,15 @@ function checkGraph(story: Story): ValidationIssue[] {
       });
     }
 
+    if (scene.kind === 'choice' && (scene.waitMinutes ?? 0) > 0) {
+      issues.push({
+        severity: 'warning',
+        code: 'wait-on-choice',
+        sceneId: scene.id,
+        message: `« ${scene.title || scene.id} » est un choix : l'attente qu'il declare ne sera jamais jouee, c'est le joueur qui ecrit.`,
+      });
+    }
+
     if (scene.ending && scene.next.length > 0) {
       issues.push({
         severity: 'warning',

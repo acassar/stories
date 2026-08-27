@@ -2,12 +2,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { resolveShell, tokensToCssVars } from '@embranche/design-tokens';
 import type { StoryTheme } from '@embranche/design-tokens';
+import { waitStatus } from '@embranche/story-engine';
 import { validateStory } from '@embranche/story-format';
 import type { GameState, Story } from '@embranche/story-format';
 
 import { Rail } from './components/Rail';
+import { Settings } from './components/Settings';
 import { useColorMode } from './hooks/useColorMode';
 import { useLayoutKind } from './hooks/useLayoutKind';
+import { useSpeed } from './hooks/useSpeed';
+import { awaySentence } from './lib/away';
 import {
   clearSave,
   loadEndings,
@@ -32,6 +36,8 @@ type Screen = 'library' | 'detail' | 'read';
  */
 export function App() {
   const [mode, toggleMode] = useColorMode();
+  const [pace, setPace] = useSpeed();
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const layout = useLayoutKind();
   const [stories, setStories] = useState<Story[]>(() => loadLibrary());
   const [endings, setEndings] = useState<Record<string, string[]>>(() => loadEndings());
@@ -133,7 +139,12 @@ export function App() {
       style={{ ...tokensToCssVars(tokens), background: tokens.bg, color: tokens.ink }}
     >
       {layout === 'desktop' && (
-        <Rail mode={mode} onToggleMode={toggleMode} onImport={(file) => void handleImport(file)} />
+        <Rail
+          mode={mode}
+          onToggleMode={toggleMode}
+          onSettings={() => setSettingsOpen(true)}
+          onImport={(file) => void handleImport(file)}
+        />
       )}
 
       <main className="panel">
@@ -145,6 +156,7 @@ export function App() {
             mode={mode}
             layout={layout}
             onToggleMode={toggleMode}
+            onSettings={() => setSettingsOpen(true)}
             onOpen={openStory}
             onImport={(file) => void handleImport(file)}
           />
@@ -155,6 +167,7 @@ export function App() {
             story={story}
             endingsSeen={endings[story.id]?.length ?? 0}
             hasSave={Boolean(saves[story.id])}
+            away={awayLine(story, saves[story.id], pace)}
             mode={mode}
             layout={layout}
             onToggleMode={toggleMode}
@@ -172,15 +185,21 @@ export function App() {
             story={story}
             initialState={resumeState}
             endingsSeen={endings[story.id]?.length ?? 0}
+            pace={pace}
             mode={mode}
             layout={layout}
             onToggleMode={toggleMode}
+            onSettings={() => setSettingsOpen(true)}
             onLeave={() => setScreen('detail')}
             onStateChange={handleStateChange}
             onEndingReached={handleEndingReached}
           />
         )}
       </main>
+
+      {settingsOpen && (
+        <Settings pace={pace} onChoose={setPace} onClose={() => setSettingsOpen(false)} />
+      )}
 
       {toast && (
         <div className="toast" role="status">
@@ -189,6 +208,18 @@ export function App() {
       )}
     </div>
   );
+}
+
+/**
+ * What the story sheet says about a correspondent who has not come back yet.
+ *
+ * Read once, on entering the screen: a sheet is a place one passes through, and
+ * a countdown ticking there would be a timer running for nobody.
+ */
+function awayLine(story: Story, save: GameState | null | undefined, pace: number): string | null {
+  if (!save) return null;
+  const status = waitStatus(story, save, pace, Date.now());
+  return status.waiting ? awaySentence(story.narrator, status.remainingMs) : null;
 }
 
 function readSaves(library: Story[]): Record<string, GameState | null> {

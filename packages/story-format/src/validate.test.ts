@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { cimesStory, clairiereStory, exampleStories } from './examples.js';
 import { createEmptyStory, createScene, slugify } from './factories.js';
+import { hasWaits, waitMinutesOf } from './scenes.js';
 import {
   StoryFormatError,
   collectConditionVariables,
@@ -296,5 +297,51 @@ describe('helpers', () => {
   it('slugify produces an id accepted by the schema', () => {
     expect(slugify('La Clairière aux Lucioles !')).toBe('la-clairiere-aux-lucioles');
     expect(slugify('   ')).toBe('scene');
+  });
+});
+
+describe('waits', () => {
+  it('survives a JSON round-trip and passes validation', () => {
+    const story = clone(clairiereStory);
+    story.scenes.lucioles!.waitMinutes = 720;
+    story.narrator = { name: 'Elara', status: 'en ligne', awayStatus: 'hors ligne' };
+
+    const back = JSON.parse(JSON.stringify(story)) as Story;
+    expect(validateStory(back).valid).toBe(true);
+    expect(parseStory(back).scenes.lucioles?.waitMinutes).toBe(720);
+    expect(parseStory(back).narrator?.awayStatus).toBe('hors ligne');
+  });
+
+  it('reports a wait declared on a choice, which would never be played', () => {
+    const story = clone(clairiereStory);
+    story.scenes['c-franchir']!.waitMinutes = 30;
+
+    const result = validateStory(story);
+    expect(result.valid).toBe(true);
+    expect(result.issues.some((issue) => issue.code === 'wait-on-choice')).toBe(true);
+  });
+
+  it('rejects a negative wait as a malformed document', () => {
+    const story = clone(clairiereStory);
+    story.scenes.start!.waitMinutes = -5;
+    expect(validateStoryShape(story).valid).toBe(false);
+  });
+
+  it('waitMinutesOf ignores what a choice declares; hasWaits is derived', () => {
+    expect(hasWaits(clairiereStory)).toBe(false);
+
+    const story = clone(clairiereStory);
+    story.scenes['c-franchir']!.waitMinutes = 30;
+    expect(waitMinutesOf(story.scenes['c-franchir']!)).toBe(0);
+    expect(hasWaits(story)).toBe(false);
+
+    story.scenes.lucioles!.waitMinutes = 15;
+    expect(waitMinutesOf(story.scenes.lucioles!)).toBe(15);
+    expect(hasWaits(story)).toBe(true);
+  });
+
+  it('a story written before waits existed reads as having none', () => {
+    expect(hasWaits(createEmptyStory())).toBe(false);
+    expect(waitMinutesOf(createScene({ id: 'x', kind: 'npc' }))).toBe(0);
   });
 });

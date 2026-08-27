@@ -13,6 +13,8 @@ interface Props {
   endingsSeen: number;
   /** True when a run is in progress on this story. */
   hasSave: boolean;
+  /** Told when the correspondent of a run in progress has not come back yet. */
+  away: string | null;
   mode: ColorMode;
   layout: LayoutKind;
   onToggleMode: () => void;
@@ -28,6 +30,7 @@ export function Detail({
   story,
   endingsSeen,
   hasSave,
+  away,
   mode,
   layout,
   onToggleMode,
@@ -99,9 +102,14 @@ export function Detail({
 
           <div className="detail__actions">
             {hasSave && (
-              <button type="button" className="cta" onClick={onResume}>
-                Reprendre la partie
-              </button>
+              <>
+                <button type="button" className="cta" onClick={onResume}>
+                  Reprendre la partie
+                </button>
+                {/* Said before the press, not after: « Reprendre » that opens on
+                    a silence looks like a story that failed to load. */}
+                {away && <p className="detail__away">{away}</p>}
+              </>
             )}
             <button type="button" className={hasSave ? 'cta cta--quiet' : 'cta'} onClick={onStart}>
               {endingsSeen > 0 || hasSave ? 'Recommencer l’aventure' : 'Commencer l’aventure'}

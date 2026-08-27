@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { act, renderHook } from '@testing-library/react';
 
-import { REVEAL_TIMING, typingDelay } from './useReveal';
+import { REVEAL_TIMING, typingDelay, useReveal } from './useReveal';
 
 describe('typingDelay', () => {
   it('takes longer for a longer line', () => {
@@ -46,5 +47,36 @@ describe('typingDelay', () => {
       expect(delay).toBeGreaterThanOrEqual(REVEAL_TIMING.base);
       expect(delay).toBeLessThanOrEqual(REVEAL_TIMING.ceiling);
     }
+  });
+});
+
+describe('useReveal — held back', () => {
+  it('shows nothing, and cannot be tapped into showing something', () => {
+    const { result } = renderHook(() => useReveal('s1', ['une ligne'], false, true));
+
+    expect(result.current.revealed).toBe(0);
+    expect(result.current.typing).toBe(false);
+    // `done` gates the choices, the ending and the automatic chaining alike.
+    expect(result.current.done).toBe(false);
+
+    act(() => result.current.skip());
+    expect(result.current.revealed).toBe(0);
+  });
+
+  it('lets the scene arrive normally once the wait is over', () => {
+    const { result, rerender } = renderHook(
+      ({ hold }: { hold: boolean }) => useReveal('s1', ['une ligne'], false, hold),
+      { initialProps: { hold: true } },
+    );
+    expect(result.current.done).toBe(false);
+
+    rerender({ hold: false });
+    expect(result.current.revealed).toBe(1);
+    expect(result.current.done).toBe(true);
+  });
+
+  it('holds a scene that has no line of its own, so it cannot chain through', () => {
+    const { result } = renderHook(() => useReveal('s1', [], false, true));
+    expect(result.current.done).toBe(false);
   });
 });

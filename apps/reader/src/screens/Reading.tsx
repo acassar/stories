@@ -1,13 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 
 import type { ColorMode } from '@embranche/design-tokens';
+import { waitStatus } from '@embranche/story-engine';
 import type { GameState, Story } from '@embranche/story-format';
 
-import { BackIcon, MoonIcon, SunIcon } from '../components/Icons';
+import { BackIcon, MoonIcon, PaceIcon, SunIcon } from '../components/Icons';
 import { usePrefersReducedMotion } from '../hooks/useColorMode';
 import type { LayoutKind } from '../hooks/useLayoutKind';
+import { useNow } from '../hooks/useNow';
 import { REVEAL_TIMING, useReveal } from '../hooks/useReveal';
 import { useStory } from '../hooks/useStory';
+import { awaySentence, awayStatus } from '../lib/away';
+import type { Pace } from '../lib/settings';
 import { buildTranscript } from '../lib/transcript';
 import { Ending } from './Ending';
 
@@ -16,9 +20,12 @@ interface Props {
   /** Save to resume, or `null` for a fresh run. */
   initialState: GameState | null;
   endingsSeen: number;
+  /** How fast the waits of the story run for this reader. */
+  pace: Pace;
   mode: ColorMode;
   layout: LayoutKind;
   onToggleMode: () => void;
+  onSettings: () => void;
   onLeave: () => void;
   onStateChange: (state: GameState) => void;
   onEndingReached: (sceneId: string) => void;
@@ -35,9 +42,11 @@ export function Reading({
   story,
   initialState,
   endingsSeen,
+  pace,
   mode,
   layout,
   onToggleMode,
+  onSettings,
   onLeave,
   onStateChange,
   onEndingReached,
@@ -65,10 +74,22 @@ export function Reading({
     if (resumedSceneId.current !== scene.id) resumedSceneId.current = null;
   }, [scene.id]);
 
+  /*
+   * The silence of the correspondent.
+   *
+   * Read, never stored: the state only knows when the silence started, so
+   * moving the pace during one shortens or lengthens it on the spot, with
+   * nothing to reschedule. The clock only ticks while it lasts.
+   */
+  const pending = Boolean(state.awaitingSince);
+  const now = useNow(pending);
+  const away = waitStatus(story, state, pace, now);
+
   const reveal = useReveal(
     scene.id,
     scene.blocks.map((block) => block.text),
     !reduceMotion && !resuming,
+    away.waiting,
   );
   const thread = useRef<HTMLUListElement>(null);
 
@@ -95,7 +116,13 @@ export function Reading({
     });
   }, [reveal.revealed, reveal.typing, state.history.length, reduceMotion]);
 
-  const reachedEnding = scene.isEnding && scene.ending;
+  /*
+   * Not while the correspondent is away. The engine stands on the last scene,
+   * but nothing of it has been sent: recording the ending there would tick it
+   * off the player's record and release their save — deleting a run in the
+   * middle of the silence it was waiting out.
+   */
+  const reachedEnding = !away.waiting && scene.isEnding && scene.ending;
   useEffect(() => {
     if (reachedEnding) onEndingReached(scene.id);
     // `onEndingReached` is stable on the App side; only the scene should trigger.
@@ -151,18 +178,27 @@ export function Reading({
         <div className="reading__who">
           <div className="reading__name">{narrator?.name ?? story.title}</div>
           <div className="reading__status">
-            {reveal.typing ? 'écrit…' : (narrator?.status ?? story.tag ?? '')}
+            {away.waiting
+              ? awayStatus(narrator, away.remainingMs)
+              : reveal.typing
+                ? 'écrit…'
+                : (narrator?.status ?? story.tag ?? '')}
           </div>
         </div>
         {layout === 'mobile' && (
-          <button
-            type="button"
-            className="icon-btn"
-            onClick={onToggleMode}
-            aria-label={mode === 'light' ? 'Passer en mode nuit' : 'Passer en mode jour'}
-          >
-            {mode === 'light' ? <SunIcon /> : <MoonIcon />}
-          </button>
+          <>
+            <button
+              type="button"
+              className="icon-btn"
+              onClick={onToggleMode}
+              aria-label={mode === 'light' ? 'Passer en mode nuit' : 'Passer en mode jour'}
+            >
+              {mode === 'light' ? <SunIcon /> : <MoonIcon />}
+            </button>
+            <button type="button" className="icon-btn" onClick={onSettings} aria-label="Réglages">
+              <PaceIcon />
+            </button>
+          </>
         )}
       </header>
 
@@ -185,6 +221,18 @@ export function Reading({
             </div>
           </li>
         ))}
+
+        {/*
+          The silence is shown where the messages are, not only in the header:
+          a thread that simply stops looks like an app that has stopped.
+        */}
+        {away.waiting && (
+          <li className="bubble-row">
+            <div className="away" aria-live="polite">
+              {awaySentence(narrator, away.remainingMs)}
+            </div>
+          </li>
+        )}
 
         {reveal.typing && (
           // The player "types" too: a forced line arrives on their side of the

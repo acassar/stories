@@ -111,6 +111,7 @@ export const sceneSchema = z.object({
   blocks: z.array(textBlockSchema),
   next: z.array(linkSchema),
   position: positionSchema,
+  waitMinutes: z.number().int().min(0).optional(),
   ending: sceneEndingSchema.optional(),
   media: sceneMediaSchema.optional(),
   tags: z.array(z.string()).optional(),
@@ -119,6 +120,7 @@ export const sceneSchema = z.object({
 export const narratorSchema = z.object({
   name: z.string().min(1),
   status: z.string().optional(),
+  awayStatus: z.string().optional(),
 });
 
 export const storySchema = z.object({
@@ -156,4 +158,9 @@ export const gameStateSchema = z.object({
   visited: z.array(identifier),
   startedAt: z.string(),
   updatedAt: z.string(),
+  // Zod strips what it does not declare, and `parseGameState` returns the
+  // parsed object: a field forgotten here would not merely go unvalidated, it
+  // would vanish on every save round-trip.
+  awaitingSince: z.string().optional(),
+  waitsDone: z.array(identifier).optional(),
 });

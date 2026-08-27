@@ -18,6 +18,11 @@ interface Props {
 /**
  * Built-in playtest: the same story and the same engine as the reader, in a
  * phone frame. No story logic here — just a view wired onto `story-engine`.
+ *
+ * One deliberate difference with the reader: the waits are not played. The
+ * engine still records them, and the canvas shows them on the cards, but an
+ * authoring tool that made its author sit out a twelve-hour night would simply
+ * not be used. Reading a story at its real pace is the reader's job.
  */
 export function Playtest({ story, fromSceneId, onClose }: Props) {
   const [mode, setMode] = useState<ColorMode>('light');

@@ -1,11 +1,12 @@
 import type { ColorMode } from '@embranche/design-tokens';
 
-import { BrandMark, MoonIcon, SunIcon } from './Icons';
+import { BrandMark, MoonIcon, PaceIcon, SunIcon } from './Icons';
 import { ImportButton } from './ImportButton';
 
 interface Props {
   mode: ColorMode;
   onToggleMode: () => void;
+  onSettings: () => void;
   onImport: (file: File) => void;
 }
 
@@ -17,7 +18,7 @@ interface Props {
  * destination, its library, and one always comes back to it through the story
  * one is leaving.
  */
-export function Rail({ mode, onToggleMode, onImport }: Props) {
+export function Rail({ mode, onToggleMode, onSettings, onImport }: Props) {
   return (
     <aside className="rail">
       <div className="rail__brand">
@@ -39,6 +40,10 @@ export function Rail({ mode, onToggleMode, onImport }: Props) {
         >
           {mode === 'light' ? <SunIcon /> : <MoonIcon />}
           <span className="rail__button-label">Jour / nuit</span>
+        </button>
+        <button type="button" className="rail__button" onClick={onSettings} aria-label="Réglages">
+          <PaceIcon />
+          <span className="rail__button-label">Réglages</span>
         </button>
       </div>
     </aside>
