@@ -82,6 +82,7 @@ Livré avec, sur le même canevas : mise en relief de l'amont et de l'aval du n�
 | RD-9  | Passe d'accessibilité                      | P0       | S      | Contrastes AA dans les deux modes, anneaux de focus et ordre de tabulation : faits avec la refonte du front. Reste l'audit au lecteur d'écran sur le fil `aria-live`. |
 | RD-10 | Reprise de lecture à la bonne position     | ✅       | S      | La scène reprise arrive d'un bloc ; elle retape normalement si on y revient plus tard par « Revenir en arrière ». |
 | RD-11 | Hors-ligne (service worker)                | P2       | M      | Une histoire ouverte doit rester lisible dans le métro.                                                        |
+| RD-14 | Succès                                     | P3       | M      | Des succès déclarés dans le récit — « tu as menti trois fois », « tu es arrivé là sans jamais laisser le silence s'installer » — débloqués par les `Condition` du moteur, donc rien à coder récit par récit. L'écran de fin les afficherait à côté de la fin obtenue : ce qui vient d'être décroché, ce qui existe encore, et de quoi vouloir reprendre l'histoire autrement. Se pose sur RD-6, qui installe déjà l'écran et les fins non trouvées en silhouette ; `recordEnding` montre où la trace se range. |
 
 ---
 
