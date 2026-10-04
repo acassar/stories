@@ -2,7 +2,7 @@
 
 An interactive story game: a **studio** to write branching narratives as a graph, and a mobile-first **reader** to play them. Both share the same core.
 
-> Designed like an old book still warm in your hands, woven into a correspondence you read with one thumb. A sober palette, a single reading mode — the conversation — and a light / dark toggle.
+> Designed like an old book still warm in your hands, woven into a correspondence you read with one thumb. A sober palette, two ways to read — as a correspondence or as a book — and a light / dark toggle.
 
 ---
 
@@ -11,7 +11,7 @@ An interactive story game: a **studio** to write branching narratives as a graph
 ```
 apps/
   studio/          Author tool — visual graph editor (React Flow). Desktop / tablet.
-  reader/          Reader — mobile-first, reading as a conversation.
+  reader/          Reader — mobile-first, reading as a correspondence or as a book.
 packages/
   story-format/    Schema, types, validation and analysis of the story format (JSON).
   story-engine/    Story engine and reachability analysis. Pure TypeScript.
@@ -89,6 +89,7 @@ This is **the contract** between the two apps: the studio writes, the reader rea
   "title": "La Clairière aux Lucioles",
   "version": "2.0.0",
   "theme": "fantasy", // binding tint: fantasy | mystery | adventure | night
+  "readingStyle": "correspondence", // optional: correspondence (default) | book
   "narrator": {
     "name": "Elara",
     "status": "la voix de la clairière",
@@ -144,7 +145,7 @@ The counterpart is a homogeneity rule, enforced by `validateStory`: a node does 
 
 A few decisions and their reasons:
 
-- **One text block = one message.** The reader has a single reading format, the conversation: each block arrives as a message, with a typing delay. That is why `blocks` is a list and not a string.
+- **One text block = one message.** Each block arrives on its own, with a typing delay — a message in the correspondence, a run of the text in the book. That is why `blocks` is a list and not a string.
 - **A block does not say who speaks — its node does.** The node kind is the single source of truth for the speaker, so a node can never display its messages on the side opposite to what its color announces. A change of speaker in the middle of a scene is written as a second, chained node.
 - **A transition is an object, not a field of the source scene.** The `Link` carries `condition` and `effects`, because one scene can be reached through several paths: storing the consequences on the scene would apply them whichever path was taken.
 - **The button label and the message sent are two fields.** A button can read "Mentir" while the line that goes out says something else entirely. Without `blocks`, the label is what goes out.
@@ -355,6 +356,8 @@ The **variables table** answers what scattering conditions and effects across th
 Mobile first, then widened: touch targets of at least 48 px, choices as full-width buttons reachable with the thumb, `env(safe-area-inset-*)` respected, no hover required, text readable without zooming. Beyond 720 px, the reading is recentered as a column rather than stretched.
 
 Reading happens as a conversation: messages arrive one by one with a typing indicator, and the chosen answer stays in the thread. Tapping the conversation skips the wait. A system reduced-motion preference displays the scene in one block, changing nothing to the game.
+
+Each story declares its reading style (`readingStyle`), set by its author in the studio; absent, it is a correspondence. **Correspondence** sets the story as a thread of bubbles, the player's on their own side. **Book** sets the same lines as one running text: each follows the one before it without a line break, and the player’s answers are written into it, in italic, rather than sent. Both share the same reveal, the same waits and the same engine; only how the lines are set differs.
 
 When the current node awaits no decision, the story carries on by itself — but only once its messages have arrived, and after the same silence as between two messages. That is what makes a forced player line, or two lines in a row from the correspondent, read as a real conversation rather than as a block dropping all at once.
 

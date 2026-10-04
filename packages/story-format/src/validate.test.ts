@@ -59,6 +59,15 @@ describe('validateStoryShape', () => {
     story.scenes.start.next[0].condition = { op: 'eval', code: 'process.exit()' };
     expect(validateStoryShape(story).valid).toBe(false);
   });
+
+  it('accepts a story read as a book, and no style outside the two', () => {
+    const story = clone(clairiereStory);
+    story.readingStyle = 'book';
+    expect(validateStoryShape(story).valid).toBe(true);
+    // @ts-expect-error — an unknown style is injected on purpose
+    story.readingStyle = 'rouleau';
+    expect(validateStoryShape(story).valid).toBe(false);
+  });
 });
 
 describe('validateStory — graph coherence', () => {

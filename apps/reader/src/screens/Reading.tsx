@@ -32,11 +32,12 @@ interface Props {
 }
 
 /**
- * Reading as a conversation — the one reading format of Embranche.
+ * Reading a story, as a correspondence or as a book — whichever its author chose.
  *
  * The screen knows nothing of the story: it reads the engine snapshot and shows
  * what it is given. The only local logic is the progressive arrival of the
- * messages, which is staging, not a game rule.
+ * lines, which is staging, not a game rule. The two styles share all of it —
+ * the same lines arrive at the same moments; only how they are set differs.
  */
 export function Reading({
   story,
@@ -151,6 +152,7 @@ export function Reading({
         mode={mode}
         onRestart={restart}
         onReread={() => setShowEnding(false)}
+        rereadLabel={story.readingStyle === 'book' ? 'Relire le récit' : 'Relire la correspondance'}
         onLibrary={onLeave}
       />
     );
@@ -158,6 +160,8 @@ export function Reading({
 
   const messages = buildTranscript(story, state, scene, { revealed: reveal.revealed });
   const narrator = story.narrator;
+  // The author decides how the story is set: a thread of messages, or prose on a page.
+  const book = story.readingStyle === 'book';
 
   return (
     <div className="reading">
@@ -172,17 +176,24 @@ export function Reading({
         >
           <BackIcon />
         </button>
-        <div className="avatar" aria-hidden="true">
-          {(narrator?.name ?? story.title).charAt(0)}
-        </div>
+        {/* A book has a title on its spine, not someone on the other end. */}
+        {!book && (
+          <div className="avatar" aria-hidden="true">
+            {(narrator?.name ?? story.title).charAt(0)}
+          </div>
+        )}
         <div className="reading__who">
-          <div className="reading__name">{narrator?.name ?? story.title}</div>
+          <div className="reading__name">
+            {book ? story.title : (narrator?.name ?? story.title)}
+          </div>
           <div className="reading__status">
             {away.waiting
               ? awayStatus(narrator, away.remainingMs)
-              : reveal.typing
-                ? 'écrit…'
-                : (narrator?.status ?? story.tag ?? '')}
+              : book
+                ? (story.tag ?? '')
+                : reveal.typing
+                  ? 'écrit…'
+                  : (narrator?.status ?? story.tag ?? '')}
           </div>
         </div>
         {layout === 'mobile' && (
@@ -203,24 +214,32 @@ export function Reading({
       </header>
 
       <ul
-        className="thread"
+        className={`thread${book ? ' thread--book' : ''}`}
         ref={thread}
         aria-live="polite"
-        aria-label="Correspondance"
+        aria-label={book ? 'Récit' : 'Correspondance'}
         // Tapping the conversation skips the wait: nobody should have to wait
         // for an animation to read on.
         onClick={reveal.skip}
       >
-        {messages.map((message) => (
-          <li
-            key={message.key}
-            className={`bubble-row${message.fromPlayer ? ' bubble-row--player' : ''}`}
-          >
-            <div className={`bubble${message.fromPlayer ? ' bubble--player' : ''}`}>
+        {messages.map((message) =>
+          book ? (
+            // One running text: each line follows the one before it, the
+            // player's answers written into it rather than sent.
+            <li key={message.key} className={`prose${message.fromPlayer ? ' prose--player' : ''}`}>
               {message.text}
-            </div>
-          </li>
-        ))}
+            </li>
+          ) : (
+            <li
+              key={message.key}
+              className={`bubble-row${message.fromPlayer ? ' bubble-row--player' : ''}`}
+            >
+              <div className={`bubble${message.fromPlayer ? ' bubble--player' : ''}`}>
+                {message.text}
+              </div>
+            </li>
+          ),
+        )}
 
         {/*
           The silence is shown where the messages are, not only in the header:
@@ -237,8 +256,10 @@ export function Reading({
         {reveal.typing && (
           // The player "types" too: a forced line arrives on their side of the
           // conversation, not on the correspondent's.
-          <li className={`bubble-row${scene.speaker === 'player' ? ' bubble-row--player' : ''}`}>
-            <div className="typing" aria-label="En train d’écrire">
+          <li
+            className={`bubble-row${!book && scene.speaker === 'player' ? ' bubble-row--player' : ''}`}
+          >
+            <div className={`typing${book ? ' typing--book' : ''}`} aria-label="En train d’écrire">
               <span />
               <span />
               <span />
@@ -247,7 +268,7 @@ export function Reading({
         )}
       </ul>
 
-      <div className="answers">
+      <div className={`answers${book ? ' answers--book' : ''}`}>
         {/* The answers keep the same column as the conversation above them. */}
         <div className="answers__column">
           {/* Undoing the last choice — the story steps back one bifurcation,
@@ -266,7 +287,7 @@ export function Reading({
 
           {reveal.done && scene.choices.length > 0 && (
             <>
-              <div className="answers__label">Répondre</div>
+              <div className="answers__label">{book ? 'Et ensuite…' : 'Répondre'}</div>
               {scene.choices.map((choice) => (
                 <button
                   key={choice.id}

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
+import { clairiereStory } from '@embranche/story-format';
 import type { Story } from '@embranche/story-format';
 
 import { App } from './App';
@@ -101,6 +102,37 @@ describe('Embranche reader', () => {
     await user.click(screen.getByRole('button', { name: 'Relire la correspondance' }));
     expect(screen.getByText('Je les suis.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Voir la fin' })).toBeInTheDocument();
+  });
+
+  /*
+   * The same run as above, in a story its author set as a book: the same lines
+   * arrive, and the player's answer is written into the text rather than sent
+   * from their side.
+   */
+  it('reads a story as a book when its author asks for it', async () => {
+    saveImportedStory({
+      ...clairiereStory,
+      id: 'clairiere-livre',
+      title: 'La Clairière en livre',
+      readingStyle: 'book',
+    });
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole('button', { name: /La Clairière en livre/ }));
+    await user.click(screen.getByRole('button', { name: 'Commencer l’aventure' }));
+
+    const page = screen.getByLabelText('Récit');
+    expect(await within(page).findByText(/fougères plus hautes que toi/)).toHaveClass('prose');
+    expect(screen.queryByLabelText('Correspondance')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Suivre les lucioles' }));
+    expect(await within(page).findByText(/porte de lumière/)).toBeInTheDocument();
+    expect(within(page).getByText('Je les suis.')).toHaveClass('prose', 'prose--player');
+
+    await user.click(screen.getByRole('button', { name: 'Franchir le portail' }));
+    await user.click(await screen.findByRole('button', { name: 'Voir la fin' }));
+    expect(screen.getByRole('button', { name: 'Relire le récit' })).toBeInTheDocument();
   });
 
   it('only shows the conditional choice once its condition holds', async () => {

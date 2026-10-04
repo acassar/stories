@@ -21,6 +21,13 @@ export type VariableValue = string | number | boolean;
 /** Binding tint of the story — drives the cover and the UI accent. */
 export type StoryTheme = 'fantasy' | 'mystery' | 'adventure' | 'night';
 
+/**
+ * How the reader sets the story on screen. `correspondence` is a thread of
+ * messages, the player's on their own side; `book` is the same lines as prose,
+ * the player's answers written into the text. Absent means `correspondence`.
+ */
+export type ReadingStyle = 'correspondence' | 'book';
+
 /** Editorial lifecycle, driven from the studio dashboard. */
 export type StoryStatus = 'draft' | 'published';
 
@@ -200,6 +207,7 @@ export interface StoryMeta {
   /** Genre label displayed to the player: « Fantastique », « Enquete »... */
   tag?: string;
   theme?: StoryTheme;
+  readingStyle?: ReadingStyle;
   /** Advertised reading time, in minutes. */
   estimatedMinutes?: number;
   status?: StoryStatus;

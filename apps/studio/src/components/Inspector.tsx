@@ -3,7 +3,14 @@ import { useEffect, useState } from 'react';
 import { STORY_THEMES, kinds, themeLabels } from '@embranche/design-tokens';
 import type { StoryTheme } from '@embranche/design-tokens';
 import { collectStoryVariables, slugify } from '@embranche/story-format';
-import type { Scene, SceneId, SceneKind, Story, ValidationIssue } from '@embranche/story-format';
+import type {
+  ReadingStyle,
+  Scene,
+  SceneId,
+  SceneKind,
+  Story,
+  ValidationIssue,
+} from '@embranche/story-format';
 
 import {
   addLink,
@@ -213,6 +220,19 @@ function StoryPanel({ story, onChange }: { story: Story; onChange: (story: Story
               {themeLabels[theme]}
             </option>
           ))}
+        </select>
+      </label>
+
+      {/* How the reader sets the story: a thread of messages, or prose on a page. */}
+      <label className="field">
+        <span className="field__label">Style de lecture</span>
+        <select
+          className="select"
+          value={story.readingStyle ?? 'correspondence'}
+          onChange={(event) => set({ readingStyle: event.target.value as ReadingStyle })}
+        >
+          <option value="correspondence">Correspondance — des messages</option>
+          <option value="book">Livre — de la prose</option>
         </select>
       </label>
 

@@ -1160,3 +1160,73 @@ body {
     max-width: 380px;
   }
 }
+
+/* ------------------------------------------------------------------ book */
+
+/*
+  The book style: the same lines as the correspondence, set as one running
+  text. Nothing is cut out of the paper here — the text is the paper. Each line
+  follows the one before it on the same line, without a break or an indent;
+  the player's answers are woven in, told apart only by their italic and their
+  ink.
+*/
+.thread--book {
+  display: block;
+  padding: 24px 22px 10px;
+  font: 400 17px/1.65 var(--emb-font-prose);
+  color: var(--emb-ink);
+  hyphens: auto;
+}
+
+.prose {
+  display: inline;
+  /* Inline text cannot slide in: it only fades. */
+  animation: embFade 0.5s both;
+}
+/* The space a writer would type between two sentences. */
+.prose::after {
+  content: ' ';
+}
+
+.prose--player {
+  font-style: italic;
+  color: var(--emb-accent-text);
+}
+
+/* The page is being written: three dots on the page, no bubble around them. */
+.typing--book {
+  background: none;
+  border: none;
+  padding: 10px 0;
+}
+
+.answers--book .answers__label {
+  text-transform: none;
+  letter-spacing: 0;
+  font: italic 400 14px var(--emb-font-prose);
+}
+
+/* A choice of what the book says next, not a reply sent to someone. */
+.answers--book .answer {
+  align-self: stretch;
+  max-width: none;
+  text-align: left;
+  border-radius: var(--emb-radius-md);
+}
+
+@media (min-width: 900px) {
+  /* The column of the page, centred: inline lines cannot be capped one by one. */
+  .screen--desktop .thread--book {
+    padding-inline: max(40px, calc((100% - 640px) / 2));
+    font-size: 19px;
+  }
+
+  .screen--desktop .answers--book .answers__column {
+    max-width: 640px;
+  }
+
+  .screen--desktop .answers--book .answer {
+    max-width: none;
+    border-radius: var(--emb-radius-md);
+  }
+}

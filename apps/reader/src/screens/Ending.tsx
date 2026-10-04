@@ -13,8 +13,10 @@ interface Props {
   steps: number;
   mode: ColorMode;
   onRestart: () => void;
-  /** Back to the conversation, which is still there behind this screen. */
+  /** Back to the story as it was read, which is still there behind this screen. */
   onReread: () => void;
+  /** Says what one goes back to: a correspondence, or a book. */
+  rereadLabel: string;
   onLibrary: () => void;
 }
 
@@ -27,6 +29,7 @@ export function Ending({
   mode,
   onRestart,
   onReread,
+  rereadLabel,
   onLibrary,
 }: Props) {
   const theme = (story.theme ?? 'night') as StoryTheme;
@@ -67,7 +70,7 @@ export function Ending({
           Rejouer ce récit
         </button>
         <button type="button" className="cta cta--quiet" onClick={onReread}>
-          Relire la correspondance
+          {rereadLabel}
         </button>
         <button type="button" className="cta cta--quiet" onClick={onLibrary}>
           Retour à la bibliothèque

@@ -1,9 +1,9 @@
 /**
- * Building the conversation.
+ * Building what has been read so far.
  *
- * The reader has a single reading format: each text block of a node walked
- * through arrives as a message. A player line is not a special case — it is a
- * node like any other, whose kind says which side to display the bubble on.
+ * Each text block of a node walked through arrives as a message — a bubble in
+ * the correspondence, a paragraph in the book. A player line is not a special
+ * case — it is a node like any other, whose kind says whose line it is.
  * A pure function, so directly testable.
  */
 

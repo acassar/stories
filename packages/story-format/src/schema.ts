@@ -19,6 +19,8 @@ export const variableValueSchema = z.union([z.string(), z.number(), z.boolean()]
 
 export const storyThemeSchema = z.enum(['fantasy', 'mystery', 'adventure', 'night']);
 
+export const readingStyleSchema = z.enum(['correspondence', 'book']);
+
 export const storyStatusSchema = z.enum(['draft', 'published']);
 
 const comparisonOperatorSchema = z.enum(['eq', 'neq', 'gt', 'gte', 'lt', 'lte']);
@@ -134,6 +136,7 @@ export const storySchema = z.object({
   blurb: z.string().optional(),
   tag: z.string().optional(),
   theme: storyThemeSchema.optional(),
+  readingStyle: readingStyleSchema.optional(),
   estimatedMinutes: z.number().int().min(0).optional(),
   status: storyStatusSchema.optional(),
   narrator: narratorSchema.optional(),
