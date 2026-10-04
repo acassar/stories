@@ -26,9 +26,18 @@ export interface LayoutOptions {
   sweeps?: number;
 }
 
+/**
+ * The distances the graph is laid out with.
+ *
+ * A card is 190 wide and about a hundred tall, so these gaps leave more than a
+ * card of air on each side. That air is not decoration: it is where the links
+ * are drawn. Packed tighter — as the first version was — several links share
+ * the same few pixels between two ranks, and a graph one can no longer read is
+ * not a graph that is too big, it is one that is too small.
+ */
 export const DEFAULT_LAYOUT: Required<LayoutOptions> = {
-  columnGap: 230,
-  rowGap: 190,
+  columnGap: 380,
+  rowGap: 260,
   sweeps: 4,
 };
 

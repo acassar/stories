@@ -27,6 +27,38 @@ export function moveScene(
   return updateScene(story, sceneId, { position });
 }
 
+/**
+ * True when the two documents tell the same story — only the cards have moved.
+ *
+ * Validation, search and the reachability analysis all answer questions about
+ * the graph, never about where its cards sit, and all three cost enough to
+ * matter: dragging a node commits a new document on every frame, and running
+ * them there is work whose answer could not have changed.
+ *
+ * Compared by reference, not by value. Every operation in this file is
+ * immutable, so an untouched scene *is* the untouched scene, and a moved one
+ * differs from its former self by its position alone.
+ */
+export function sameGraph(a: Story, b: Story): boolean {
+  if (a === b) return true;
+
+  const keys = Object.keys(a) as (keyof Story)[];
+  if (keys.length !== Object.keys(b).length) return false;
+  if (keys.some((key) => key !== 'scenes' && a[key] !== b[key])) return false;
+
+  const ids = Object.keys(a.scenes);
+  if (ids.length !== Object.keys(b.scenes).length) return false;
+  return ids.every((id) => sameScene(a.scenes[id], b.scenes[id]));
+}
+
+function sameScene(one: Scene | undefined, other: Scene | undefined): boolean {
+  if (one === other) return true;
+  if (!one || !other) return false;
+  const keys = Object.keys(one) as (keyof Scene)[];
+  if (keys.length !== Object.keys(other).length) return false;
+  return keys.every((key) => key === 'position' || one[key] === other[key]);
+}
+
 /** Adds a blank node and returns the document along with its id. */
 export function addScene(
   story: Story,

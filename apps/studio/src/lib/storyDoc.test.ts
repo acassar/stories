@@ -13,10 +13,12 @@ import {
   pasteScenes,
   removeLink,
   removeScene,
+  moveScene,
   removeScenes,
   renameSceneId,
   setKind,
   setStartScene,
+  sameGraph,
   soleIncomingLink,
   toggleEnding,
   uniqueSceneId,
@@ -231,5 +233,53 @@ describe('copy and paste', () => {
     expect(
       Object.values(story.scenes).flatMap((scene) => scene.next.map((link) => link.to)),
     ).not.toContain('lucioles');
+  });
+});
+
+/*
+ * Telling a move apart from an edit. The canvas leans on this to skip the
+ * validation, the search and the reachability analysis while a card is being
+ * dragged — none of the three has ever looked at where a card sits, and all
+ * three cost enough that running them per frame is what made a drag stutter.
+ */
+describe('sameGraph', () => {
+  it('holds for a document that has not changed at all', () => {
+    expect(sameGraph(clairiereStory, clairiereStory)).toBe(true);
+  });
+
+  it('holds when a card has merely been moved', () => {
+    const moved = moveScene(clairiereStory, 'start', { x: 999, y: 42 });
+    expect(moved).not.toBe(clairiereStory);
+    expect(sameGraph(clairiereStory, moved)).toBe(true);
+  });
+
+  it('fails on anything the analyses would answer differently', () => {
+    expect(
+      sameGraph(clairiereStory, updateScene(clairiereStory, 'start', { title: 'Autre' })),
+    ).toBe(false);
+    expect(sameGraph(clairiereStory, removeScene(clairiereStory, 'lucioles'))).toBe(false);
+    expect(sameGraph(clairiereStory, addScene(clairiereStory, 'npc', { x: 0, y: 0 }).story)).toBe(
+      false,
+    );
+    expect(sameGraph(clairiereStory, setStartScene(clairiereStory, 'lucioles'))).toBe(false);
+    expect(sameGraph(clairiereStory, removeLink(clairiereStory, 'start', 'vers-arbre'))).toBe(
+      false,
+    );
+  });
+
+  it('fails on a field that changed, was added, or was dropped', () => {
+    expect(sameGraph(clairiereStory, { ...clairiereStory, tag: 'Enquête' })).toBe(false);
+
+    const { tag, ...untagged } = clairiereStory;
+    expect(tag).toBeDefined();
+    expect(sameGraph(clairiereStory, untagged as Story)).toBe(false);
+
+    // Counted on the scenes too, since a new field compares equal to nothing.
+    const scene = clairiereStory.scenes.start!;
+    const extra: Story = {
+      ...clairiereStory,
+      scenes: { ...clairiereStory.scenes, start: { ...scene, tags: ['nuit'] } },
+    };
+    expect(sameGraph(clairiereStory, extra)).toBe(false);
   });
 });

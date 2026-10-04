@@ -17,6 +17,7 @@
   --st-sub: #6b6253;
   --st-muted: #9a8f7d;
   --st-chip: #efe7d8;
+  --st-edge: #c9bda8;
   --st-selected: #7b53d4;
   --st-selected-soft: #f0e9fc;
   --st-upstream: #b69ae0;
@@ -835,11 +836,98 @@ body {
   stroke-width: 4.5 !important;
   opacity: 1 !important;
 }
-.react-flow__edge:hover .react-flow__edge-textbg {
-  fill-opacity: 1 !important;
+/*
+  What a link has to say beyond its own course: a condition, a handful of
+  effects. Never grabbable — the link itself is what one clicks, and a label
+  catching the cursor over a card would make the card unreachable.
+*/
+.link-label {
+  position: absolute;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--st-surface);
+  color: var(--st-sub);
+  font-family: var(--emb-font-ui);
+  font-size: 11px;
+  line-height: 1.3;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 0 0 1px var(--st-border);
 }
-.react-flow__edge:hover .react-flow__edge-text {
-  opacity: 1 !important;
+
+.link-label--dim {
+  opacity: var(--st-dim);
+}
+
+/*
+  Two links drawn on the same pixels. Dotted rather than dashed, and amber
+  rather than the colour of a kind: this marks a shortcoming of the drawing, not
+  anything the story says.
+*/
+.link-shared {
+  stroke: var(--st-warn);
+  stroke-width: 3.5;
+  stroke-dasharray: 1 5;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+/*
+  A link running under a card. The layer is the label layer, the only one drawn
+  above the cards — a mark for something a card hides has to be on top of it.
+  Fixed at the origin and left to overflow: the coordinates are the canvas's own.
+*/
+.link-behind__layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.link-behind {
+  stroke: var(--st-warn);
+  stroke-width: 2;
+  stroke-dasharray: 2 5;
+  stroke-linecap: round;
+}
+
+/* The break that says "this one passes underneath", shown once in the legend. */
+.legend__cross {
+  width: 28px;
+  height: 16px;
+  margin-right: 2px;
+  vertical-align: -3px;
+  fill: none;
+  stroke: var(--st-edge);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+/* The one legend line that does something: it takes you to the mark. */
+.legend__jump {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border: 0;
+  padding: 0;
+  background: none;
+  font: inherit;
+  color: var(--st-warn);
+  text-align: left;
+  cursor: pointer;
+}
+
+.legend__jump:hover {
+  text-decoration: underline;
+}
+
+.legend__cross--shared {
+  stroke: var(--st-warn);
+  stroke-width: 3;
+  stroke-dasharray: 1 4;
 }
 
 /* -------------------------------------------------------------- inspector */

@@ -282,3 +282,47 @@ describe('Editor', () => {
     expect(screen.queryByText(/« Le sentier »/)).toBeNull();
   });
 });
+
+/*
+ * What the canvas admits it cannot draw properly.
+ *
+ * Two ways a link disappears: another one is drawn on the same pixels, or it
+ * runs under a card — the wiring sits beneath the cards on purpose. Both are
+ * marked, and the mark for the second has to be drawn *above* the cards, which
+ * is the one thing only a mounted canvas can show.
+ */
+describe('links the canvas cannot show whole', () => {
+  it('marks a link running behind a card, above that card', () => {
+    // React Flow hides an edge whose cards it has not measured, so nothing is
+    // drawn at all until the sizes come in — hence the manual measurement.
+    withManualMeasurement(() => {
+      render(<Harness />);
+      act(() => ManualResizeObserver.measureAll());
+
+      // « La Clairière » is stored with hand-placed positions, and a couple of
+      // its links do pass under a card.
+      expect(document.querySelectorAll('path.react-flow__edge-path').length).toBeGreaterThan(0);
+      expect(
+        document.querySelectorAll('.link-behind__layer path.link-behind').length,
+      ).toBeGreaterThan(0);
+    });
+  });
+
+  it('offers to walk to them, and says how many there are', () => {
+    render(<Harness />);
+    const jump = screen.getByRole('button', { name: /lien est masqué/ });
+
+    expect(jump).toBeInTheDocument();
+    // Clicking must not throw: it drives the viewport, which jsdom does not lay
+    // out — the point is that the legend is wired to something.
+    fireEvent.click(jump);
+  });
+
+  it('says nothing once « Ranger » has untangled the graph', () => {
+    render(<Harness />);
+    fireEvent.click(screen.getByRole('button', { name: '⤢ Ranger' }));
+
+    expect(screen.queryByRole('button', { name: /lien est masqué/ })).toBeNull();
+    expect(document.querySelectorAll('path.link-behind')).toHaveLength(0);
+  });
+});

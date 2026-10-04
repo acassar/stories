@@ -9,7 +9,7 @@ import {
   ReactFlowProvider,
   useReactFlow,
 } from '@xyflow/react';
-import type { Connection, EdgeChange, NodeChange, NodeTypes } from '@xyflow/react';
+import type { Connection, EdgeChange, EdgeTypes, NodeChange, NodeTypes } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
 import { kinds, studio } from '@embranche/design-tokens';
@@ -41,11 +41,13 @@ import {
   removeLink,
   removeScene,
   removeScenes,
+  sameGraph,
 } from '../lib/storyDoc';
 import type { SceneClipboard } from '../lib/storyDoc';
 import { downloadStoryJson } from '../lib/storage';
 import { Inspector } from './Inspector';
 import { IssuesBar } from './IssuesBar';
+import { LinkEdge } from './LinkEdge';
 import { Playtest } from './Playtest';
 import { SceneNode } from './SceneNode';
 import { Toolbar } from './Toolbar';
@@ -57,7 +59,21 @@ interface Props {
   onBack: () => void;
 }
 
+/**
+ * Holds on to the last document that changed something other than the layout.
+ *
+ * A cache keyed by its own input: handing back the previous story whenever the
+ * new one tells the same tale keeps everything memoised on it from being
+ * recomputed for a card that merely moved.
+ */
+function useGraph(story: Story): Story {
+  const stable = useRef(story);
+  if (!sameGraph(stable.current, story)) stable.current = story;
+  return stable.current;
+}
+
 const nodeTypes: NodeTypes = { scene: SceneNode };
+const edgeTypes: EdgeTypes = { link: LinkEdge };
 
 /** Editing screen: scene canvas on the left, editing panel on the right. */
 export function Editor(props: Props) {
@@ -108,15 +124,27 @@ function EditorCanvas({ story, onChange, onBack }: Props) {
   // edits and what the focus lights up. Several is a bulk gesture.
   const primaryId = selectedIds.length === 1 ? (selectedIds[0] as SceneId) : null;
 
+  /*
+   * The story as the analyses see it — the same object for as long as nothing
+   * but the positions has changed.
+   *
+   * Dragging a node commits a document per frame, and each of them used to
+   * restart the validation, the search and the reachability analysis. None of
+   * the three has ever looked at where a card sits, so none of their answers
+   * could have changed: on a long story that was five milliseconds of work per
+   * frame, thrown away to arrive at what was already on screen.
+   */
+  const graph = useGraph(story);
+
   // Live validation: recomputed on every keystroke, it feeds both the alert
   // ring on the nodes and the bottom bar.
-  const validation = useMemo(() => validateStory(story), [story]);
-  const hits = useMemo(() => searchScenes(story, query), [story, query]);
+  const validation = useMemo(() => validateStory(graph), [graph]);
+  const hits = useMemo(() => searchScenes(graph, query), [graph, query]);
   const matches = useMemo(() => new Set(hits.map((hit) => hit.sceneId)), [hits]);
 
   const focus = useMemo(
-    () => (focusMode ? focusOn(story, selectedIds) : undefined),
-    [story, selectedIds, focusMode],
+    () => (focusMode ? focusOn(graph, selectedIds) : undefined),
+    [graph, selectedIds, focusMode],
   );
 
   /*
@@ -124,23 +152,23 @@ function EditorCanvas({ story, onChange, onBack }: Props) {
    * the author asks for it (STU-14). The graph-level orphan warning stays on
    * permanently — it is cheap and answers a different question.
    */
-  const reach = useMemo(() => (deadPaths ? exploreReachable(story) : null), [story, deadPaths]);
+  const reach = useMemo(() => (deadPaths ? exploreReachable(graph) : null), [graph, deadPaths]);
   const dead = useMemo(() => {
     if (!reach?.exhaustive) return undefined;
-    return new Set(Object.keys(story.scenes).filter((id) => !reach.scenes.has(id)));
-  }, [reach, story]);
+    return new Set(Object.keys(graph.scenes).filter((id) => !reach.scenes.has(id)));
+  }, [reach, graph]);
   const deadLinks = useMemo(() => {
     if (!reach?.exhaustive) return undefined;
     const unused = new Set<string>();
-    for (const scene of Object.values(story.scenes)) {
+    for (const scene of Object.values(graph.scenes)) {
       for (const link of scene.next) {
-        if (story.scenes[link.to] && !reach.links.has(`${scene.id}:${link.id}`)) {
+        if (graph.scenes[link.to] && !reach.links.has(`${scene.id}:${link.id}`)) {
           unused.add(`${scene.id}:${link.id}`);
         }
       }
     }
     return unused;
-  }, [reach, story]);
+  }, [reach, graph]);
 
   const selectedLinks = useMemo(() => new Set(selectedLinkIds), [selectedLinkIds]);
 
@@ -157,6 +185,30 @@ function EditorCanvas({ story, onChange, onBack }: Props) {
     () => toEdges(story, validation.issues, projection),
     [story, validation.issues, projection],
   );
+  // Normally empty: the legend only explains the mark when there is one to see.
+  const obscuredSpots = useMemo(
+    () => edges.flatMap((edge) => edge.data?.obscured.map((mark) => mark.at) ?? []),
+    [edges],
+  );
+
+  /**
+   * Walks the shared stretches, one per click.
+   *
+   * They are few and far apart — on a long story the graph runs to thirty
+   * thousand pixels, and the two or three places where the drawing gave up are
+   * not something anybody finds by scrolling. Cycling rather than always
+   * landing on the first one: the second click has to go somewhere.
+   */
+  const obscuredCursor = useRef(0);
+  const showObscured = useCallback(() => {
+    if (obscuredSpots.length === 0) return;
+    const spot = obscuredSpots[obscuredCursor.current % obscuredSpots.length] as {
+      x: number;
+      y: number;
+    };
+    obscuredCursor.current += 1;
+    setCenter(spot.x, spot.y, { zoom: 1, duration: 420 });
+  }, [obscuredSpots, setCenter]);
 
   /** Selects a node and brings it into view — used by search, issues, links. */
   const reveal = useCallback(
@@ -382,6 +434,7 @@ function EditorCanvas({ story, onChange, onBack }: Props) {
               nodes={nodes}
               edges={edges}
               nodeTypes={nodeTypes}
+              edgeTypes={edgeTypes}
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
@@ -422,6 +475,8 @@ function EditorCanvas({ story, onChange, onBack }: Props) {
                   selectionCount={selectedIds.length}
                   matchCount={query.trim() ? hits.length : null}
                   deadCount={deadPaths ? (dead ? dead.size : null) : undefined}
+                  obscuredSpots={obscuredSpots}
+                  onShowObscured={showObscured}
                 />
               </Panel>
 
@@ -511,13 +566,25 @@ interface LegendProps {
   matchCount: number | null;
   /** Dead nodes, `null` when the analysis was truncated, `undefined` when off. */
   deadCount: number | null | undefined;
+  /** Middles of the stretches shared by two links — normally none. */
+  obscuredSpots: { x: number; y: number }[];
+  /** Brings the first of them into view. */
+  onShowObscured: () => void;
 }
 
 /**
  * What the canvas is currently saying. The colors carry a lot — kind, focus,
  * search, dead paths — and a legend is cheaper than making the author guess.
  */
-function Legend({ focusMode, focusedOn, selectionCount, matchCount, deadCount }: LegendProps) {
+function Legend({
+  focusMode,
+  focusedOn,
+  selectionCount,
+  matchCount,
+  deadCount,
+  obscuredSpots,
+  onShowObscured,
+}: LegendProps) {
   return (
     <div className="legend">
       <div className="legend__kinds">
@@ -532,6 +599,44 @@ function Legend({ focusMode, focusedOn, selectionCount, matchCount, deadCount }:
           </span>
         ))}
       </div>
+
+      {/*
+        The one convention on the canvas that cannot be guessed. Two links that
+        cross are told apart by breaking the one underneath, so the legend has
+        to say which of the two the break belongs to — otherwise a broken line
+        reads as a broken story.
+      */}
+      <div className="legend__line">
+        <svg className="legend__cross" viewBox="0 0 28 16" aria-hidden="true">
+          <path d="M14,1 V15" />
+          <path d="M1,8 H9" />
+          <path d="M19,8 H27" />
+        </svg>
+        le lien coupé passe dessous
+      </div>
+
+      {/*
+        Only shown when it actually happens: a convention nobody ever meets is
+        noise in a legend, and the corridors normally leave nothing to explain.
+
+        Clickable, because a count is useless on its own. A long story runs to
+        thirty thousand pixels, and the one place the drawing gave up is not
+        something anybody will find by scrolling.
+      */}
+      {obscuredSpots.length > 0 && (
+        <button type="button" className="legend__line legend__jump" onClick={onShowObscured}>
+          <svg
+            className="legend__cross legend__cross--shared"
+            viewBox="0 0 28 16"
+            aria-hidden="true"
+          >
+            <path d="M1,8 H27" />
+          </svg>
+          {obscuredSpots.length === 1
+            ? 'un endroit où un lien est masqué — cliquer pour y aller'
+            : `${obscuredSpots.length} endroits où un lien est masqué — cliquer pour les parcourir`}
+        </button>
+      )}
 
       {focusMode && focusedOn && selectionCount === 1 && (
         <div className="legend__line">
