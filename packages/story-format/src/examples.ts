@@ -7,6 +7,7 @@
  * breaks here breaks the format.
  */
 
+import { horlogesStory } from './stories/horloges.js';
 import { kerlavenStory } from './stories/kerlaven.js';
 import { STORY_FORMAT_VERSION } from './types.js';
 import type { Story } from './types.js';
@@ -783,6 +784,7 @@ export const inconnuStory: Story = {
 };
 
 export { kerlavenStory } from './stories/kerlaven.js';
+export { horlogesStory } from './stories/horloges.js';
 
 /** Library shipped with the app. */
 export const exampleStories: Story[] = [
@@ -791,6 +793,7 @@ export const exampleStories: Story[] = [
   cimesStory,
   inconnuStory,
   kerlavenStory,
+  horlogesStory,
 ];
 
 /** Reference story for the tests and for the first launch. */

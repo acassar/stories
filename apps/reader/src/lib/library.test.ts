@@ -49,6 +49,7 @@ describe('library', () => {
       'appel-des-cimes',
       'numero-inconnu',
       'frequence-kerlaven',
+      'maison-horloges',
     ]);
   });
 
