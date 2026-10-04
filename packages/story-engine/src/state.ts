@@ -26,7 +26,7 @@ export function enterScene(story: Story, state: GameState, now: Clock = systemCl
   const scene = story.scenes[state.currentSceneId];
   const already = (state.waitsDone ?? []).includes(state.currentSceneId);
 
-  if (!scene || waitMinutesOf(scene) <= 0 || already) {
+  if (!scene || waitMinutesOf(scene, story) <= 0 || already) {
     if (!state.awaitingSince) return state;
     const { awaitingSince, ...rest } = state;
     return rest;

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { cimesStory, clairiereStory, exampleStories } from './examples.js';
 import { createEmptyStory, createScene, slugify } from './factories.js';
-import { hasWaits, waitMinutesOf } from './scenes.js';
+import { hasWaits, speakerOf, waitMinutesOf } from './scenes.js';
 import {
   StoryFormatError,
   collectConditionVariables,
@@ -352,5 +352,42 @@ describe('waits', () => {
   it('a story written before waits existed reads as having none', () => {
     expect(hasWaits(createEmptyStory())).toBe(false);
     expect(waitMinutesOf(createScene({ id: 'x', kind: 'npc' }))).toBe(0);
+  });
+});
+
+/*
+ * A book has no one on the other end: nobody to wait for, and nobody to answer
+ * a line the player did not choose. The text is kept — it is read as the
+ * story's own — and the author is told.
+ */
+describe('a story set as a book', () => {
+  function asBook(story: Story): Story {
+    return { ...clone(story), readingStyle: 'book' };
+  }
+
+  it('reads a player line as part of the text, and only there', () => {
+    const player = clairiereStory.scenes.prudence!;
+    const choice = clairiereStory.scenes['c-franchir']!;
+    expect(speakerOf(player)).toBe('player');
+    expect(speakerOf(player, { readingStyle: 'book' })).toBe('narrator');
+    expect(speakerOf(choice, { readingStyle: 'book' })).toBe('player');
+  });
+
+  it('plays no wait, whatever the scenes declare', () => {
+    const story = asBook(clairiereStory);
+    story.scenes.lucioles!.waitMinutes = 15;
+    expect(waitMinutesOf(story.scenes.lucioles!, story)).toBe(0);
+    expect(hasWaits(story)).toBe(false);
+  });
+
+  it('warns about what will not play the way it is drawn', () => {
+    const story = asBook(clairiereStory);
+    story.scenes.lucioles!.waitMinutes = 15;
+    const codes = validateStory(story).issues.map((issue) => [issue.code, issue.sceneId]);
+    expect(codes).toContainEqual(['player-in-book', 'prudence']);
+    expect(codes).toContainEqual(['wait-in-book', 'lucioles']);
+    // The same story as a correspondence has nothing to say about either.
+    const before = validateStory(clairiereStory).issues.map((issue) => issue.code);
+    expect(before).not.toContain('player-in-book');
   });
 });

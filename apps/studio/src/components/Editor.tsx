@@ -410,6 +410,7 @@ function EditorCanvas({ story, onChange, onBack }: Props) {
           history={history}
           selectionCount={selectedIds.length}
           chainableKinds={chainable}
+          book={story.readingStyle === 'book'}
           selectedName={primaryId ? (story.scenes[primaryId]?.title ?? primaryId) : null}
           query={query}
           hits={hits}

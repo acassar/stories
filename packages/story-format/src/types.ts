@@ -296,6 +296,10 @@ export type IssueCode =
   | 'mixed-links'
   /** A wait on a `choice` node: the player does not keep themselves waiting. */
   | 'wait-on-choice'
+  /** A `player` node in a book: it is read as part of the story's text. */
+  | 'player-in-book'
+  /** A wait in a book: a book has no correspondent to wait for. */
+  | 'wait-in-book'
   /** Automatic chaining whose links are all conditional. */
   | 'no-default-link'
   /** Automatic chaining loop: the reading would never stop. */

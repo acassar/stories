@@ -251,6 +251,15 @@ body {
   font-weight: 700;
 }
 
+/* A kind the reading style has no use for: shown, never offered. */
+.kind-picker__option:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.kind-picker__option:disabled:hover {
+  border-color: var(--st-field-border);
+}
+
 /* -------------------------------------------------------------- dashboard */
 
 .dash__head {

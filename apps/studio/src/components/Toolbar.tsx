@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { kinds } from '@embranche/design-tokens';
 import type { SceneId, SceneKind } from '@embranche/story-format';
 
+import { BOOK_PLAYER_HINT } from '../lib/values';
 import type { SearchHit } from '../lib/search';
 import type { StoryHistory } from '../hooks/useStoryHistory';
 
@@ -18,6 +19,8 @@ interface Props {
    * no single selection and the button creates a loose node.
    */
   chainableKinds: readonly SceneKind[] | null;
+  /** The story is read as a book, where a `player` node has no one to speak to. */
+  book: boolean;
   selectedName: string | null;
   query: string;
   hits: SearchHit[];
@@ -138,7 +141,9 @@ export function Toolbar(props: Props) {
         */}
         <div className="toolbar__group">
           {(['npc', 'player', 'choice'] as const).map((kind) => {
-            const allowed = props.chainableKinds === null || props.chainableKinds.includes(kind);
+            const outOfStyle = props.book && kind === 'player';
+            const allowed =
+              !outOfStyle && (props.chainableKinds === null || props.chainableKinds.includes(kind));
             return (
               <button
                 key={kind}
@@ -151,7 +156,11 @@ export function Toolbar(props: Props) {
                 }}
                 disabled={!allowed}
                 onClick={() => props.onAddScene(kind)}
-                title={addHint(kind, allowed, selectionCount, props.selectedName)}
+                title={
+                  outOfStyle
+                    ? BOOK_PLAYER_HINT
+                    : addHint(kind, allowed, selectionCount, props.selectedName)
+                }
               >
                 ＋ {kinds[kind].label}
               </button>

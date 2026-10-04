@@ -10,6 +10,7 @@
 
 import { MarkerType } from '@xyflow/react';
 import type { Edge, Node } from '@xyflow/react';
+import { waitMinutesOf } from '@embranche/story-format';
 import type { Link, Scene, SceneId, Story, ValidationIssue } from '@embranche/story-format';
 
 import { kinds, studio } from '@embranche/design-tokens';
@@ -55,6 +56,8 @@ export interface SceneNodeData extends Record<string, unknown> {
   issues: ValidationIssue[];
   /** True when this node stops the reading to wait for a player decision. */
   awaitsChoice: boolean;
+  /** Real minutes the reader waits before this node speaks — zero throughout a book. */
+  waitMinutes: number;
   /** Position relative to the selection. `idle` when there is none. */
   focus: FocusRole;
   /** True when the node matches the current search. */
@@ -275,6 +278,7 @@ export function toNodes(
       isStart: scene.id === story.startSceneId,
       issues: issues.filter((issue) => issue.sceneId === scene.id),
       awaitsChoice: scene.next.some((link) => story.scenes[link.to]?.kind === 'choice'),
+      waitMinutes: waitMinutesOf(scene, story),
       focus: roleOf(focus, scene.id),
       match: options.matches?.has(scene.id) ?? false,
       dead: options.dead?.has(scene.id) ?? false,

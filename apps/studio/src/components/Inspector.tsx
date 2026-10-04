@@ -24,7 +24,7 @@ import {
   updateScene,
   updateStory,
 } from '../lib/storyDoc';
-import { formatWait } from '../lib/values';
+import { BOOK_PLAYER_HINT, formatWait } from '../lib/values';
 import { ConditionEditor } from './ConditionEditor';
 import { EffectEditor } from './EffectEditor';
 
@@ -165,6 +165,7 @@ function SelectionPanel({
 
 function StoryPanel({ story, onChange }: { story: Story; onChange: (story: Story) => void }) {
   const set = (patch: Partial<Story>) => onChange(updateStory(story, patch));
+  const book = story.readingStyle === 'book';
 
   return (
     <>
@@ -224,17 +225,24 @@ function StoryPanel({ story, onChange }: { story: Story; onChange: (story: Story
       </label>
 
       {/* How the reader sets the story: a thread of messages, or prose on a page. */}
-      <label className="field">
-        <span className="field__label">Style de lecture</span>
+      <div className="field">
+        <label className="field__label" htmlFor="emb-reading-style">
+          Style de lecture
+        </label>
         <select
+          id="emb-reading-style"
           className="select"
           value={story.readingStyle ?? 'correspondence'}
+          aria-describedby="emb-reading-style-hint"
           onChange={(event) => set({ readingStyle: event.target.value as ReadingStyle })}
         >
           <option value="correspondence">Correspondance — des messages</option>
           <option value="book">Livre — de la prose</option>
         </select>
-      </label>
+        <span className="field__hint" id="emb-reading-style-hint">
+          {book ? bookConsequences(story) : 'Le récit arrive en messages, le joueur y répond.'}
+        </span>
+      </div>
 
       <div className="grid-2">
         <label className="field">
@@ -265,6 +273,7 @@ function StoryPanel({ story, onChange }: { story: Story; onChange: (story: Story
           <input
             className="input"
             value={story.narrator?.name ?? ''}
+            disabled={book}
             placeholder="Elara"
             onChange={(event) => set({ narrator: { ...story.narrator, name: event.target.value } })}
           />
@@ -274,6 +283,7 @@ function StoryPanel({ story, onChange }: { story: Story; onChange: (story: Story
           <input
             className="input"
             value={story.narrator?.status ?? ''}
+            disabled={book}
             placeholder="en ligne"
             onChange={(event) =>
               set({
@@ -293,6 +303,7 @@ function StoryPanel({ story, onChange }: { story: Story; onChange: (story: Story
         <input
           className="input"
           value={story.narrator?.awayStatus ?? ''}
+          disabled={book}
           placeholder="hors ligne"
           aria-describedby="emb-away-hint"
           onChange={(event) =>
@@ -306,8 +317,9 @@ function StoryPanel({ story, onChange }: { story: Story; onChange: (story: Story
           }
         />
         <span className="field__hint" id="emb-away-hint">
-          Ce que le lecteur lit sous le nom tant que ton personnage n’a pas répondu. Chaque récit
-          dit son absence à sa façon : « hors ligne », « en plongée », « injoignable ».
+          {book
+            ? 'Un livre n’a pas d’interlocuteur : le lecteur affiche le titre du récit, et rien ne se fait attendre. Ces champs sont gardés pour un retour en correspondance.'
+            : 'Ce que le lecteur lit sous le nom tant que ton personnage n’a pas répondu. Chaque récit dit son absence à sa façon : « hors ligne », « en plongée », « injoignable ».'}
         </span>
       </label>
 
@@ -358,6 +370,7 @@ function ScenePanel({
   const palette = kinds[scene.kind];
 
   const set = (patch: Partial<Scene>) => onChange(updateScene(story, scene.id, patch));
+  const book = story.readingStyle === 'book';
 
   return (
     <>
@@ -378,6 +391,10 @@ function ScenePanel({
             <button
               key={kind}
               type="button"
+              // A book gives the player no line of their own: the kind stays
+              // shown on a node that already has it, never offered anew.
+              disabled={book && kind === 'player' && scene.kind !== 'player'}
+              title={book && kind === 'player' ? BOOK_PLAYER_HINT : undefined}
               className={`kind-picker__option${scene.kind === kind ? ' kind-picker__option--on' : ''}`}
               style={
                 scene.kind === kind
@@ -394,7 +411,11 @@ function ScenePanel({
             </button>
           ))}
         </div>
-        <span className="field__hint">{kindHelp[scene.kind]}</span>
+        <span className="field__hint">
+          {book && scene.kind === 'player'
+            ? 'Dans un livre, ce nœud est lu comme du texte du récit, comme un nœud Personnage. Change son type pour que le graphe dise la même chose.'
+            : kindHelp[scene.kind]}
+        </span>
       </div>
 
       {/*
@@ -416,8 +437,9 @@ function ScenePanel({
             onChange={(event) => set({ label: event.target.value })}
           />
           <span className="field__hint" id="emb-choice-label-hint">
-            Ce que le joueur lit sur le bouton. Le message envoyé, lui, s’écrit ci-dessous —
-            laisse-le vide pour envoyer le libellé tel quel.
+            {book
+              ? 'Ce que le joueur lit sur le bouton. Le texte qui s’inscrit dans le récit, lui, s’écrit ci-dessous — laisse-le vide pour écrire le libellé tel quel.'
+              : 'Ce que le joueur lit sur le bouton. Le message envoyé, lui, s’écrit ci-dessous — laisse-le vide pour envoyer le libellé tel quel.'}
           </span>
         </div>
       )}
@@ -435,9 +457,28 @@ function ScenePanel({
 
       {/*
         Offered on everything but a choice: there, the player is the one
-        writing, and nobody keeps themselves waiting.
+        writing, and nobody keeps themselves waiting. Not in a book either —
+        nobody is away there — except to clear a wait left from a
+        correspondence.
       */}
-      {scene.kind !== 'choice' && (
+      {book && scene.kind !== 'choice' && (scene.waitMinutes ?? 0) > 0 && (
+        <div className="field">
+          <span className="field__label">Attente avant ce message</span>
+          <span className="field__hint">
+            {formatWait(scene.waitMinutes ?? 0)} déclarées, qui ne seront pas jouées : dans un
+            livre, personne n’est absent.
+          </span>
+          <button
+            type="button"
+            className="btn btn--small"
+            onClick={() => set({ waitMinutes: undefined })}
+          >
+            Retirer l’attente
+          </button>
+        </div>
+      )}
+
+      {!book && scene.kind !== 'choice' && (
         <label className="field">
           <span className="field__label">Attente avant ce message (min)</span>
           <input
@@ -788,6 +829,38 @@ const kindHelp: Record<SceneKind, string> = {
   player: 'Le joueur parle, sans rien décider. La lecture enchaîne toute seule.',
   choice: 'Le joueur décide. C’est le seul type de nœud qui arrête la lecture.',
 };
+
+/**
+ * What a book does to a story written as a correspondence. Nothing is deleted —
+ * switching back restores everything — so the author is told what will read
+ * differently rather than asked to clean it up.
+ */
+function bookConsequences(story: Story): string {
+  const scenes = Object.values(story.scenes);
+  const players = scenes.filter((scene) => scene.kind === 'player').length;
+  const waits = scenes.filter(
+    (scene) => scene.kind !== 'choice' && (scene.waitMinutes ?? 0) > 0,
+  ).length;
+
+  const sentences = [
+    'Le récit s’écrit tout seul, d’un trait ; les choix du joueur s’y inscrivent.',
+  ];
+  if (players > 0) {
+    sentences.push(
+      players === 1
+        ? '1 ligne du joueur sera lue comme du texte du récit.'
+        : `${players} lignes du joueur seront lues comme du texte du récit.`,
+    );
+  }
+  if (waits > 0) {
+    sentences.push(
+      waits === 1
+        ? '1 attente ne sera pas jouée : personne n’est absent.'
+        : `${waits} attentes ne seront pas jouées : personne n’est absent.`,
+    );
+  }
+  return sentences.join(' ');
+}
 
 function nodeName(story: Story, id: SceneId): string {
   const scene = story.scenes[id];

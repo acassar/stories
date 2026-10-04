@@ -134,8 +134,10 @@ A node has a **kind**, and the kind of what it points at decides everything:
 | Kind     | Who speaks        | What happens next                    |
 | -------- | ----------------- | ------------------------------------ |
 | `npc`    | the correspondent | the story chains on by itself        |
-| `player` | the player        | the story chains on by itself        |
+| `player` | the player¹       | the story chains on by itself        |
 | `choice` | the player        | **the only kind that stops reading** |
+
+¹ In a story read as a book, nobody answers: a `player` node is read as part of the text — see [The reader](#the-reader).
 
 > **If the outgoing links point at `choice` nodes, buttons are displayed; otherwise the story chains on.**
 
@@ -170,7 +172,7 @@ A scene that alternated speakers message by message (`speaker`) is **split into 
 ### Waiting for real
 
 A scene may declare `waitMinutes`: the correspondent goes quiet for that long, in real time, before
-its messages arrive. Twelve hours means twelve hours — the app can be closed and reopened, and the
+its messages arrive — in a correspondence only: a book has no one to wait for. Twelve hours means twelve hours — the app can be closed and reopened, and the
 silence is where it was left. A story that declares none behaves exactly as before.
 
 **The state records when a silence began, never when it ends.** The end depends on the pace its
@@ -357,7 +359,14 @@ Mobile first, then widened: touch targets of at least 48 px, choices as full-wid
 
 Reading happens as a conversation: messages arrive one by one with a typing indicator, and the chosen answer stays in the thread. Tapping the conversation skips the wait. A system reduced-motion preference displays the scene in one block, changing nothing to the game.
 
-Each story declares its reading style (`readingStyle`), set by its author in the studio; absent, it is a correspondence. **Correspondence** sets the story as a thread of bubbles, the player's on their own side. **Book** sets the same lines as one running text: each follows the one before it without a line break, and the player’s answers are written into it, in italic, rather than sent. Both share the same reveal, the same waits and the same engine; only how the lines are set differs.
+Each story declares its reading style (`readingStyle`), set by its author in the studio; absent, it is a correspondence. **Correspondence** sets the story as a thread of bubbles, the player's on their own side: each message is announced by three dots, then arrives whole. **Book** sets the same lines as one running text, written letter by letter as if the story were writing itself: each line follows the one before it without a line break, and the player's choices are written into it, in italic, rather than sent. Both share the engine and the chaining; tapping the text puts the rest of the scene on the page in either.
+
+A book has no one on the other end, and the format says what follows from that rather than leaving each app to guess (`speakerOf`, `waitMinutesOf`):
+
+- **No wait.** There is no correspondent to be away, so `waitMinutes` is not played — the only time spent is the time the text takes to write itself.
+- **No `player` line.** The player speaks only through their choices. A `player` node — a line said without having been chosen — is read as part of the story's text.
+
+Nothing is deleted when a story switches to a book: switching back restores both. `validateStory` warns about each (`player-in-book`, `wait-in-book`), the studio greys out the `player` kind and the narrator fields, and the inspector says how many lines and waits will read differently.
 
 When the current node awaits no decision, the story carries on by itself — but only once its messages have arrived, and after the same silence as between two messages. That is what makes a forced player line, or two lines in a row from the correspondent, read as a real conversation rather than as a block dropping all at once.
 

@@ -455,7 +455,7 @@ export class StoryEngine {
       kind: scene.kind,
       title: scene.title,
       blocks: this.fill(sceneMessages(scene), state),
-      speaker: speakerOf(scene),
+      speaker: speakerOf(scene, this._story),
       choices: allChoices.filter((choice) => choice.available),
       allChoices,
       awaitsChoice: waits,

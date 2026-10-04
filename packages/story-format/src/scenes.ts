@@ -6,15 +6,29 @@
  * cannot drift between the reader and the studio preview.
  */
 
-import type { Link, Scene, SceneId, Story, TextBlock } from './types.js';
+import type { Link, ReadingStyle, Scene, SceneId, Story, TextBlock } from './types.js';
+
+/** How the story is set on screen, its default made explicit. */
+export function readingStyleOf(story: Pick<Story, 'readingStyle'>): ReadingStyle {
+  return story.readingStyle ?? 'correspondence';
+}
 
 /**
- * Who speaks in this node. The kind decides, alone and without exception —
- * which is what guarantees a node cannot show its messages on a different side
- * than the one its color announces in the studio.
+ * Who speaks in this node. The kind decides — which is what guarantees a node
+ * cannot show its messages on a different side than the one its color
+ * announces in the studio.
+ *
+ * One exception, and it belongs to the book: there, nobody answers, the player
+ * only chooses. A `player` node — a line the player says without having picked
+ * it — has no one to say it to, so it is read as part of the story's text.
  */
-export function speakerOf(scene: Pick<Scene, 'kind'>): 'narrator' | 'player' {
-  return scene.kind === 'npc' ? 'narrator' : 'player';
+export function speakerOf(
+  scene: Pick<Scene, 'kind'>,
+  story: Pick<Story, 'readingStyle'> = {},
+): 'narrator' | 'player' {
+  if (scene.kind === 'npc') return 'narrator';
+  if (scene.kind === 'player' && readingStyleOf(story) === 'book') return 'narrator';
+  return 'player';
 }
 
 /**
@@ -52,10 +66,12 @@ export function outgoing(story: Story, scene: Scene): { link: Link; target: Scen
 /**
  * How long the correspondent stays silent before this scene speaks, in real
  * minutes. Zero for a `choice` node whatever it declares: the player is the one
- * writing there, and nobody keeps themselves waiting.
+ * writing there, and nobody keeps themselves waiting. Zero throughout a book,
+ * too: a book has no correspondent to wait for — only the time it takes to
+ * write itself.
  */
-export function waitMinutesOf(scene: Scene): number {
-  if (scene.kind === 'choice') return 0;
+export function waitMinutesOf(scene: Scene, story: Pick<Story, 'readingStyle'> = {}): number {
+  if (scene.kind === 'choice' || readingStyleOf(story) === 'book') return 0;
   return Math.max(0, scene.waitMinutes ?? 0);
 }
 
@@ -65,7 +81,7 @@ export function waitMinutesOf(scene: Scene): number {
  * declared: a flag beside the scenes could disagree with them.
  */
 export function hasWaits(story: Story): boolean {
-  return Object.values(story.scenes).some((scene) => waitMinutesOf(scene) > 0);
+  return Object.values(story.scenes).some((scene) => waitMinutesOf(scene, story) > 0);
 }
 
 /** True when the scene ends the story — no link is ever followed out of it. */

@@ -55,7 +55,7 @@ export function waitStatus(story: Story, state: GameState, speed: number, now: n
   if (!state.awaitingSince) return OVER(now);
 
   const scene = story.scenes[state.currentSceneId];
-  const minutes = scene ? waitMinutesOf(scene) : 0;
+  const minutes = scene ? waitMinutesOf(scene, story) : 0;
   if (minutes <= 0) return OVER(now);
 
   const pace = Number.isFinite(speed) && speed > 0 ? speed : speed === Infinity ? Infinity : 1;

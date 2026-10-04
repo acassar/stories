@@ -8,7 +8,7 @@
 
 import { textTokens } from './interpolate.js';
 import { migrateStory } from './migrate.js';
-import { findAutoLoops } from './scenes.js';
+import { findAutoLoops, readingStyleOf } from './scenes.js';
 import { gameStateSchema, storySchema } from './schema.js';
 import type {
   Condition,
@@ -114,6 +114,7 @@ export function parseGameState(input: unknown): GameState {
 function checkGraph(story: Story): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   const sceneIds = new Set(Object.keys(story.scenes));
+  const book = readingStyleOf(story) === 'book';
 
   if (!sceneIds.has(story.startSceneId)) {
     issues.push({
@@ -157,6 +158,29 @@ function checkGraph(story: Story): ValidationIssue[] {
         code: 'wait-on-choice',
         sceneId: scene.id,
         message: `« ${scene.title || scene.id} » est un choix : l'attente qu'il declare ne sera jamais jouee, c'est le joueur qui ecrit.`,
+      });
+    }
+
+    /*
+     * A story switched to a book after it was written keeps what only made sense
+     * in a correspondence. Nothing breaks — the reader has a reading for both —
+     * but the author should know their text will not play the way it is drawn.
+     */
+    if (book && scene.kind === 'player') {
+      issues.push({
+        severity: 'warning',
+        code: 'player-in-book',
+        sceneId: scene.id,
+        message: `« ${scene.title || scene.id} » est une ligne du joueur : dans un livre, elle sera lue comme du texte du recit.`,
+      });
+    }
+
+    if (book && scene.kind !== 'choice' && (scene.waitMinutes ?? 0) > 0) {
+      issues.push({
+        severity: 'warning',
+        code: 'wait-in-book',
+        sceneId: scene.id,
+        message: `« ${scene.title || scene.id} » declare une attente : dans un livre, elle ne sera pas jouee, personne n'est absent.`,
       });
     }
 

@@ -2,7 +2,7 @@ import { Handle, Position } from '@xyflow/react';
 import type { NodeProps } from '@xyflow/react';
 
 import { kinds } from '@embranche/design-tokens';
-import { sceneMessages, waitMinutesOf } from '@embranche/story-format';
+import { sceneMessages } from '@embranche/story-format';
 
 import { PORT } from '../lib/graph';
 import type { SceneFlowNode } from '../lib/graph';
@@ -22,11 +22,10 @@ import { formatWait } from '../lib/values';
  * link around the cards instead of across them.
  */
 export function SceneNode({ data, selected }: NodeProps<SceneFlowNode>) {
-  const { scene, isStart, issues, awaitsChoice, focus, match, dead } = data;
+  const { scene, isStart, issues, awaitsChoice, waitMinutes: wait, focus, match, dead } = data;
   const hasError = issues.some((issue) => issue.severity === 'error');
   const hasWarning = !hasError && issues.length > 0;
   const palette = kinds[scene.kind];
-  const wait = waitMinutesOf(scene);
   const preview = sceneMessages(scene)
     .map((block) => block.text)
     .join(' ');

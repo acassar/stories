@@ -93,3 +93,10 @@ export const EFFECT_OPERATORS = [
   { value: 'addItem', label: 'donner l’objet' },
   { value: 'removeItem', label: 'reprendre l’objet' },
 ] as const;
+
+/**
+ * Why the player kind is greyed out in a book. The toolbar and the inspector
+ * share it, so both say the same thing.
+ */
+export const BOOK_PLAYER_HINT =
+  'Dans un livre, le joueur ne parle que par ses choix : une ligne qu’il dirait sans l’avoir choisie est lue comme du texte du récit.';

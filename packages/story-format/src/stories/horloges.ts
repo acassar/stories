@@ -2,11 +2,12 @@
  * « La Maison aux Horloges » — the sample story set as a book.
  *
  * Written for the `book` reading style: second-person prose whose lines run on
- * from one another, and player lines that are gestures rather than replies, so
+ * from one another, and choices whose lines are gestures rather than replies, so
  * that they read as the next sentence of the text. It has no narrator — a book
- * has no one on the other end. It still covers the usual shapes: a conditional
- * choice earned on a detour, a player line chained to a scene, an npc → npc
- * chain, two paths converging on the same room.
+ * has no one on the other end, and no `player` node: nobody speaks unasked. It
+ * still covers the usual shapes: a conditional choice earned on a detour, a
+ * choice chained to narration, an npc → npc chain, two paths converging on the
+ * same room.
  */
 
 import { STORY_FORMAT_VERSION } from '../types.js';
@@ -101,11 +102,11 @@ export const horlogesStory: Story = {
       ],
       next: [{ id: 'suite', to: 'retour' }],
     },
-    // A player line that asks for nothing: the gesture is written, then the
-    // story walks back to the front door on its own.
+    // The gesture is written, then the story walks back to the front door on
+    // its own.
     retour: {
       id: 'retour',
-      kind: 'player',
+      kind: 'npc',
       title: 'Retour à la façade',
       position: { x: 60, y: 630 },
       blocks: [{ text: 'Tu la glisses dans ta poche et reviens vers la façade, puis tu entres.' }],

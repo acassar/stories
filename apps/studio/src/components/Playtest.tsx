@@ -127,6 +127,7 @@ function PlaytestSession({ story, fromSceneId, mode, onToggleMode }: SessionProp
   }, [state]);
 
   const transcript = buildTranscript(story, state);
+  const book = story.readingStyle === 'book';
 
   return (
     <div className="phone">
@@ -181,29 +182,50 @@ function PlaytestSession({ story, fromSceneId, mode, onToggleMode }: SessionProp
             gap: 9,
           }}
         >
-          {transcript.map((message, index) => (
-            <div
-              key={index}
-              style={{
-                display: 'flex',
-                justifyContent: message.fromPlayer ? 'flex-end' : 'flex-start',
-              }}
+          {/* A book is one running text, the player's choices woven into it. */}
+          {book && (
+            <p
+              style={{ margin: 0, font: '400 16px/1.65 var(--emb-font-prose)', color: tokens.ink }}
             >
+              {transcript.map((message, index) => (
+                <span
+                  key={index}
+                  style={
+                    message.fromPlayer
+                      ? { fontStyle: 'italic', color: tokens.accentText }
+                      : undefined
+                  }
+                >
+                  {message.text}{' '}
+                </span>
+              ))}
+            </p>
+          )}
+
+          {!book &&
+            transcript.map((message, index) => (
               <div
+                key={index}
                 style={{
-                  maxWidth: '78%',
-                  background: message.fromPlayer ? tokens.accent : tokens.panel,
-                  color: message.fromPlayer ? tokens.onAccent : tokens.ink,
-                  border: `1px solid ${message.fromPlayer ? tokens.accent : tokens.line}`,
-                  font: `${message.fromPlayer ? '400' : 'italic 400'} 15px/1.48 var(--emb-font-prose)`,
-                  padding: '10px 13px',
-                  borderRadius: message.fromPlayer ? '16px 16px 4px 16px' : '4px 16px 16px 16px',
+                  display: 'flex',
+                  justifyContent: message.fromPlayer ? 'flex-end' : 'flex-start',
                 }}
               >
-                {message.text}
+                <div
+                  style={{
+                    maxWidth: '78%',
+                    background: message.fromPlayer ? tokens.accent : tokens.panel,
+                    color: message.fromPlayer ? tokens.onAccent : tokens.ink,
+                    border: `1px solid ${message.fromPlayer ? tokens.accent : tokens.line}`,
+                    font: `${message.fromPlayer ? '400' : 'italic 400'} 15px/1.48 var(--emb-font-prose)`,
+                    padding: '10px 13px',
+                    borderRadius: message.fromPlayer ? '16px 16px 4px 16px' : '4px 16px 16px 16px',
+                  }}
+                >
+                  {message.text}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
 
           {scene.isEnding && scene.ending && (
             <div
@@ -308,7 +330,7 @@ function buildTranscript(story: Story, state: GameState): TranscriptMessage[] {
   const push = (sceneId: string): void => {
     const scene = story.scenes[sceneId];
     if (!scene) return;
-    const fromPlayer = speakerOf(scene) === 'player';
+    const fromPlayer = speakerOf(scene, story) === 'player';
     for (const block of sceneMessages(scene)) messages.push({ text: block.text, fromPlayer });
   };
 
