@@ -9,6 +9,7 @@ import { usePrefersReducedMotion } from '../hooks/useColorMode';
 import type { LayoutKind } from '../hooks/useLayoutKind';
 import { useNow } from '../hooks/useNow';
 import { REVEAL_TIMING, useReveal } from '../hooks/useReveal';
+import { WRITING_TIMING, useTypewriter } from '../hooks/useTypewriter';
 import { useStory } from '../hooks/useStory';
 import { awaySentence, awayStatus } from '../lib/away';
 import type { Pace } from '../lib/settings';
@@ -86,12 +87,21 @@ export function Reading({
   const now = useNow(pending);
   const away = waitStatus(story, state, pace, now);
 
-  const reveal = useReveal(
-    scene.id,
-    scene.blocks.map((block) => block.text),
-    !reduceMotion && !resuming,
-    away.waiting,
-  );
+  // The author decides how the story is set: a thread of messages, or prose on a page.
+  const book = story.readingStyle === 'book';
+
+  /*
+   * Two stagings, one per style. A correspondence types each message behind
+   * three dots, then shows it whole; a book writes itself letter by letter,
+   * with nobody announcing the next line. Both hooks run, so the order of hooks
+   * never depends on the story — the one not in use is told not to animate,
+   * and has already revealed everything.
+   */
+  const texts = scene.blocks.map((block) => block.text);
+  const animate = !reduceMotion && !resuming;
+  const bubbles = useReveal(scene.id, texts, animate && !book, away.waiting);
+  const pen = useTypewriter(scene.id, texts, animate && book);
+  const reveal = book ? { ...pen, typing: false } : { ...bubbles, written: 0 };
   const thread = useRef<HTMLUListElement>(null);
 
   /**
@@ -101,21 +111,26 @@ export function Reading({
    * but only once its messages have arrived, and after the same silence as
    * between two messages. That is what makes a forced player line, or two lines
    * in a row from the correspondent, read as a real conversation rather than as
-   * a block dropping all at once.
+   * a block dropping all at once. A book takes the breath it takes between two
+   * of its lines.
    */
   useEffect(() => {
     if (!reveal.done || !scene.canAdvance) return;
-    const timer = setTimeout(advance, reduceMotion ? 0 : REVEAL_TIMING.pause);
+    const pause = book ? WRITING_TIMING.line : REVEAL_TIMING.pause;
+    const timer = setTimeout(advance, reduceMotion ? 0 : pause);
     return () => clearTimeout(timer);
-  }, [reveal.done, scene.canAdvance, scene.id, advance, reduceMotion]);
+  }, [reveal.done, scene.canAdvance, scene.id, advance, reduceMotion, book]);
 
-  // The conversation always follows its latest message.
+  /*
+   * The reading always follows its latest line. A book follows its pen without
+   * smoothing: a smooth scroll restarted on every letter only stutters.
+   */
   useEffect(() => {
     thread.current?.scrollTo({
       top: thread.current.scrollHeight,
-      behavior: reduceMotion ? 'auto' : 'smooth',
+      behavior: reduceMotion || book ? 'auto' : 'smooth',
     });
-  }, [reveal.revealed, reveal.typing, state.history.length, reduceMotion]);
+  }, [reveal.revealed, reveal.typing, reveal.written, state.history.length, reduceMotion, book]);
 
   /*
    * Not while the correspondent is away. The engine stands on the last scene,
@@ -160,8 +175,28 @@ export function Reading({
 
   const messages = buildTranscript(story, state, scene, { revealed: reveal.revealed });
   const narrator = story.narrator;
-  // The author decides how the story is set: a thread of messages, or prose on a page.
-  const book = story.readingStyle === 'book';
+
+  /*
+   * The line the pen is on. It carries the key it will keep once written, and
+   * sits in the same list as the written ones, so finishing it changes a class
+   * rather than replacing the element. It is hidden from assistive technology
+   * while it grows — a screen reader would otherwise read it out letter by
+   * letter — and joins the live region whole.
+   */
+  const lines =
+    book && !reveal.done && reveal.written > 0
+      ? [
+          ...messages,
+          {
+            key: `${state.history.length}-${scene.id}-${reveal.revealed}`,
+            text: Array.from(scene.blocks[reveal.revealed]?.text ?? '')
+              .slice(0, reveal.written)
+              .join(''),
+            fromPlayer: scene.speaker === 'player',
+            writing: true,
+          },
+        ]
+      : messages;
 
   return (
     <div className="reading">
@@ -222,11 +257,15 @@ export function Reading({
         // for an animation to read on.
         onClick={reveal.skip}
       >
-        {messages.map((message) =>
+        {lines.map((message) =>
           book ? (
             // One running text: each line follows the one before it, the
             // player's answers written into it rather than sent.
-            <li key={message.key} className={`prose${message.fromPlayer ? ' prose--player' : ''}`}>
+            <li
+              key={message.key}
+              className={`prose${message.fromPlayer ? ' prose--player' : ''}${'writing' in message ? ' prose--writing' : ''}`}
+              aria-hidden={'writing' in message ? true : undefined}
+            >
               {message.text}
             </li>
           ) : (
@@ -256,10 +295,8 @@ export function Reading({
         {reveal.typing && (
           // The player "types" too: a forced line arrives on their side of the
           // conversation, not on the correspondent's.
-          <li
-            className={`bubble-row${!book && scene.speaker === 'player' ? ' bubble-row--player' : ''}`}
-          >
-            <div className={`typing${book ? ' typing--book' : ''}`} aria-label="En train d’écrire">
+          <li className={`bubble-row${scene.speaker === 'player' ? ' bubble-row--player' : ''}`}>
+            <div className="typing" aria-label="En train d’écrire">
               <span />
               <span />
               <span />

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { clairiereStory } from '@embranche/story-format';
@@ -109,6 +109,33 @@ describe('Embranche reader', () => {
    * arrive, and the player's answer is written into the text rather than sent
    * from their side.
    */
+  /*
+   * Nobody is on the other end of a book: no dots announce a line, the text
+   * writes itself — and a tap puts the rest of the scene on the page.
+   */
+  it('writes a book letter by letter, with no one typing', async () => {
+    animateMessages();
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole('button', { name: /La Maison aux Horloges/ }));
+    await user.click(screen.getByRole('button', { name: 'Commencer l’aventure' }));
+
+    const page = screen.getByLabelText('Récit');
+    const pen = await waitFor(() => {
+      const line = page.querySelector('.prose--writing');
+      expect(line).not.toBeNull();
+      return line!;
+    });
+    expect(pen.textContent!.length).toBeLessThan(40);
+    expect(screen.queryByLabelText('En train d’écrire')).not.toBeInTheDocument();
+
+    await user.click(page);
+    expect(
+      await screen.findByRole('button', { name: 'Pousser la porte d’entrée' }),
+    ).toBeInTheDocument();
+    expect(within(page).getByText(/ne mène plus qu’à une seule maison/)).toBeInTheDocument();
+  });
+
   it('reads a story as a book when its author asks for it', async () => {
     saveImportedStory({
       ...clairiereStory,

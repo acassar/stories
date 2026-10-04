@@ -1180,8 +1180,6 @@ body {
 
 .prose {
   display: inline;
-  /* Inline text cannot slide in: it only fades. */
-  animation: embFade 0.5s both;
 }
 /* The space a writer would type between two sentences. */
 .prose::after {
@@ -1193,11 +1191,24 @@ body {
   color: var(--emb-accent-text);
 }
 
-/* The page is being written: three dots on the page, no bubble around them. */
-.typing--book {
-  background: none;
-  border: none;
-  padding: 10px 0;
+/*
+  The pen, at the end of the line it is writing. It takes the place of the
+  space that follows a written line.
+*/
+.prose--writing::after {
+  content: '';
+  display: inline-block;
+  width: 1.5px;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: -0.15em;
+  background: currentColor;
+  animation: embCaret 1s steps(1) infinite;
+}
+@keyframes embCaret {
+  50% {
+    opacity: 0;
+  }
 }
 
 .answers--book .answers__label {
