@@ -27,3 +27,4 @@ Object.defineProperty(window, 'matchMedia', {
 
 // jsdom cannot scroll: convenience calls must not break.
 Element.prototype.scrollTo = () => {};
+Element.prototype.scrollBy = () => {};

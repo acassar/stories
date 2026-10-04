@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
@@ -134,6 +134,55 @@ describe('Embranche reader', () => {
       await screen.findByRole('button', { name: 'Pousser la porte d’entrée' }),
     ).toBeInTheDocument();
     expect(within(page).getByText(/ne mène plus qu’à une seule maison/)).toBeInTheDocument();
+  });
+
+  /*
+   * Following the pen would slide the line being read out from under the eyes.
+   * jsdom lays nothing out, so the page is given a height by hand: four
+   * screens of text, one on view.
+   */
+  it('keeps a book where its reader is, and says when the text goes on below', async () => {
+    animateMessages();
+    const sizes = [
+      Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'scrollHeight'),
+      Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight'),
+    ] as const;
+    Object.defineProperty(HTMLElement.prototype, 'scrollHeight', {
+      configurable: true,
+      get: () => 2000,
+    });
+    Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
+      configurable: true,
+      get: () => 500,
+    });
+    const scrollTo = vi.spyOn(Element.prototype, 'scrollTo');
+    const scrollBy = vi.spyOn(Element.prototype, 'scrollBy');
+
+    try {
+      const user = userEvent.setup();
+      render(<App />);
+      await user.click(screen.getByRole('button', { name: /La Maison aux Horloges/ }));
+      await user.click(screen.getByRole('button', { name: 'Commencer l’aventure' }));
+
+      const page = screen.getByLabelText('Récit');
+      const pen = () => page.querySelector('.prose--writing')?.textContent?.length ?? 0;
+      await waitFor(() => expect(pen()).toBeGreaterThan(0));
+      const before = { calls: scrollTo.mock.calls.length, written: pen() };
+      await waitFor(() => expect(pen()).toBeGreaterThan(before.written + 5));
+      // The pen moved on; the page did not.
+      expect(scrollTo.mock.calls.length).toBe(before.calls);
+
+      await user.click(await screen.findByRole('button', { name: 'Lire la suite' }));
+      expect(scrollBy).toHaveBeenCalled();
+    } finally {
+      scrollTo.mockRestore();
+      scrollBy.mockRestore();
+      sizes.forEach((size, index) => {
+        const name = index === 0 ? 'scrollHeight' : 'clientHeight';
+        if (size) Object.defineProperty(HTMLElement.prototype, name, size);
+        else delete (HTMLElement.prototype as unknown as Record<string, unknown>)[name];
+      });
+    }
   });
 
   it('reads a story as a book when its author asks for it', async () => {

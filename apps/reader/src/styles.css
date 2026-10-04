@@ -1211,6 +1211,49 @@ body {
   }
 }
 
+/*
+  The page does not follow the pen, so a sign says when the text goes on below.
+  It floats just above the answers, over the bottom of the page, and nods
+  downwards — tapping it turns one screen.
+*/
+.answers--book {
+  position: relative;
+}
+.read-on {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 1;
+  width: 44px;
+  height: 44px;
+  margin-inline: auto;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--emb-hard);
+  border-radius: 50%;
+  background: var(--emb-panel);
+  color: var(--emb-accent-text);
+  box-shadow: var(--emb-hard-shadow-sm);
+  cursor: pointer;
+  animation:
+    embFade 0.3s both,
+    embNod 1.4s ease-in-out 0.3s infinite;
+}
+.read-on:focus-visible {
+  outline: 2px solid var(--emb-accent);
+  outline-offset: 3px;
+}
+@keyframes embNod {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(5px);
+  }
+}
+
 .answers--book .answers__label {
   text-transform: none;
   letter-spacing: 0;

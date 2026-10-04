@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { ColorMode } from '@embranche/design-tokens';
 import { waitStatus } from '@embranche/story-engine';
 import type { GameState, Story } from '@embranche/story-format';
 
-import { BackIcon, MoonIcon, PaceIcon, SunIcon } from '../components/Icons';
+import { BackIcon, MoonIcon, PaceIcon, ReadOnIcon, SunIcon } from '../components/Icons';
 import { usePrefersReducedMotion } from '../hooks/useColorMode';
 import type { LayoutKind } from '../hooks/useLayoutKind';
 import { useNow } from '../hooks/useNow';
@@ -15,6 +15,9 @@ import { awaySentence, awayStatus } from '../lib/away';
 import type { Pace } from '../lib/settings';
 import { buildTranscript } from '../lib/transcript';
 import { Ending } from './Ending';
+
+/** Text hidden below the page, in pixels, small enough to count as read. */
+const READ_ON_SLACK = 24;
 
 interface Props {
   story: Story;
@@ -121,16 +124,47 @@ export function Reading({
     return () => clearTimeout(timer);
   }, [reveal.done, scene.canAdvance, scene.id, advance, reduceMotion, book]);
 
-  /*
-   * The reading always follows its latest line. A book follows its pen without
-   * smoothing: a smooth scroll restarted on every letter only stutters.
-   */
+  // A conversation always follows its latest message.
   useEffect(() => {
+    if (book) return;
     thread.current?.scrollTo({
       top: thread.current.scrollHeight,
-      behavior: reduceMotion || book ? 'auto' : 'smooth',
+      behavior: reduceMotion ? 'auto' : 'smooth',
     });
-  }, [reveal.revealed, reveal.typing, reveal.written, state.history.length, reduceMotion, book]);
+  }, [reveal.revealed, reveal.typing, state.history.length, reduceMotion, book]);
+
+  /*
+   * A book stays where its reader is.
+   *
+   * Following the pen would slide the line being read up and out from under the
+   * eyes, letter after letter. So the page never moves by itself — except once,
+   * on the way in, to land a resumed run where it stopped — and a sign says when
+   * the text goes on below the fold.
+   */
+  const [textBelow, setTextBelow] = useState(false);
+  const measure = useCallback(() => {
+    const page = thread.current;
+    if (!page) return;
+    setTextBelow(page.scrollHeight - page.scrollTop - page.clientHeight > READ_ON_SLACK);
+  }, []);
+
+  useEffect(() => {
+    if (!book) return;
+    thread.current?.scrollTo({ top: thread.current.scrollHeight });
+    // Only on the way in — `book` does not change during a session, the screen
+    // is remounted for another story. Afterwards, the reader holds the page.
+  }, [book]);
+
+  useEffect(() => {
+    if (book) measure();
+  }, [book, measure, reveal.revealed, reveal.written, state.history.length]);
+
+  // One screen at a time, minus a few lines kept in view to read on from.
+  const readOn = () => {
+    const page = thread.current;
+    if (!page) return;
+    page.scrollBy({ top: page.clientHeight * 0.8, behavior: reduceMotion ? 'auto' : 'smooth' });
+  };
 
   /*
    * Not while the correspondent is away. The engine stands on the last scene,
@@ -256,6 +290,7 @@ export function Reading({
         // Tapping the conversation skips the wait: nobody should have to wait
         // for an animation to read on.
         onClick={reveal.skip}
+        onScroll={book ? measure : undefined}
       >
         {lines.map((message) =>
           book ? (
@@ -306,6 +341,13 @@ export function Reading({
       </ul>
 
       <div className={`answers${book ? ' answers--book' : ''}`}>
+        {/* The page does not follow the pen: this says there is more to read. */}
+        {book && textBelow && (
+          <button type="button" className="read-on" onClick={readOn} aria-label="Lire la suite">
+            <ReadOnIcon />
+          </button>
+        )}
+
         {/* The answers keep the same column as the conversation above them. */}
         <div className="answers__column">
           {/* Undoing the last choice — the story steps back one bifurcation,
