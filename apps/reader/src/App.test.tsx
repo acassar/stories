@@ -185,6 +185,49 @@ describe('Embranche reader', () => {
     }
   });
 
+  /*
+   * Between a node that chains on and the next one, the reading takes a breath.
+   * Nothing waits on the reader then, so nothing may be offered to them — not
+   * even undoing, which would flash and vanish.
+   */
+  it(
+    'offers nothing while the story chains on by itself',
+    async () => {
+      animateMessages();
+      const user = userEvent.setup();
+      render(<App />);
+      await user.click(screen.getByRole('button', { name: /La Maison aux Horloges/ }));
+      await user.click(screen.getByRole('button', { name: 'Commencer l’aventure' }));
+      await user.click(screen.getByLabelText('Récit'));
+
+      let undoShown = false;
+      const watch = new MutationObserver(() => {
+        // Undoing alone, with no choice beside it: the story is not stopped.
+        // Cheap on purpose, since it runs for every letter the pen writes.
+        if (document.querySelector('.undo') && !document.querySelector('.answer')) undoShown = true;
+      });
+      watch.observe(document.body, { childList: true, subtree: true });
+      try {
+        await user.click(await screen.findByRole('button', { name: 'Pousser la porte d’entrée' }));
+        // The gesture writes itself, then the hall follows on its own; once its
+        // first line is under way, a tap puts the rest of it on the page.
+        const page = screen.getByLabelText('Récit');
+        await waitFor(
+          () => expect(page.querySelector('.prose--writing')?.textContent ?? '').toMatch(/^À l/),
+          TYPED,
+        );
+        await user.click(page);
+        await screen.findByRole('button', { name: 'Monter vers le tic-tac' });
+      } finally {
+        watch.disconnect();
+      }
+      expect(undoShown).toBe(false);
+      // Where the story stops again, undoing is back.
+      expect(screen.getByRole('button', { name: /Revenir en arrière/ })).toBeInTheDocument();
+    },
+    TYPED.timeout,
+  );
+
   it('reads a story as a book when its author asks for it', async () => {
     saveImportedStory({
       ...clairiereStory,

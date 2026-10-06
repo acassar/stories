@@ -351,8 +351,10 @@ export function Reading({
         {/* The answers keep the same column as the conversation above them. */}
         <div className="answers__column">
           {/* Undoing the last choice — the story steps back one bifurcation,
-              it does not start over. */}
-          {reveal.done && canGoBack && (
+              it does not start over. Offered only where the reading stops: on
+              a node that chains on, it would flash for the breath before the
+              next line. */}
+          {reveal.done && canGoBack && !scene.canAdvance && (
             <button type="button" className="undo" onClick={goBack}>
               ↩ Revenir en arrière
             </button>
