@@ -294,8 +294,8 @@ export function Reading({
       >
         {lines.map((message) =>
           book ? (
-            // One running text: each line follows the one before it, the
-            // player's answers written into it rather than sent.
+            // Prose, one paragraph per block, the player's answers written
+            // into it rather than sent.
             <li
               key={message.key}
               className={`prose${message.fromPlayer ? ' prose--player' : ''}${'writing' in message ? ' prose--writing' : ''}`}

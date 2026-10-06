@@ -1,9 +1,9 @@
 /**
  * « La Maison aux Horloges » — the sample story set as a book.
  *
- * Written for the `book` reading style: second-person prose whose lines run on
- * from one another, and choices whose lines are gestures rather than replies, so
- * that they read as the next sentence of the text. It has no narrator — a book
+ * Written for the `book` reading style: second-person prose in short
+ * paragraphs, and choices whose lines are gestures rather than replies, so that
+ * they read as the next paragraph of the text. It has no narrator — a book
  * has no one on the other end, and no `player` node: nobody speaks unasked. It
  * still covers the usual shapes: a conditional choice earned on a detour, a
  * choice chained to narration, an npc → npc chain, two paths converging on the

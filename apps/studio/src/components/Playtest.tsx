@@ -182,24 +182,23 @@ function PlaytestSession({ story, fromSceneId, mode, onToggleMode }: SessionProp
             gap: 9,
           }}
         >
-          {/* A book is one running text, the player's choices woven into it. */}
+          {/* A book is prose, one paragraph per block, the player's choices woven into it. */}
           {book && (
-            <p
-              style={{ margin: 0, font: '400 16px/1.65 var(--emb-font-prose)', color: tokens.ink }}
-            >
+            <div style={{ font: '400 16px/1.65 var(--emb-font-prose)', color: tokens.ink }}>
               {transcript.map((message, index) => (
-                <span
+                <p
                   key={index}
-                  style={
-                    message.fromPlayer
+                  style={{
+                    margin: '0 0 0.8em',
+                    ...(message.fromPlayer
                       ? { fontStyle: 'italic', color: tokens.accentText }
-                      : undefined
-                  }
+                      : undefined),
+                  }}
                 >
-                  {message.text}{' '}
-                </span>
+                  {message.text}
+                </p>
               ))}
-            </p>
+            </div>
           )}
 
           {!book &&

@@ -1164,11 +1164,10 @@ body {
 /* ------------------------------------------------------------------ book */
 
 /*
-  The book style: the same lines as the correspondence, set as one running
-  text. Nothing is cut out of the paper here — the text is the paper. Each line
-  follows the one before it on the same line, without a break or an indent;
-  the player's answers are woven in, told apart only by their italic and their
-  ink.
+  The book style: the same lines as the correspondence, set as prose. Nothing
+  is cut out of the paper here — the text is the paper. Each block of text is a
+  paragraph, so the author paces the page by cutting their blocks; the player's
+  answers are paragraphs too, told apart only by their italic and their ink.
 */
 .thread--book {
   display: block;
@@ -1179,11 +1178,8 @@ body {
 }
 
 .prose {
-  display: inline;
-}
-/* The space a writer would type between two sentences. */
-.prose::after {
-  content: ' ';
+  display: block;
+  margin: 0 0 0.8em;
 }
 
 .prose--player {

@@ -8,7 +8,7 @@ export const WRITING_TIMING = {
   sentence: 180,
   /** Extra breath after a comma, a colon, a dash. */
   clause: 70,
-  /** Between two lines, which run on in the same text. */
+  /** Between two lines. */
   line: 240,
 } as const;
 
