@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { StoryEngine } from '@embranche/story-engine';
-import { clairiereStory } from '@embranche/story-format';
+import { clairiereStory } from '@embranche/story-format/fixtures';
 
 import { buildTranscript } from './transcript';
 

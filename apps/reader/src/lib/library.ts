@@ -5,12 +5,7 @@
  * knows nothing of persistence, it is injected into it.
  */
 
-import {
-  exampleStories,
-  migrateStory,
-  parseGameState,
-  validateStory,
-} from '@embranche/story-format';
+import { migrateStory, parseGameState, validateStory } from '@embranche/story-format';
 import type { GameState, Story } from '@embranche/story-format';
 
 import { forgetLanguage } from './language';
@@ -19,11 +14,17 @@ const IMPORTED_KEY = 'embranche.reader.stories.v1';
 const SAVES_KEY = 'embranche.reader.saves.v1';
 const ENDINGS_KEY = 'embranche.reader.endings.v1';
 /**
- * Stories the reader has put away. Only the samples shipped with the app need
- * to be remembered here — an imported story is removed outright, but a sample
- * would come back on the next load if nothing recorded that it was dismissed.
+ * Stories the reader has put away. Only the stories shipped with the app need
+ * to be remembered here — an imported story is removed outright, but a shipped
+ * one would come back on the next load if nothing recorded that it was dismissed.
  */
 const REMOVED_KEY = 'embranche.reader.removed.v1';
+
+/**
+ * Stories built into the app, there before anything is imported. None today:
+ * the library starts empty, and everything in it was opened from a file.
+ */
+export const SHIPPED_STORIES: readonly Story[] = [];
 
 function read<T>(storage: Storage, key: string, fallback: T): T {
   const raw = storage.getItem(key);
@@ -37,16 +38,19 @@ function read<T>(storage: Storage, key: string, fallback: T): T {
 
 /**
  * Available stories: those shipped with the app, plus those imported from JSON
- * produced by the studio. An import replaces the sample sharing its id.
+ * produced by the studio. An import replaces the shipped story sharing its id.
  */
-export function loadLibrary(storage: Storage = window.localStorage): Story[] {
+export function loadLibrary(
+  storage: Storage = window.localStorage,
+  shipped: readonly Story[] = SHIPPED_STORIES,
+): Story[] {
   // A file imported under an older format stays playable: it is migrated on
   // read rather than left to disappear from the library.
   const imported = read<unknown[]>(storage, IMPORTED_KEY, [])
     .map(migrateStory)
     .filter((candidate): candidate is Story => validateStory(candidate).valid);
   const byId = new Map<string, Story>();
-  for (const story of exampleStories) byId.set(story.id, story);
+  for (const story of shipped) byId.set(story.id, story);
   for (const story of imported) byId.set(story.id, story);
   const removed = new Set(read<string[]>(storage, REMOVED_KEY, []));
   return [...byId.values()].filter((story) => !removed.has(story.id));

@@ -1,11 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  STORY_FORMAT_VERSION,
-  clairiereStory,
-  findEndings,
-  kerlavenStory,
-} from '@embranche/story-format';
+import { STORY_FORMAT_VERSION, findEndings } from '@embranche/story-format';
+import { clairiereStory, kerlavenStory } from '@embranche/story-format/fixtures';
 import type { Story } from '@embranche/story-format';
 
 import { StoryEngine } from './engine.js';

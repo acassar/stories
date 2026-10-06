@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { clairiereStory } from './examples.js';
+import { clairiereStory } from './fixtures/index.js';
 import { languageOf, localizeStory, storyLanguages, untranslatedScenes } from './translate.js';
 import { validateStory, validateStoryShape } from './validate.js';
 import type { Scene, Story, StoryTranslation } from './types.js';

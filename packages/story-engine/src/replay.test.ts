@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { STORY_FORMAT_VERSION, clairiereStory, kerlavenStory } from '@embranche/story-format';
+import { STORY_FORMAT_VERSION } from '@embranche/story-format';
+import { clairiereStory, kerlavenStory } from '@embranche/story-format/fixtures';
 import type { Story } from '@embranche/story-format';
 
 import { StoryEngine } from './engine.js';

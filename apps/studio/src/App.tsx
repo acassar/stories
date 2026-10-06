@@ -4,7 +4,7 @@ import type { Story } from '@embranche/story-format';
 
 import { Dashboard } from './components/Dashboard';
 import { Editor } from './components/Editor';
-import { createLocalRepository, seedIfEmpty } from './lib/storage';
+import { createLocalRepository } from './lib/storage';
 
 /**
  * Studio shell. It holds two things: which story is open, and the
@@ -13,7 +13,7 @@ import { createLocalRepository, seedIfEmpty } from './lib/storage';
  */
 export function App() {
   const repository = useMemo(() => createLocalRepository(), []);
-  const [stories, setStories] = useState<Story[]>(() => seedIfEmpty(repository));
+  const [stories, setStories] = useState<Story[]>(() => repository.list());
   const [openId, setOpenId] = useState<string | null>(null);
 
   const openStory = openId ? stories.find((story) => story.id === openId) : undefined;

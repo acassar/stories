@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { clairiereStory, createEmptyStory, createLink, createScene } from '@embranche/story-format';
+import { createEmptyStory, createLink, createScene } from '@embranche/story-format';
+import { clairiereStory } from '@embranche/story-format/fixtures';
 import type { Condition, Story } from '@embranche/story-format';
 
 import { exploreReachable, findDeadScenes, linkKey } from './reachability.js';

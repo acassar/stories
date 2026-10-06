@@ -1,5 +1,6 @@
 /**
- * Sample stories — the reader's starting library and the test sandbox.
+ * Test stories — the sandbox every suite of the repository plays in. They ship
+ * in no app: importing them is reserved to tests, and the lint says so.
  *
  * They are written to cover every shape of the graph: branching (`npc` →
  * several `choice`), automatic chaining (`choice` → `player`, `npc` → `npc`),
@@ -7,10 +8,10 @@
  * breaks here breaks the format.
  */
 
-import { horlogesStory } from './stories/horloges.js';
-import { kerlavenStory } from './stories/kerlaven.js';
-import { STORY_FORMAT_VERSION } from './types.js';
-import type { Story } from './types.js';
+import { STORY_FORMAT_VERSION } from '../types.js';
+import type { Story } from '../types.js';
+import { horlogesStory } from './horloges.js';
+import { kerlavenStory } from './kerlaven.js';
 
 export const clairiereStory: Story = {
   formatVersion: STORY_FORMAT_VERSION,
@@ -783,11 +784,11 @@ export const inconnuStory: Story = {
   },
 };
 
-export { kerlavenStory } from './stories/kerlaven.js';
-export { horlogesStory } from './stories/horloges.js';
+export { kerlavenStory } from './kerlaven.js';
+export { horlogesStory } from './horloges.js';
 
-/** Library shipped with the app. */
-export const exampleStories: Story[] = [
+/** Every test story, for the suites that walk them all. */
+export const fixtureStories: Story[] = [
   clairiereStory,
   verlaineStory,
   cimesStory,
@@ -795,6 +796,3 @@ export const exampleStories: Story[] = [
   kerlavenStory,
   horlogesStory,
 ];
-
-/** Reference story for the tests and for the first launch. */
-export const exampleStory = clairiereStory;

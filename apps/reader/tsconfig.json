@@ -7,6 +7,7 @@
     "types": ["vite/client"],
     "paths": {
       "@embranche/story-format": ["../../packages/story-format/src/index.ts"],
+      "@embranche/story-format/fixtures": ["../../packages/story-format/src/fixtures/index.ts"],
       "@embranche/story-engine": ["../../packages/story-engine/src/index.ts"],
       "@embranche/design-tokens": ["../../packages/design-tokens/src/index.ts"]
     }

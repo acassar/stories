@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { clairiereStory, kerlavenStory, validateStory } from '@embranche/story-format';
+import { validateStory } from '@embranche/story-format';
+import { clairiereStory, kerlavenStory } from '@embranche/story-format/fixtures';
 import type { Story } from '@embranche/story-format';
 
 import { DEFAULT_LAYOUT, arrangeStory, layoutStory } from './layout';

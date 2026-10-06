@@ -6,7 +6,7 @@
  * touching anything else.
  */
 
-import { exampleStories, migrateStory, validateStory } from '@embranche/story-format';
+import { migrateStory, validateStory } from '@embranche/story-format';
 import type { Story } from '@embranche/story-format';
 
 const STORAGE_KEY = 'embranche.studio.stories.v1';
@@ -60,17 +60,6 @@ export function createLocalRepository(storage: Storage = window.localStorage): S
       );
     },
   };
-}
-
-/**
- * On the very first launch, the library is seeded with the sample stories: an
- * empty studio teaches nobody anything.
- */
-export function seedIfEmpty(repository: StoryRepository): Story[] {
-  const existing = repository.list();
-  if (existing.length > 0) return existing;
-  for (const story of exampleStories) repository.save(structuredClone(story));
-  return repository.list();
 }
 
 /** Downloads the story in `story-format` — the file the reader opens. */

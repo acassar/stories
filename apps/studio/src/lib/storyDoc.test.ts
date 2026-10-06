@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { clairiereStory, validateStory } from '@embranche/story-format';
+import { validateStory } from '@embranche/story-format';
+import { clairiereStory } from '@embranche/story-format/fixtures';
 import type { Story } from '@embranche/story-format';
 
 import {

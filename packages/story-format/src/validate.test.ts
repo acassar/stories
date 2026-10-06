@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { cimesStory, clairiereStory, exampleStories } from './examples.js';
+import { cimesStory, clairiereStory, fixtureStories } from './fixtures/index.js';
 import { createEmptyStory, createScene, slugify } from './factories.js';
 import { hasWaits, speakerOf, waitMinutesOf } from './scenes.js';
 import {
@@ -72,7 +72,7 @@ describe('validateStoryShape', () => {
 
 describe('validateStory — graph coherence', () => {
   it('validates the sample stories without error', () => {
-    for (const story of exampleStories) {
+    for (const story of fixtureStories) {
       const result = validateStory(story);
       const errors = result.issues.filter((i) => i.severity === 'error');
       expect(errors, `${story.title} : ${errors.map((e) => e.message).join(' | ')}`).toEqual([]);

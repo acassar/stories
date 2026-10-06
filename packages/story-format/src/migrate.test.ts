@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { migrateStory } from './migrate.js';
 import { awaitsChoice, choiceLabel } from './scenes.js';
-import { clairiereStory } from './examples.js';
+import { clairiereStory } from './fixtures/index.js';
 import { parseStory, validateStory } from './validate.js';
 import type { Story } from './types.js';
 

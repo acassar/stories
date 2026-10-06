@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { clairiereStory, validateStory } from '@embranche/story-format';
+import { validateStory } from '@embranche/story-format';
+import { clairiereStory } from '@embranche/story-format/fixtures';
 import type { SceneId, Story } from '@embranche/story-format';
 
 import { Inspector } from './Inspector';

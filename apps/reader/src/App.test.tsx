@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import { clairiereStory } from '@embranche/story-format';
+import { clairiereStory, fixtureStories } from '@embranche/story-format/fixtures';
 import type { Story } from '@embranche/story-format';
 
 import { App } from './App';
@@ -43,8 +43,11 @@ const TYPED = { timeout: 8000 };
  * the app — the very file the studio exports.
  */
 describe('Embranche reader', () => {
+  // Nothing ships with the app: the reader of these tests has imported the
+  // test stories, as anyone would open a file.
   beforeEach(() => {
     window.localStorage.clear();
+    for (const story of fixtureStories) saveImportedStory(story);
   });
 
   afterEach(() => {
@@ -607,5 +610,14 @@ describe('Embranche reader — real-time waits', () => {
     await user.click(screen.getByLabelText('Retour à la fiche du récit'));
     expect(screen.getByRole('button', { name: 'Reprendre la partie' })).toBeInTheDocument();
     expect(screen.getByText(/Pierre est hors ligne — de retour dans/)).toBeInTheDocument();
+  });
+});
+
+describe('Embranche reader — first launch', () => {
+  it('opens on an empty library: no story ships with the app', () => {
+    window.localStorage.clear();
+    render(<App />);
+    expect(screen.getByText(/Aucune histoire/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Clairière/ })).not.toBeInTheDocument();
   });
 });

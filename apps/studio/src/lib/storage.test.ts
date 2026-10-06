@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { clairiereStory, createEmptyStory, exampleStories } from '@embranche/story-format';
+import { createEmptyStory } from '@embranche/story-format';
+import { clairiereStory } from '@embranche/story-format/fixtures';
 
-import { createLocalRepository, importStoryFile, seedIfEmpty } from './storage';
+import { createLocalRepository, importStoryFile } from './storage';
 
 /** Minimal `Storage` implementation, to avoid depending on the jsdom global. */
 function memoryStorage(): Storage {
@@ -59,13 +60,6 @@ describe('createLocalRepository', () => {
     draft.startSceneId = 'pas-encore-ecrite';
     repository.save(draft);
     expect(repository.list()).toHaveLength(1);
-  });
-
-  it('seeds the library on first launch, then leaves it alone', () => {
-    const repository = createLocalRepository(storage);
-    expect(seedIfEmpty(repository)).toHaveLength(exampleStories.length);
-    repository.remove(clairiereStory.id);
-    expect(seedIfEmpty(repository)).toHaveLength(exampleStories.length - 1);
   });
 });
 

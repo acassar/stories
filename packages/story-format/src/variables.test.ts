@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { clairiereStory } from './examples.js';
+import { clairiereStory } from './fixtures/index.js';
 import { createEmptyStory, createLink, createScene } from './factories.js';
 import type { Story } from './types.js';
 import {

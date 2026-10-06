@@ -69,7 +69,7 @@ The reader is mobile-first: open it in your browser inspector in phone mode, or 
 
 ```bash
 pnpm verify        # lint + typecheck + tests
-pnpm test          # 452 tests
+pnpm test          # 453 tests
 pnpm test:coverage # the same, with the thresholds on the core
 pnpm lint
 pnpm typecheck
@@ -287,11 +287,11 @@ the board at the twelfth move. Nothing is added to the format, nothing is stored
 A name the story never sets is left standing, braces included, and reported as a warning: a
 mistyped variable has no other symptom.
 
-### The shipped library
+### Test stories
 
-`exampleStories` holds the five stories both apps start with — the studio seeds them into its dashboard, the reader into its library. Four are short and each isolates one shape of the graph.
+No story ships with the apps: the reader and the studio both start empty, and everything in them was opened from a file. The stories the repository holds are test fixtures, behind their own entry point — `@embranche/story-format/fixtures` — that only tests import; the lint fails an app that tries. Most are short and each isolates one shape of the graph.
 
-The fifth, **« La Fréquence Kerlaven »**, is the long one: 229 nodes, 9 endings, five acts, in [`stories/kerlaven.ts`](packages/story-format/src/stories/kerlaven.ts). It lives in its own module because of its size, and it is what the format is stress-tested against — item gates (`hasItem` / `lacksItem` on the links that open a button), chaining switches that pick a node from the state, hub nodes several acts fall back into, and an ending gated on a `visited` scene. A seeded walk in the `story-engine` suite reaches each of its nine endings and asserts no run ever stalls.
+**« La Fréquence Kerlaven »** is the long one: 229 nodes, 9 endings, five acts, in [`fixtures/kerlaven.ts`](packages/story-format/src/fixtures/kerlaven.ts). It lives in its own module because of its size, and it is what the format is stress-tested against — item gates (`hasItem` / `lacksItem` on the links that open a button), chaining switches that pick a node from the state, hub nodes several acts fall back into, and an ending gated on a `visited` scene. A seeded walk in the `story-engine` suite reaches each of its nine endings and asserts no run ever stalls.
 
 ### Validation
 
@@ -439,12 +439,12 @@ The reader revalidates the document and flatly refuses an inconsistent story.
 
 ## Tests
 
-452 tests, all green.
+453 tests, all green.
 
 | Suite          | What it covers                                                                   |
 | -------------- | -------------------------------------------------------------------------------- |
 | `story-format` | schema, graph coherence, migration 1 → 2, JSON round-trip, error cases, inventory of the variables and items a story reads and writes |
-| `story-engine` | progression, automatic chaining, conditions, effects, going back, serialization, events, condition-aware reachability, seeded walks of the long sample story down to each of its endings |
+| `story-engine` | progression, automatic chaining, conditions, effects, going back, serialization, events, condition-aware reachability, seeded walks of the long test story down to each of its endings |
 | `studio`       | editing operations, copy / paste of a fragment, undo granularity, automatic layout, full-text search, projection to React Flow, persistence, import, and the editor itself end to end |
 | `reader`       | full run to an ending, conditional choice, resume, conversation                   |
 

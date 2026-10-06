@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { StoryEngine } from '@embranche/story-engine';
-import { clairiereStory, createEmptyStory, exampleStories } from '@embranche/story-format';
+import { createEmptyStory } from '@embranche/story-format';
+import { clairiereStory, fixtureStories } from '@embranche/story-format/fixtures';
 
 import {
   clearSave,
@@ -41,16 +42,16 @@ beforeEach(() => {
   storage = memoryStorage();
 });
 
+/** The library as it would read with the test stories built into the app. */
+const withShipped = () => loadLibrary(storage, fixtureStories);
+
 describe('library', () => {
-  it('ships the sample stories by default', () => {
-    expect(loadLibrary(storage).map((story) => story.id)).toEqual([
-      'clairiere-lucioles',
-      'dossier-verlaine',
-      'appel-des-cimes',
-      'numero-inconnu',
-      'frequence-kerlaven',
-      'maison-horloges',
-    ]);
+  it('starts empty: no story ships with the app', () => {
+    expect(loadLibrary(storage)).toEqual([]);
+  });
+
+  it('lists the shipped stories first', () => {
+    expect(withShipped().map((story) => story.id)).toEqual(fixtureStories.map((story) => story.id));
   });
 
   it('adds an imported story', () => {
@@ -58,15 +59,15 @@ describe('library', () => {
       createEmptyStory({ id: 'venue-du-studio', title: 'Venue du studio' }),
       storage,
     );
-    const titles = loadLibrary(storage).map((story) => story.title);
+    const titles = withShipped().map((story) => story.title);
     expect(titles).toContain('Venue du studio');
-    expect(titles).toHaveLength(exampleStories.length + 1);
+    expect(titles).toHaveLength(fixtureStories.length + 1);
   });
 
-  it('an import replaces the sample sharing its id rather than duplicating it', () => {
+  it('an import replaces the shipped story sharing its id rather than duplicating it', () => {
     saveImportedStory({ ...structuredClone(clairiereStory), title: 'Version révisée' }, storage);
-    const library = loadLibrary(storage);
-    expect(library).toHaveLength(exampleStories.length);
+    const library = withShipped();
+    expect(library).toHaveLength(fixtureStories.length);
     expect(library.find((story) => story.id === 'clairiere-lucioles')?.title).toBe(
       'Version révisée',
     );
@@ -74,7 +75,7 @@ describe('library', () => {
 
   it('ignores a stored story that has become invalid', () => {
     storage.setItem('embranche.reader.stories.v1', JSON.stringify([{ id: 'cassee' }]));
-    expect(loadLibrary(storage)).toHaveLength(exampleStories.length);
+    expect(loadLibrary(storage)).toEqual([]);
   });
 });
 
@@ -128,14 +129,14 @@ describe('record', () => {
 });
 
 describe('removeStory', () => {
-  it('takes a sample out of the library, for good', () => {
-    expect(loadLibrary(storage).map((s) => s.id)).toContain('clairiere-lucioles');
+  it('takes a shipped story out of the library, for good', () => {
+    expect(withShipped().map((s) => s.id)).toContain('clairiere-lucioles');
 
     removeStory('clairiere-lucioles', storage);
 
-    // A sample is shipped with the app: without a record of the dismissal it
+    // A shipped story comes with the app: without a record of the dismissal it
     // would simply reappear on the next load.
-    expect(loadLibrary(storage).map((s) => s.id)).not.toContain('clairiere-lucioles');
+    expect(withShipped().map((s) => s.id)).not.toContain('clairiere-lucioles');
   });
 
   it('takes the run and the endings found with it', () => {
@@ -154,14 +155,14 @@ describe('removeStory', () => {
     removeStory('clairiere-lucioles', storage);
     saveImportedStory(clairiereStory, storage);
 
-    expect(loadLibrary(storage).map((s) => s.id)).toContain('clairiere-lucioles');
+    expect(withShipped().map((s) => s.id)).toContain('clairiere-lucioles');
   });
 
   it('leaves the other stories alone', () => {
     removeStory('clairiere-lucioles', storage);
 
-    const left = loadLibrary(storage).map((s) => s.id);
-    expect(left).toHaveLength(exampleStories.length - 1);
+    const left = withShipped().map((s) => s.id);
+    expect(left).toHaveLength(fixtureStories.length - 1);
     expect(left).not.toContain('clairiere-lucioles');
   });
 });

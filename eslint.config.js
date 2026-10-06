@@ -57,6 +57,25 @@ export default tseslint.config(
     },
   },
 
+  // The test stories ship in no app: only a test may import them.
+  {
+    files: ['apps/**/*.{ts,tsx}'],
+    ignores: ['**/*.test.{ts,tsx}', '**/test/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@embranche/story-format/fixtures',
+              message: 'Test stories are for tests: no app ships them.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
   // Apps React
   {
     files: ['apps/**/*.{ts,tsx}'],

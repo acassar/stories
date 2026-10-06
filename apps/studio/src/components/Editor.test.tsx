@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { clairiereStory } from '@embranche/story-format';
+import { clairiereStory } from '@embranche/story-format/fixtures';
 import type { Story } from '@embranche/story-format';
 
 import { Editor } from './Editor';
