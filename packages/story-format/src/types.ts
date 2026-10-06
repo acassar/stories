@@ -230,8 +230,48 @@ export interface StoryMeta {
   narrator?: Narrator;
 }
 
+/**
+ * The text of a scene in another language. Every field is optional: what is
+ * left out reads in the story's own language.
+ *
+ * Only what a reader sees is here. The working title, the links, the waits —
+ * everything that makes the graph — stay with the story, so a translation can
+ * never send a run anywhere its original would not.
+ */
+export interface SceneTranslation {
+  label?: string;
+  /**
+   * The lines of the scene, one string per block. Their number need not match
+   * the original: a block is a paragraph or a message, and another language
+   * may cut its sentences elsewhere.
+   */
+  blocks?: string[];
+  section?: SceneSection;
+  ending?: Partial<SceneEnding>;
+}
+
+/** The story told in another language, over the same graph. */
+export interface StoryTranslation {
+  title?: string;
+  blurb?: string;
+  tag?: string;
+  narrator?: Partial<Narrator>;
+  scenes?: Record<SceneId, SceneTranslation>;
+}
+
 export interface Story extends StoryMeta {
   formatVersion: number;
+  /**
+   * The language the story is written in, as a BCP 47 tag (`fr`, `en`,
+   * `pt-BR`). Absent means French, the language the apps are written in.
+   */
+  language?: string;
+  /**
+   * The same story in other languages, by language tag. A translation is a
+   * layer over the text and nothing else: same scenes, same links, same save —
+   * which is what lets a reader switch language in the middle of a run.
+   */
+  translations?: Record<string, StoryTranslation>;
   startSceneId: SceneId;
   /** Initial values of the game variables. */
   variables?: Record<VariableName, VariableValue>;
@@ -316,6 +356,10 @@ export type IssueCode =
   | 'player-in-book'
   /** A wait in a book: a book has no correspondent to wait for. */
   | 'wait-in-book'
+  /** A translation carries text for a scene the story does not have. */
+  | 'translation-unknown-scene'
+  /** A translation leaves some of the story's text in the original language. */
+  | 'translation-incomplete'
   /** Automatic chaining whose links are all conditional. */
   | 'no-default-link'
   /** Automatic chaining loop: the reading would never stop. */

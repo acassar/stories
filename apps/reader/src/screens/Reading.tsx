@@ -2,6 +2,7 @@ import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 
 import type { ColorMode } from '@embranche/design-tokens';
 import { waitStatus } from '@embranche/story-engine';
+import { languageOf } from '@embranche/story-format';
 import type { GameState, SceneSection, Story } from '@embranche/story-format';
 
 import { BackIcon, MoonIcon, PaceIcon, ReadOnIcon, SunIcon } from '../components/Icons';
@@ -287,6 +288,7 @@ export function Reading({
 
       <ul
         className={`thread${book ? ' thread--book' : ''}`}
+        lang={languageOf(story)}
         ref={thread}
         aria-live="polite"
         aria-label={book ? 'Récit' : 'Correspondance'}

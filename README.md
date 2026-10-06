@@ -69,7 +69,7 @@ The reader is mobile-first: open it in your browser inspector in phone mode, or 
 
 ```bash
 pnpm verify        # lint + typecheck + tests
-pnpm test          # 281 tests
+pnpm test          # 445 tests
 pnpm test:coverage # the same, with the thresholds on the core
 pnpm lint
 pnpm typecheck
@@ -90,6 +90,7 @@ This is **the contract** between the two apps: the studio writes, the reader rea
   "version": "2.0.0",
   "theme": "fantasy", // binding tint: fantasy | mystery | adventure | night
   "readingStyle": "correspondence", // optional: correspondence (default) | book
+  "language": "fr", // optional, BCP 47; absent means French
   "narrator": {
     "name": "Elara",
     "status": "la voix de la clairière",
@@ -221,6 +222,45 @@ of its scene, never ahead of it.
 changes nothing about where the story goes: the engine never reads `section`, and only the apps set
 it on screen. The studio edits it from the panel and shows it as a badge on the card, so the outline
 of the story can be read off the graph.
+
+### Languages
+
+A story is written in one language (`language`, a BCP 47 tag; absent, French) and may carry others
+in `translations`, keyed by tag:
+
+```jsonc
+"translations": {
+  "en": {
+    "title": "The Firefly Glade",
+    "blurb": "One night, the forest behind your house lights up.",
+    "scenes": {
+      "start": { "blocks": ["The path sinks under ferns taller than you."] },
+      "c-lucioles": { "label": "Follow the fireflies", "blocks": ["I follow them."] }
+    }
+  }
+}
+```
+
+**A translation is a layer over the words, never a second story.** It holds only what a reader sees —
+the lines, the button labels, the chapter titles, the endings, the title, blurb, tag and narrator — and
+nothing that shapes the graph. The scenes, links, conditions and waits exist once, so a run is the
+same run in every language: the save names scenes and links, not sentences, and a reader can switch
+language in the middle of a run and read on from where they stopped. `localizeStory(story, tag)`
+returns the story as it reads in that language; the engine plays it without knowing.
+
+Whatever a translation leaves out reads in the original. A translated scene may cut its lines into
+a different number of blocks: another language puts its sentences elsewhere.
+
+The reader shows a language switch on the story sheet as soon as a story offers more than one
+language, and remembers the choice per story. With no choice made, it opens the story in the first
+language the browser asks for that the story offers, its own otherwise. The app around the story
+stays in French.
+
+`validateStory` warns, without blocking, about text given to a scene the story does not have
+(`translation-unknown-scene`), about a translation leaving scenes in the original — once per
+language, not per scene (`translation-incomplete`) — and about a token in a translated line naming a
+variable nobody sets. The studio carries a scene's translations along when it is renamed or deleted;
+translations themselves are written in the JSON.
 
 ### Variables inside the text
 
@@ -397,7 +437,7 @@ The reader revalidates the document and flatly refuses an inconsistent story.
 
 ## Tests
 
-254 tests, all green.
+445 tests, all green.
 
 | Suite          | What it covers                                                                   |
 | -------------- | -------------------------------------------------------------------------------- |

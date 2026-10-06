@@ -2,14 +2,20 @@ import { useState } from 'react';
 
 import { resolveTokens } from '@embranche/design-tokens';
 import type { ColorMode, StoryTheme } from '@embranche/design-tokens';
+import { languageOf } from '@embranche/story-format';
 import type { Story } from '@embranche/story-format';
 
 import { BackIcon, MoonIcon, SunIcon, ThemeIcon } from '../components/Icons';
 import type { LayoutKind } from '../hooks/useLayoutKind';
+import { languageName } from '../lib/language';
 import { countEndings } from '../lib/library';
 
 interface Props {
+  /** The story in the language it is read in. */
   story: Story;
+  /** Every language the story can be read in; the switch shows only beyond one. */
+  languages: string[];
+  onLanguage: (language: string) => void;
   endingsSeen: number;
   /** True when a run is in progress on this story. */
   hasSave: boolean;
@@ -28,6 +34,8 @@ interface Props {
 /** Story sheet: what is known before opening the book. */
 export function Detail({
   story,
+  languages,
+  onLanguage,
   endingsSeen,
   hasSave,
   away,
@@ -82,6 +90,29 @@ export function Detail({
         <div className="detail__body">
           <p className="detail__author">par {story.author ?? 'anonyme'}</p>
           {story.blurb && <p className="detail__blurb">{story.blurb}</p>}
+
+          {/* A run in progress survives the switch and reads on in the new
+              language: a translation changes the words, never a scene. */}
+          {languages.length > 1 && (
+            <div className="languages" role="radiogroup" aria-label="Langue du récit">
+              {languages.map((language) => {
+                const on = language === languageOf(story);
+                return (
+                  <button
+                    key={language}
+                    type="button"
+                    role="radio"
+                    lang={language}
+                    aria-checked={on}
+                    className={`pace__option${on ? ' pace__option--on' : ''}`}
+                    onClick={() => onLanguage(language)}
+                  >
+                    {languageName(language)}
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           <div className="stats">
             <div className="stats__item">

@@ -130,6 +130,29 @@ export const narratorSchema = z.object({
   awayStatus: z.string().optional(),
 });
 
+/** A BCP 47 tag, lowercase primary subtag: `fr`, `en`, `pt-BR`. */
+export const languageTagSchema = z
+  .string()
+  .regex(
+    /^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$/,
+    'langue : une etiquette BCP 47, comme « fr » ou « en »',
+  );
+
+export const sceneTranslationSchema = z.object({
+  label: z.string().optional(),
+  blocks: z.array(z.string()).optional(),
+  section: sceneSectionSchema.optional(),
+  ending: sceneEndingSchema.partial().optional(),
+});
+
+export const storyTranslationSchema = z.object({
+  title: z.string().min(1).optional(),
+  blurb: z.string().optional(),
+  tag: z.string().optional(),
+  narrator: narratorSchema.partial().optional(),
+  scenes: z.record(sceneTranslationSchema).optional(),
+});
+
 export const storySchema = z.object({
   // Older documents are not rejected: they go through `migrateStory` before
   // reaching this point, so validation always runs on the current shape.
@@ -145,6 +168,8 @@ export const storySchema = z.object({
   estimatedMinutes: z.number().int().min(0).optional(),
   status: storyStatusSchema.optional(),
   narrator: narratorSchema.optional(),
+  language: languageTagSchema.optional(),
+  translations: z.record(languageTagSchema, storyTranslationSchema).optional(),
   startSceneId: identifier,
   variables: z.record(variableValueSchema).optional(),
   inventory: z.record(z.number().int().min(0)).optional(),

@@ -10,6 +10,7 @@ import { textTokens } from './interpolate.js';
 import { migrateStory } from './migrate.js';
 import { findAutoLoops, readingStyleOf } from './scenes.js';
 import { gameStateSchema, storySchema } from './schema.js';
+import { untranslatedScenes } from './translate.js';
 import type {
   Condition,
   Effect,
@@ -57,7 +58,11 @@ export function validateStory(input: unknown): ValidationResult {
   if (!shape.valid) return shape;
 
   const story = input as Story;
-  const issues: ValidationIssue[] = [...checkGraph(story), ...checkVariables(story)];
+  const issues: ValidationIssue[] = [
+    ...checkGraph(story),
+    ...checkVariables(story),
+    ...checkTranslations(story),
+  ];
 
   return { valid: !issues.some((i) => i.severity === 'error'), issues };
 }
@@ -350,13 +355,19 @@ export function findUnreachableScenes(story: Story): SceneId[] {
 // Variables
 // ---------------------------------------------------------------------------
 
-function checkVariables(story: Story): ValidationIssue[] {
+/** Variables the story starts with or writes somewhere — the ones a text may name. */
+function declaredVariables(story: Story): Set<VariableName> {
   const declared = new Set<VariableName>(Object.keys(story.variables ?? {}));
   for (const { link } of allLinks(story)) {
     for (const effect of link.effects ?? []) {
       if ('variable' in effect) declared.add(effect.variable);
     }
   }
+  return declared;
+}
+
+function checkVariables(story: Story): ValidationIssue[] {
+  const declared = declaredVariables(story);
 
   const issues: ValidationIssue[] = [];
   for (const { scene, link } of allLinks(story)) {
@@ -391,6 +402,60 @@ function checkVariables(story: Story): ValidationIssue[] {
         code: 'unknown-variable-in-text',
         sceneId: scene.id,
         message: `Le texte de « ${scene.title || scene.id} » appelle « ${name} », qui n'est jamais initialisee ni ecrite : le lecteur affichera les accolades telles quelles.`,
+      });
+    }
+  }
+
+  return issues;
+}
+
+// ---------------------------------------------------------------------------
+// Translations
+// ---------------------------------------------------------------------------
+
+/**
+ * Nothing here blocks: a translation half done still reads, the rest in the
+ * original. Missing text is reported once per language rather than per scene —
+ * a translation just begun would otherwise bury every other issue of the story.
+ */
+function checkTranslations(story: Story): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+  const declared = declaredVariables(story);
+
+  for (const [language, translation] of Object.entries(story.translations ?? {})) {
+    for (const [id, text] of Object.entries(translation.scenes ?? {})) {
+      const scene = story.scenes[id];
+      if (!scene) {
+        issues.push({
+          severity: 'warning',
+          code: 'translation-unknown-scene',
+          message: `La traduction « ${language} » donne un texte a « ${id} », une scene que l'histoire n'a pas.`,
+        });
+        continue;
+      }
+
+      const texts = [...(text.blocks ?? [])];
+      if (text.label) texts.push(text.label);
+      if (text.ending?.name) texts.push(text.ending.name);
+      if (text.ending?.blurb) texts.push(text.ending.blurb);
+      for (const name of new Set(texts.flatMap(textTokens))) {
+        if (declared.has(name)) continue;
+        issues.push({
+          severity: 'warning',
+          code: 'unknown-variable-in-text',
+          sceneId: id,
+          message: `La traduction « ${language} » de « ${scene.title || id} » appelle « ${name} », qui n'est jamais initialisee ni ecrite : le lecteur affichera les accolades telles quelles.`,
+        });
+      }
+    }
+
+    const missing = untranslatedScenes(story, translation);
+    if (missing.length > 0) {
+      issues.push({
+        severity: 'warning',
+        code: 'translation-incomplete',
+        sceneId: missing[0],
+        message: `La traduction « ${language} » laisse ${missing.length} scene${missing.length > 1 ? 's' : ''} dans la langue d'origine.`,
       });
     }
   }

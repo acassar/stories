@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { resolveShell, tokensToCssVars } from '@embranche/design-tokens';
 import type { StoryTheme } from '@embranche/design-tokens';
 import { waitStatus } from '@embranche/story-engine';
-import { validateStory } from '@embranche/story-format';
+import { localizeStory, storyLanguages, validateStory } from '@embranche/story-format';
 import type { GameState, Story } from '@embranche/story-format';
 
 import { Rail } from './components/Rail';
@@ -12,6 +12,7 @@ import { useColorMode } from './hooks/useColorMode';
 import { useLayoutKind } from './hooks/useLayoutKind';
 import { useSpeed } from './hooks/useSpeed';
 import { awaySentence } from './lib/away';
+import { loadLanguages, pickLanguage, saveLanguage } from './lib/language';
 import {
   clearSave,
   loadEndings,
@@ -39,7 +40,8 @@ export function App() {
   const [pace, setPace] = useSpeed();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const layout = useLayoutKind();
-  const [stories, setStories] = useState<Story[]>(() => loadLibrary());
+  const [library, setLibrary] = useState<Story[]>(() => loadLibrary());
+  const [chosenLanguages, setChosenLanguages] = useState(() => loadLanguages());
   const [endings, setEndings] = useState<Record<string, string[]>>(() => loadEndings());
   const [screen, setScreen] = useState<Screen>('library');
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -52,13 +54,27 @@ export function App() {
   const [session, setSession] = useState(0);
   const [resumeState, setResumeState] = useState<GameState | null>(null);
 
+  /*
+   * Every screen is handed each story in the language it is read in. The
+   * engine, the saves and the record never see the difference: a translation
+   * changes the words, not a single scene or link.
+   */
+  const stories = useMemo(
+    () =>
+      library.map((item) =>
+        localizeStory(item, pickLanguage(item, chosenLanguages[item.id], navigator.languages)),
+      ),
+    [library, chosenLanguages],
+  );
+
+  const original = activeId ? library.find((item) => item.id === activeId) : undefined;
   const story = activeId ? stories.find((item) => item.id === activeId) : undefined;
   const theme = (story?.theme ?? 'night') as StoryTheme;
   const tokens = useMemo(() => resolveShell(theme, mode), [theme, mode]);
 
   // Saves are kept up to date at the only three moments they move: a run
   // advances, a run is restarted, a story arrives.
-  const [saves, setSaves] = useState<Record<string, GameState | null>>(() => readSaves(stories));
+  const [saves, setSaves] = useState<Record<string, GameState | null>>(() => readSaves(library));
 
   const activeIdRef = useRef(activeId);
   activeIdRef.current = activeId;
@@ -102,10 +118,11 @@ export function App() {
   const handleRemove = (storyId: string) => {
     const story = stories.find((item) => item.id === storyId);
     removeStory(storyId);
-    const library = loadLibrary();
-    setStories(library);
-    setSaves(readSaves(library));
+    const remaining = loadLibrary();
+    setLibrary(remaining);
+    setSaves(readSaves(remaining));
     setEndings(loadEndings());
+    setChosenLanguages(loadLanguages());
     setActiveId(null);
     setScreen('library');
     setToast(`« ${story?.title ?? 'Ce récit'} » a quitté ta bibliothèque.`);
@@ -127,9 +144,9 @@ export function App() {
     }
     const imported = data as Story;
     saveImportedStory(imported);
-    const library = loadLibrary();
-    setStories(library);
-    setSaves(readSaves(library));
+    const refreshed = loadLibrary();
+    setLibrary(refreshed);
+    setSaves(readSaves(refreshed));
     setToast(`« ${imported.title} » ajoutée à ta bibliothèque.`);
   };
 
@@ -165,6 +182,8 @@ export function App() {
         {screen === 'detail' && story && (
           <Detail
             story={story}
+            languages={original ? storyLanguages(original) : []}
+            onLanguage={(language) => setChosenLanguages(saveLanguage(story.id, language))}
             endingsSeen={endings[story.id]?.length ?? 0}
             hasSave={Boolean(saves[story.id])}
             away={awayLine(story, saves[story.id], pace)}

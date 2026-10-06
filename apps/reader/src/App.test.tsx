@@ -49,6 +49,7 @@ describe('Embranche reader', () => {
 
   afterEach(() => {
     resetMedia();
+    vi.restoreAllMocks();
   });
 
   async function openClairiere(user: ReturnType<typeof userEvent.setup>) {
@@ -327,6 +328,52 @@ describe('Embranche reader', () => {
     const resume = await screen.findByRole('button', { name: 'Reprendre la partie' });
     expect(resume).toBeInTheDocument();
     expect(loadSave('clairiere-lucioles')?.currentSceneId).toBe('arbre');
+  });
+
+  it('offers no language switch for a story written in one language', async () => {
+    const user = userEvent.setup();
+    await openClairiere(user);
+    expect(screen.queryByRole('radiogroup', { name: 'Langue du récit' })).not.toBeInTheDocument();
+  });
+
+  /*
+   * A translation is a layer over the words: the run started in French reads
+   * on in English, from the scene it stopped on.
+   */
+  it('switches the language of a story, and keeps the run', async () => {
+    const bilingual: Story = {
+      ...clairiereStory,
+      translations: {
+        en: {
+          title: 'The Firefly Glade',
+          scenes: {
+            start: { blocks: ['The path sinks under ferns taller than you.'] },
+            'c-arbre': { label: 'Climb the old oak' },
+            arbre: { blocks: ['A castle floats among the clouds.'] },
+          },
+        },
+      },
+    };
+    saveImportedStory(bilingual);
+    // A French browser: with no choice made, the story opens in French.
+    vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['fr-FR']);
+    const user = userEvent.setup();
+    await openClairiere(user);
+    await user.click(screen.getByRole('button', { name: 'Commencer l’aventure' }));
+    await user.click(screen.getByRole('button', { name: 'Grimper au vieux chêne' }));
+    await user.click(screen.getByRole('button', { name: 'Retour à la fiche du récit' }));
+
+    const languages = screen.getByRole('radiogroup', { name: 'Langue du récit' });
+    expect(within(languages).getByRole('radio', { name: 'Français' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+    await user.click(within(languages).getByRole('radio', { name: 'English' }));
+    expect(screen.getByRole('heading', { name: 'The Firefly Glade' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Reprendre la partie' }));
+    expect(await screen.findByText('A castle floats among the clouds.')).toBeInTheDocument();
+    expect(screen.getByText('The path sinks under ferns taller than you.')).toBeInTheDocument();
   });
 
   it('reads on a wide screen, with the rail instead of the topbar', async () => {

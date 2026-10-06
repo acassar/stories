@@ -65,6 +65,17 @@ describe('storyDoc', () => {
     expect(validateStory(story).valid).toBe(true);
   });
 
+  it('carries the translated text of a node along with it', () => {
+    const story: Story = {
+      ...clone(),
+      translations: { en: { scenes: { start: { blocks: ['The path.'] } } } },
+    };
+    expect(renameSceneId(story, 'start', 'sentier').translations?.en?.scenes).toEqual({
+      sentier: { blocks: ['The path.'] },
+    });
+    expect(removeScene(story, 'start').translations?.en?.scenes).toEqual({});
+  });
+
   it('moves the start scene when it is deleted', () => {
     const story = removeScene(clone(), 'start');
     expect(story.startSceneId).not.toBe('start');

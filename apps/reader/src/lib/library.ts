@@ -13,6 +13,8 @@ import {
 } from '@embranche/story-format';
 import type { GameState, Story } from '@embranche/story-format';
 
+import { forgetLanguage } from './language';
+
 const IMPORTED_KEY = 'embranche.reader.stories.v1';
 const SAVES_KEY = 'embranche.reader.saves.v1';
 const ENDINGS_KEY = 'embranche.reader.endings.v1';
@@ -72,6 +74,7 @@ export function removeStory(storyId: string, storage: Storage = window.localStor
   storage.setItem(REMOVED_KEY, JSON.stringify([...removed]));
 
   clearSave(storyId, storage);
+  forgetLanguage(storyId, storage);
   const endings = loadEndings(storage);
   delete endings[storyId];
   storage.setItem(ENDINGS_KEY, JSON.stringify(endings));

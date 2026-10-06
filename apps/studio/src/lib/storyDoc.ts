@@ -107,7 +107,27 @@ export function removeScene(story: Story, sceneId: SceneId): Story {
   const remaining = Object.keys(scenes);
   const startSceneId =
     story.startSceneId === sceneId ? (remaining[0] ?? story.startSceneId) : story.startSceneId;
-  return { ...story, scenes, startSceneId };
+  return { ...moveTranslations(story, sceneId, null), scenes, startSceneId };
+}
+
+/**
+ * Carries the translated text of a node along with it: to its new id on a
+ * rename, out of the story on a deletion. Translations are keyed by scene id,
+ * and text left under an id that no longer exists would only ever be a warning.
+ */
+function moveTranslations(story: Story, from: SceneId, to: SceneId | null): Story {
+  if (!story.translations) return story;
+  const translations: NonNullable<Story['translations']> = {};
+  for (const [language, translation] of Object.entries(story.translations)) {
+    const text = translation.scenes?.[from];
+    if (!translation.scenes || !text) {
+      translations[language] = translation;
+      continue;
+    }
+    const { [from]: _moved, ...scenes } = translation.scenes;
+    translations[language] = { ...translation, scenes: to ? { ...scenes, [to]: text } : scenes };
+  }
+  return { ...story, translations };
 }
 
 /** Deletes several nodes at once — one operation, therefore one undo step. */
@@ -359,7 +379,7 @@ export function renameSceneId(story: Story, from: SceneId, rawTo: string): Story
     else scenes[id] = retargeted;
   }
   return {
-    ...story,
+    ...moveTranslations(story, from, to),
     scenes,
     startSceneId: story.startSceneId === from ? to : story.startSceneId,
   };
