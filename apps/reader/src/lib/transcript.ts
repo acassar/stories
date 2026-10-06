@@ -8,7 +8,7 @@
  */
 
 import { interpolate, sceneMessages, speakerOf } from '@embranche/story-format';
-import type { GameState, Story } from '@embranche/story-format';
+import type { GameState, SceneSection, Story } from '@embranche/story-format';
 import { variablesAlong } from '@embranche/story-engine';
 import type { ResolvedScene } from '@embranche/story-engine';
 
@@ -17,6 +17,12 @@ export interface Message {
   key: string;
   text: string;
   fromPlayer: boolean;
+  /**
+   * A new part of the story opens just before this message. Only ever on the
+   * first message of a scene, so the break arrives with the scene's text and
+   * not ahead of it.
+   */
+  section?: SceneSection;
 }
 
 export interface TranscriptOptions {
@@ -47,6 +53,7 @@ export function buildTranscript(
         key: `${step}-${entry.sceneId}-${index}`,
         text: interpolate(block.text, before[step] ?? state.variables),
         fromPlayer,
+        ...(index === 0 && past.section && { section: past.section }),
       });
     });
   });
@@ -62,11 +69,13 @@ export function buildTranscript(
    * rather than being torn down and rebuilt, and their arrival animation does
    * not play a second time.
    */
+  const section = story.scenes[scene.id]?.section;
   scene.blocks.slice(0, revealed).forEach((block, index) => {
     messages.push({
       key: `${state.history.length}-${scene.id}-${index}`,
       text: block.text,
       fromPlayer: scene.speaker === 'player',
+      ...(index === 0 && section && { section }),
     });
   });
 

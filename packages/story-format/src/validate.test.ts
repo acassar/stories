@@ -309,6 +309,29 @@ describe('helpers', () => {
   });
 });
 
+describe('sections', () => {
+  it('survive a JSON round-trip, titled or not, and pass validation', () => {
+    const story = clone(clairiereStory);
+    story.scenes.lucioles!.section = { title: 'Chapitre II' };
+    story.scenes['c-franchir']!.section = {};
+
+    const back = JSON.parse(JSON.stringify(story)) as Story;
+    const result = validateStory(back);
+    expect(result.valid).toBe(true);
+    expect(result.issues).toEqual(validateStory(clairiereStory).issues);
+    expect(parseStory(back).scenes.lucioles?.section).toEqual({ title: 'Chapitre II' });
+    expect(parseStory(back).scenes['c-franchir']?.section).toEqual({});
+  });
+
+  it('rejects a title that is not text as a malformed document', () => {
+    const story = clone(clairiereStory) as unknown as {
+      scenes: Record<string, { section?: unknown }>;
+    };
+    story.scenes.start!.section = { title: 2 };
+    expect(validateStoryShape(story).valid).toBe(false);
+  });
+});
+
 describe('waits', () => {
   it('survives a JSON round-trip and passes validation', () => {
     const story = clone(clairiereStory);

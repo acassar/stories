@@ -254,6 +254,45 @@ describe('Embranche reader', () => {
     expect(screen.getByRole('button', { name: 'Relire le récit' })).toBeInTheDocument();
   });
 
+  it('opens a part of the story where its author asked for one', async () => {
+    const withSection = (section: { title?: string }) => ({
+      ...clairiereStory.scenes,
+      lucioles: { ...clairiereStory.scenes.lucioles!, section },
+    });
+    saveImportedStory({
+      ...clairiereStory,
+      id: 'clairiere-chapitres',
+      title: 'La Clairière en chapitres',
+      readingStyle: 'book',
+      scenes: withSection({ title: 'Chapitre II' }),
+    });
+    saveImportedStory({
+      ...clairiereStory,
+      id: 'clairiere-coupee',
+      title: 'La Clairière coupée',
+      scenes: withSection({}),
+    });
+    const user = userEvent.setup();
+    render(<App />);
+
+    // A book: a chapter heading, between two paragraphs.
+    await user.click(screen.getByRole('button', { name: /La Clairière en chapitres/ }));
+    await user.click(screen.getByRole('button', { name: 'Commencer l’aventure' }));
+    expect(screen.queryByRole('heading', { name: 'Chapitre II' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Suivre les lucioles' }));
+    const page = screen.getByLabelText('Récit');
+    expect(await within(page).findByRole('heading', { name: 'Chapitre II' })).toBeInTheDocument();
+
+    // A correspondence, untitled: a plain break across the thread.
+    await user.click(screen.getByRole('button', { name: 'Retour à la fiche du récit' }));
+    await user.click(screen.getByRole('button', { name: 'Retour à la bibliothèque' }));
+    await user.click(await screen.findByRole('button', { name: /La Clairière coupée/ }));
+    await user.click(screen.getByRole('button', { name: 'Commencer l’aventure' }));
+    await user.click(await screen.findByRole('button', { name: 'Suivre les lucioles' }));
+    const thread = screen.getByLabelText('Correspondance');
+    expect(await within(thread).findByRole('separator')).toBeInTheDocument();
+  });
+
   it('only shows the conditional choice once its condition holds', async () => {
     const user = userEvent.setup();
     await openClairiere(user);

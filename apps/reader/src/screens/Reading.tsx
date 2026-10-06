@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 
 import type { ColorMode } from '@embranche/design-tokens';
 import { waitStatus } from '@embranche/story-engine';
-import type { GameState, Story } from '@embranche/story-format';
+import type { GameState, SceneSection, Story } from '@embranche/story-format';
 
 import { BackIcon, MoonIcon, PaceIcon, ReadOnIcon, SunIcon } from '../components/Icons';
 import { usePrefersReducedMotion } from '../hooks/useColorMode';
@@ -217,6 +217,7 @@ export function Reading({
    * while it grows — a screen reader would otherwise read it out letter by
    * letter — and joins the live region whole.
    */
+  const section = story.scenes[scene.id]?.section;
   const lines =
     book && !reveal.done && reveal.written > 0
       ? [
@@ -227,6 +228,8 @@ export function Reading({
               .slice(0, reveal.written)
               .join(''),
             fromPlayer: scene.speaker === 'player',
+            // The break opens with the first line, as the pen starts it.
+            ...(reveal.revealed === 0 && section && { section }),
             writing: true,
           },
         ]
@@ -292,28 +295,27 @@ export function Reading({
         onClick={reveal.skip}
         onScroll={book ? measure : undefined}
       >
-        {lines.map((message) =>
-          book ? (
-            // Prose, one paragraph per block, the player's answers written
-            // into it rather than sent.
-            <li
-              key={message.key}
-              className={`prose${message.fromPlayer ? ' prose--player' : ''}${'writing' in message ? ' prose--writing' : ''}`}
-              aria-hidden={'writing' in message ? true : undefined}
-            >
-              {message.text}
-            </li>
-          ) : (
-            <li
-              key={message.key}
-              className={`bubble-row${message.fromPlayer ? ' bubble-row--player' : ''}`}
-            >
-              <div className={`bubble${message.fromPlayer ? ' bubble--player' : ''}`}>
+        {lines.map((message) => (
+          <Fragment key={message.key}>
+            {message.section && <PartBreak section={message.section} book={book} />}
+            {book ? (
+              // Prose, one paragraph per block, the player's answers written
+              // into it rather than sent.
+              <li
+                className={`prose${message.fromPlayer ? ' prose--player' : ''}${'writing' in message ? ' prose--writing' : ''}`}
+                aria-hidden={'writing' in message ? true : undefined}
+              >
                 {message.text}
-              </div>
-            </li>
-          ),
-        )}
+              </li>
+            ) : (
+              <li className={`bubble-row${message.fromPlayer ? ' bubble-row--player' : ''}`}>
+                <div className={`bubble${message.fromPlayer ? ' bubble--player' : ''}`}>
+                  {message.text}
+                </div>
+              </li>
+            )}
+          </Fragment>
+        ))}
 
         {/*
           The silence is shown where the messages are, not only in the header:
@@ -394,5 +396,20 @@ export function Reading({
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Where a new part of the story opens: a chapter heading when it has a title,
+ * a plain break otherwise. A book sets it on the page, between two paragraphs;
+ * a correspondence sets it across the thread, the way a messaging app marks a
+ * new day.
+ */
+function PartBreak({ section, book }: { section: SceneSection; book: boolean }) {
+  const title = section.title?.trim();
+  return (
+    <li className={`part${book ? ' part--book' : ''}`} role={title ? undefined : 'separator'}>
+      {title ? <h2 className="part__title">{title}</h2> : <span aria-hidden="true">⁂</span>}
+    </li>
   );
 }

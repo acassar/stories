@@ -1188,6 +1188,37 @@ body {
 }
 
 /*
+  A new part of the story. In a correspondence it runs across the thread, like
+  the day a messaging app marks between two messages; on the page of a book it
+  is a chapter heading, or the three stars of a scene break.
+*/
+.part {
+  list-style: none;
+  margin: 14px auto;
+  color: var(--emb-sub);
+  font: 500 13px var(--emb-font-ui);
+  text-align: center;
+  letter-spacing: 0.3em;
+}
+.part__title {
+  margin: 0;
+  font: inherit;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.part--book {
+  margin: 2em 0 1.4em;
+  font: 400 17px var(--emb-font-prose);
+  letter-spacing: 0.6em;
+}
+.part--book .part__title {
+  font: italic 600 22px/1.25 var(--emb-font-prose);
+  color: var(--emb-ink);
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+
+/*
   The pen, at the end of the line it is writing. It takes the place of the
   space that follows a written line.
 */

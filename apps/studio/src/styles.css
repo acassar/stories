@@ -723,6 +723,14 @@ body {
   background: #d9e6f2;
   color: #29506f;
 }
+.scene-node__badge--section {
+  background: #efe3c6;
+  color: #6b4f1d;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .scene-node__badge--start {
   background: #ded4f6;
   color: #4c2f8f;

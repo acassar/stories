@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 
 import { resolveShell, tokensToCssVars } from '@embranche/design-tokens';
 import type { ColorMode, StoryTheme } from '@embranche/design-tokens';
 import { StoryEngine } from '@embranche/story-engine';
 import { sceneMessages, speakerOf, validateStory } from '@embranche/story-format';
-import type { GameState, Story } from '@embranche/story-format';
+import type { GameState, SceneSection, Story } from '@embranche/story-format';
 
 import { Overlay } from './Overlay';
 
@@ -186,44 +186,52 @@ function PlaytestSession({ story, fromSceneId, mode, onToggleMode }: SessionProp
           {book && (
             <div style={{ font: '400 16px/1.65 var(--emb-font-prose)', color: tokens.ink }}>
               {transcript.map((message, index) => (
-                <p
-                  key={index}
-                  style={{
-                    margin: '0 0 0.8em',
-                    ...(message.fromPlayer
-                      ? { fontStyle: 'italic', color: tokens.accentText }
-                      : undefined),
-                  }}
-                >
-                  {message.text}
-                </p>
+                <Fragment key={index}>
+                  {message.section && (
+                    <PartBreak title={message.section.title} book color={tokens.sub} />
+                  )}
+                  <p
+                    style={{
+                      margin: '0 0 0.8em',
+                      ...(message.fromPlayer
+                        ? { fontStyle: 'italic', color: tokens.accentText }
+                        : undefined),
+                    }}
+                  >
+                    {message.text}
+                  </p>
+                </Fragment>
               ))}
             </div>
           )}
 
           {!book &&
             transcript.map((message, index) => (
-              <div
-                key={index}
-                style={{
-                  display: 'flex',
-                  justifyContent: message.fromPlayer ? 'flex-end' : 'flex-start',
-                }}
-              >
+              <Fragment key={index}>
+                {message.section && <PartBreak title={message.section.title} color={tokens.sub} />}
                 <div
                   style={{
-                    maxWidth: '78%',
-                    background: message.fromPlayer ? tokens.accent : tokens.panel,
-                    color: message.fromPlayer ? tokens.onAccent : tokens.ink,
-                    border: `1px solid ${message.fromPlayer ? tokens.accent : tokens.line}`,
-                    font: `${message.fromPlayer ? '400' : 'italic 400'} 15px/1.48 var(--emb-font-prose)`,
-                    padding: '10px 13px',
-                    borderRadius: message.fromPlayer ? '16px 16px 4px 16px' : '4px 16px 16px 16px',
+                    display: 'flex',
+                    justifyContent: message.fromPlayer ? 'flex-end' : 'flex-start',
                   }}
                 >
-                  {message.text}
+                  <div
+                    style={{
+                      maxWidth: '78%',
+                      background: message.fromPlayer ? tokens.accent : tokens.panel,
+                      color: message.fromPlayer ? tokens.onAccent : tokens.ink,
+                      border: `1px solid ${message.fromPlayer ? tokens.accent : tokens.line}`,
+                      font: `${message.fromPlayer ? '400' : 'italic 400'} 15px/1.48 var(--emb-font-prose)`,
+                      padding: '10px 13px',
+                      borderRadius: message.fromPlayer
+                        ? '16px 16px 4px 16px'
+                        : '4px 16px 16px 16px',
+                    }}
+                  >
+                    {message.text}
+                  </div>
                 </div>
-              </div>
+              </Fragment>
             ))}
 
           {scene.isEnding && scene.ending && (
@@ -314,6 +322,8 @@ function PlaytestSession({ story, fromSceneId, mode, onToggleMode }: SessionProp
 interface TranscriptMessage {
   text: string;
   fromPlayer: boolean;
+  /** A new part of the story opens just before this message. */
+  section?: SceneSection;
 }
 
 /**
@@ -330,10 +340,37 @@ function buildTranscript(story: Story, state: GameState): TranscriptMessage[] {
     const scene = story.scenes[sceneId];
     if (!scene) return;
     const fromPlayer = speakerOf(scene, story) === 'player';
-    for (const block of sceneMessages(scene)) messages.push({ text: block.text, fromPlayer });
+    sceneMessages(scene).forEach((block, index) =>
+      messages.push({
+        text: block.text,
+        fromPlayer,
+        ...(index === 0 && scene.section && { section: scene.section }),
+      }),
+    );
   };
 
   for (const entry of state.history) push(entry.sceneId);
   push(state.currentSceneId);
   return messages;
+}
+
+/** Where a new part opens: its title as a chapter heading, or a plain break. */
+function PartBreak({ title, book, color }: { title?: string; book?: boolean; color: string }) {
+  const heading = title?.trim();
+  return (
+    <div
+      role={heading ? undefined : 'separator'}
+      style={{
+        textAlign: 'center',
+        color,
+        margin: book ? '1.6em 0 1.2em' : '6px 0',
+        font: book
+          ? `${heading ? 'italic 600 19px' : '400 16px'} var(--emb-font-prose)`
+          : '500 12px var(--emb-font-ui)',
+        letterSpacing: heading ? undefined : '0.5em',
+      }}
+    >
+      {heading ?? <span aria-hidden="true">⁂</span>}
+    </div>
+  );
 }

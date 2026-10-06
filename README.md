@@ -104,6 +104,7 @@ This is **the contract** between the two apps: the studio writes, the reader rea
       "title": "Le sentier",
       "position": { "x": 400, "y": 0 }, // node position in the studio
       "waitMinutes": 720, // real minutes of silence before this scene speaks
+      "section": { "title": "Chapitre I" }, // optional: a new part opens here
       "blocks": [{ "text": "Le sentier s'enfonce sous les fougères." }],
       "next": [
         {
@@ -207,6 +208,19 @@ not be used.
 Notifications are deliberately **not** part of this: nothing on the web can wake a sleeping browser
 from the inside, so telling someone their correspondent is back needs a push service, and that is a
 platform decision this feature does not depend on.
+
+### Parts and chapters
+
+A scene may declare `section`: a new part of the story opens just before it. With a `title`, the
+part is a chapter and the title is its heading; without one, it is a plain break. A book sets it on
+the page — a chapter heading, or the three stars of a scene break — and a correspondence sets it
+across the thread, the way a messaging app marks a new day. The break arrives with the first message
+of its scene, never ahead of it.
+
+**It is layout, so it is a field, not a node kind.** A kind drives the chaining, and a part break
+changes nothing about where the story goes: the engine never reads `section`, and only the apps set
+it on screen. The studio edits it from the panel and shows it as a badge on the card, so the outline
+of the story can be read off the graph.
 
 ### Variables inside the text
 

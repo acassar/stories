@@ -80,6 +80,19 @@ export function SceneNode({ data, selected }: NodeProps<SceneFlowNode>) {
             ⏱ {formatWait(wait)}
           </span>
         )}
+        {/* The parts of a story are its outline: they show on the canvas. */}
+        {scene.section && (
+          <span
+            className="scene-node__badge scene-node__badge--section"
+            title={
+              scene.section.title
+                ? `Nouvelle partie : ${scene.section.title}`
+                : 'Nouvelle partie, sans titre'
+            }
+          >
+            § {scene.section.title || 'PARTIE'}
+          </span>
+        )}
         {isStart && <span className="scene-node__badge scene-node__badge--start">DÉPART</span>}
         {scene.ending && <span className="scene-node__badge scene-node__badge--ending">FIN</span>}
       </div>

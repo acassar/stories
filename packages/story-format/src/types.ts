@@ -146,6 +146,20 @@ export interface SceneMedia {
   portrait?: string;
 }
 
+/**
+ * A new part of the story opens on this scene.
+ *
+ * Pure layout: the engine never reads it, and each reading style sets it its
+ * own way — a break on the page of a book, a divider in a correspondence. It
+ * sits on the scene rather than in a node of its own because a node kind
+ * drives the chaining, and a part break changes nothing about where the story
+ * goes.
+ */
+export interface SceneSection {
+  /** Heading of the part — a chapter. Absent: a plain break. */
+  title?: string;
+}
+
 export interface Scene {
   id: SceneId;
   kind: SceneKind;
@@ -178,6 +192,8 @@ export interface Scene {
    * that, and nothing here should.
    */
   waitMinutes?: number;
+  /** A new part opens here: a break before the scene, a chapter if titled. */
+  section?: SceneSection;
   ending?: SceneEnding;
   media?: SceneMedia;
   /** Free-form labels, for filtering on the studio side. */

@@ -100,6 +100,10 @@ export const sceneMediaSchema = z.object({
 
 export const positionSchema = z.object({ x: z.number(), y: z.number() });
 
+export const sceneSectionSchema = z.object({
+  title: z.string().optional(),
+});
+
 /**
  * The label is not required for `choice` nodes here: a button without text is a
  * story inconsistency, not a malformed document, and the studio must be able to
@@ -114,6 +118,7 @@ export const sceneSchema = z.object({
   next: z.array(linkSchema),
   position: positionSchema,
   waitMinutes: z.number().int().min(0).optional(),
+  section: sceneSectionSchema.optional(),
   ending: sceneEndingSchema.optional(),
   media: sceneMediaSchema.optional(),
   tags: z.array(z.string()).optional(),

@@ -60,6 +60,25 @@ describe('Inspector', () => {
     expect(screen.getByTestId('selection')).toHaveTextContent('la-clairiere');
   });
 
+  it('opens a part on a node, titles it, and takes it back', () => {
+    render(<Harness selectedIds={['lucioles']} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ouvrir une partie ici' }));
+    // A plain break is written without an empty title.
+    expect(currentStory().scenes.lucioles?.section).toEqual({});
+
+    fireEvent.change(screen.getByLabelText('Titre de la partie'), {
+      target: { value: 'Chapitre II' },
+    });
+    expect(currentStory().scenes.lucioles?.section).toEqual({ title: 'Chapitre II' });
+
+    fireEvent.change(screen.getByLabelText('Titre de la partie'), { target: { value: '' } });
+    expect(currentStory().scenes.lucioles?.section).toEqual({});
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retirer la coupure' }));
+    expect(currentStory().scenes.lucioles?.section).toBeUndefined();
+  });
+
   it('refuses an id another node already carries', () => {
     render(<Harness selectedIds={['lucioles']} />);
 

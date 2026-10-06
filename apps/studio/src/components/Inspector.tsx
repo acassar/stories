@@ -456,6 +456,43 @@ function ScenePanel({
       <SceneIdField story={story} scene={scene} onChange={onChange} onSelect={onSelect} />
 
       {/*
+        Layout only: the engine ignores it. An empty title is written as no
+        title at all, so a plain break never exports an empty string.
+      */}
+      <div className="field">
+        <span className="field__label">Nouvelle partie</span>
+        {scene.section ? (
+          <>
+            <input
+              className="input"
+              value={scene.section.title ?? ''}
+              placeholder="Chapitre II — La nuit"
+              aria-label="Titre de la partie"
+              aria-describedby="emb-section-hint"
+              onChange={(event) =>
+                set({ section: event.target.value ? { title: event.target.value } : {} })
+              }
+            />
+            <span className="field__hint" id="emb-section-hint">
+              Une coupure s’affiche avant ce nœud : un titre de chapitre si tu en écris un, trois
+              étoiles sinon.
+            </span>
+            <button
+              type="button"
+              className="btn btn--small"
+              onClick={() => set({ section: undefined })}
+            >
+              Retirer la coupure
+            </button>
+          </>
+        ) : (
+          <button type="button" className="btn btn--small" onClick={() => set({ section: {} })}>
+            Ouvrir une partie ici
+          </button>
+        )}
+      </div>
+
+      {/*
         Offered on everything but a choice: there, the player is the one
         writing, and nobody keeps themselves waiting. Not in a book either —
         nobody is away there — except to clear a wait left from a

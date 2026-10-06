@@ -90,6 +90,28 @@ describe('buildTranscript', () => {
     expect(after.slice(0, before.length).map((m) => m.key)).toEqual(before.map((m) => m.key));
   });
 
+  it('opens a part on the first message of its scene, not before it arrives', () => {
+    const story = structuredClone(clairiereStory);
+    story.scenes.lucioles!.section = { title: 'Chapitre II' };
+    const e = new StoryEngine(story);
+    play(e, 'vers-lucioles');
+
+    // Nothing of the scene has arrived yet: the break waits with it.
+    const waiting = buildTranscript(story, e.state, e.getCurrentScene(), { revealed: 0 });
+    expect(waiting.some((m) => m.section)).toBe(false);
+
+    const messages = buildTranscript(story, e.state, e.getCurrentScene(), { revealed: 2 });
+    const opened = messages.filter((m) => m.section);
+    expect(opened).toHaveLength(1);
+    expect(opened[0]).toMatchObject({ section: { title: 'Chapitre II' } });
+    expect(opened[0]?.text).toBe(story.scenes.lucioles!.blocks[0]!.text);
+
+    // Still there once the scene has fallen into the history.
+    play(e, 'vers-franchir');
+    const later = buildTranscript(story, e.state, e.getCurrentScene(), { revealed: 0 });
+    expect(later.filter((m) => m.section)).toHaveLength(1);
+  });
+
   it('gives each message a unique key, even when the text repeats', () => {
     const e = engine();
     play(e, 'vers-arbre');
