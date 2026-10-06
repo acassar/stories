@@ -9,9 +9,13 @@ import type { GameState, Story } from '@embranche/story-format';
 import { Rail } from './components/Rail';
 import { Settings } from './components/Settings';
 import { useColorMode } from './hooks/useColorMode';
+import { useLocale } from './hooks/useLocale';
+import { MessagesContext } from './hooks/useMessages';
 import { useLayoutKind } from './hooks/useLayoutKind';
 import { useSpeed } from './hooks/useSpeed';
 import { awaySentence } from './lib/away';
+import { MESSAGES } from './lib/i18n';
+import type { Messages } from './lib/i18n';
 import { loadLanguages, pickLanguage, saveLanguage } from './lib/language';
 import {
   clearSave,
@@ -38,6 +42,8 @@ type Screen = 'library' | 'detail' | 'read';
 export function App() {
   const [mode, toggleMode] = useColorMode();
   const [pace, setPace] = useSpeed();
+  const [locale, setLocale] = useLocale();
+  const t = MESSAGES[locale];
   const [settingsOpen, setSettingsOpen] = useState(false);
   const layout = useLayoutKind();
   const [library, setLibrary] = useState<Story[]>(() => loadLibrary());
@@ -57,14 +63,18 @@ export function App() {
   /*
    * Every screen is handed each story in the language it is read in. The
    * engine, the saves and the record never see the difference: a translation
-   * changes the words, not a single scene or link.
+   * changes the words, not a single scene or link. With no choice made, a
+   * story opens in the language the app is read in, if it has it.
    */
   const stories = useMemo(
     () =>
       library.map((item) =>
-        localizeStory(item, pickLanguage(item, chosenLanguages[item.id], navigator.languages)),
+        localizeStory(
+          item,
+          pickLanguage(item, chosenLanguages[item.id], [locale, ...navigator.languages]),
+        ),
       ),
-    [library, chosenLanguages],
+    [library, chosenLanguages, locale],
   );
 
   const original = activeId ? library.find((item) => item.id === activeId) : undefined;
@@ -125,7 +135,7 @@ export function App() {
     setChosenLanguages(loadLanguages());
     setActiveId(null);
     setScreen('library');
-    setToast(`« ${story?.title ?? 'Ce récit'} » a quitté ta bibliothèque.`);
+    setToast(t.storyRemoved(story?.title ?? t.thisStory));
   };
 
   const handleImport = async (file: File) => {
@@ -133,13 +143,13 @@ export function App() {
     try {
       data = JSON.parse(await readText(file));
     } catch {
-      setToast('Ce fichier n’est pas du JSON lisible.');
+      setToast(t.notJson);
       return;
     }
     const result = validateStory(data);
     if (!result.valid) {
       const first = result.issues.find((issue) => issue.severity === 'error');
-      setToast(`Histoire refusée : ${first?.message ?? 'document incohérent'}`);
+      setToast(t.storyRefused(first?.message ?? t.incoherentDocument));
       return;
     }
     const imported = data as Story;
@@ -147,85 +157,93 @@ export function App() {
     const refreshed = loadLibrary();
     setLibrary(refreshed);
     setSaves(readSaves(refreshed));
-    setToast(`« ${imported.title} » ajoutée à ta bibliothèque.`);
+    setToast(t.storyAdded(imported.title));
   };
 
   return (
-    <div
-      className={`screen screen--${layout}`}
-      style={{ ...tokensToCssVars(tokens), background: tokens.bg, color: tokens.ink }}
-    >
-      {layout === 'desktop' && (
-        <Rail
-          mode={mode}
-          onToggleMode={toggleMode}
-          onSettings={() => setSettingsOpen(true)}
-          onImport={(file) => void handleImport(file)}
-        />
-      )}
-
-      <main className="panel">
-        {screen === 'library' && (
-          <Library
-            stories={stories}
-            endings={endings}
-            saves={saves}
+    <MessagesContext.Provider value={t}>
+      <div
+        className={`screen screen--${layout}`}
+        style={{ ...tokensToCssVars(tokens), background: tokens.bg, color: tokens.ink }}
+      >
+        {layout === 'desktop' && (
+          <Rail
             mode={mode}
-            layout={layout}
             onToggleMode={toggleMode}
             onSettings={() => setSettingsOpen(true)}
-            onOpen={openStory}
             onImport={(file) => void handleImport(file)}
           />
         )}
 
-        {screen === 'detail' && story && (
-          <Detail
-            story={story}
-            languages={original ? storyLanguages(original) : []}
-            onLanguage={(language) => setChosenLanguages(saveLanguage(story.id, language))}
-            endingsSeen={endings[story.id]?.length ?? 0}
-            hasSave={Boolean(saves[story.id])}
-            away={awayLine(story, saves[story.id], pace)}
-            mode={mode}
-            layout={layout}
-            onToggleMode={toggleMode}
-            onBack={() => setScreen('library')}
-            onResume={() => start(false)}
-            onStart={() => start(true)}
-            onRemove={() => handleRemove(story.id)}
-          />
-        )}
+        <main className="panel">
+          {screen === 'library' && (
+            <Library
+              stories={stories}
+              endings={endings}
+              saves={saves}
+              mode={mode}
+              layout={layout}
+              onToggleMode={toggleMode}
+              onSettings={() => setSettingsOpen(true)}
+              onOpen={openStory}
+              onImport={(file) => void handleImport(file)}
+            />
+          )}
 
-        {screen === 'read' && story && (
-          <Reading
-            // Remounting the component per session guarantees a fresh engine.
-            key={`${story.id}-${session}`}
-            story={story}
-            initialState={resumeState}
-            endingsSeen={endings[story.id]?.length ?? 0}
+          {screen === 'detail' && story && (
+            <Detail
+              story={story}
+              languages={original ? storyLanguages(original) : []}
+              onLanguage={(language) => setChosenLanguages(saveLanguage(story.id, language))}
+              endingsSeen={endings[story.id]?.length ?? 0}
+              hasSave={Boolean(saves[story.id])}
+              away={awayLine(story, saves[story.id], pace, t)}
+              mode={mode}
+              layout={layout}
+              onToggleMode={toggleMode}
+              onBack={() => setScreen('library')}
+              onResume={() => start(false)}
+              onStart={() => start(true)}
+              onRemove={() => handleRemove(story.id)}
+            />
+          )}
+
+          {screen === 'read' && story && (
+            <Reading
+              // Remounting the component per session guarantees a fresh engine.
+              key={`${story.id}-${session}`}
+              story={story}
+              initialState={resumeState}
+              endingsSeen={endings[story.id]?.length ?? 0}
+              pace={pace}
+              mode={mode}
+              layout={layout}
+              onToggleMode={toggleMode}
+              onSettings={() => setSettingsOpen(true)}
+              onLeave={() => setScreen('detail')}
+              onStateChange={handleStateChange}
+              onEndingReached={handleEndingReached}
+            />
+          )}
+        </main>
+
+        {settingsOpen && (
+          <Settings
             pace={pace}
-            mode={mode}
-            layout={layout}
-            onToggleMode={toggleMode}
-            onSettings={() => setSettingsOpen(true)}
-            onLeave={() => setScreen('detail')}
-            onStateChange={handleStateChange}
-            onEndingReached={handleEndingReached}
+            onChoose={setPace}
+            locale={locale}
+            onLocale={setLocale}
+            onClose={() => setSettingsOpen(false)}
           />
         )}
-      </main>
 
-      {settingsOpen && (
-        <Settings pace={pace} onChoose={setPace} onClose={() => setSettingsOpen(false)} />
-      )}
-
-      {toast && (
-        <div className="toast" role="status">
-          {toast}
-        </div>
-      )}
-    </div>
+        {toast && (
+          <div className="toast" role="status">
+            {toast}
+          </div>
+        )}
+      </div>
+    </MessagesContext.Provider>
   );
 }
 
@@ -235,10 +253,15 @@ export function App() {
  * Read once, on entering the screen: a sheet is a place one passes through, and
  * a countdown ticking there would be a timer running for nobody.
  */
-function awayLine(story: Story, save: GameState | null | undefined, pace: number): string | null {
+function awayLine(
+  story: Story,
+  save: GameState | null | undefined,
+  pace: number,
+  messages: Messages,
+): string | null {
   if (!save) return null;
   const status = waitStatus(story, save, pace, Date.now());
-  return status.waiting ? awaySentence(story.narrator, status.remainingMs) : null;
+  return status.waiting ? awaySentence(story.narrator, status.remainingMs, messages) : null;
 }
 
 function readSaves(library: Story[]): Record<string, GameState | null> {

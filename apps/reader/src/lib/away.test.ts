@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { awaySentence, awayStatus, formatRemaining } from './away';
+import { MESSAGES } from './i18n';
+
+const fr = MESSAGES.fr;
 
 describe('formatRemaining', () => {
   it('picks the coarsest unit that still says something', () => {
@@ -24,16 +27,22 @@ describe('formatRemaining', () => {
 describe('the words of an absence', () => {
   it('uses the wording the story chose', () => {
     const narrator = { name: 'Pierre', awayStatus: 'en plongée' };
-    expect(awayStatus(narrator, 90 * 60_000)).toBe('en plongée · 1 h 30');
-    expect(awaySentence(narrator, 90 * 60_000)).toBe(
+    expect(awayStatus(narrator, 90 * 60_000, fr)).toBe('en plongée · 1 h 30');
+    expect(awaySentence(narrator, 90 * 60_000, fr)).toBe(
       'Pierre est en plongée — de retour dans 1 h 30.',
     );
   });
 
   it('falls back when the story never worded its own', () => {
-    expect(awayStatus(undefined, 60_000)).toBe('hors ligne · 1 min');
-    expect(awaySentence({ name: 'Elara' }, 60_000)).toBe(
+    expect(awayStatus(undefined, 60_000, fr)).toBe('hors ligne · 1 min');
+    expect(awaySentence({ name: 'Elara' }, 60_000, fr)).toBe(
       'Elara est hors ligne — de retour dans 1 min.',
+    );
+  });
+
+  it('speaks the reader’s language around the story’s own words', () => {
+    expect(awaySentence({ name: 'Elara' }, 60_000, MESSAGES.en)).toBe(
+      'Elara is offline — back in 1 min.',
     );
   });
 });

@@ -376,6 +376,26 @@ describe('Embranche reader', () => {
     expect(screen.getByText('The path sinks under ferns taller than you.')).toBeInTheDocument();
   });
 
+  it('speaks English when asked, and opens translated stories in English', async () => {
+    saveImportedStory({
+      ...clairiereStory,
+      translations: { en: { title: 'The Firefly Glade' } },
+    });
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole('button', { name: 'Réglages' }));
+    await user.click(screen.getByRole('radio', { name: 'English' }));
+    await user.click(screen.getByRole('button', { name: 'Got it' }));
+
+    expect(screen.getByRole('heading', { name: 'What will you live through?' })).toBeVisible();
+    expect(document.documentElement.lang).toBe('en');
+    // The story follows the app, since it has English to offer.
+    expect(screen.getByRole('button', { name: /The Firefly Glade/ })).toBeInTheDocument();
+    // A story with no English stays as its author wrote it.
+    expect(screen.getByRole('button', { name: /Le Dossier Verlaine/ })).toBeInTheDocument();
+  });
+
   it('reads on a wide screen, with the rail instead of the topbar', async () => {
     widenViewport();
     const user = userEvent.setup();

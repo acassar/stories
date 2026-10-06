@@ -3,6 +3,7 @@ import type { ColorMode, StoryTheme } from '@embranche/design-tokens';
 import type { SceneEnding, Story } from '@embranche/story-format';
 
 import { StarIcon } from '../components/Icons';
+import { useMessages } from '../hooks/useMessages';
 import { countEndings } from '../lib/library';
 
 interface Props {
@@ -32,6 +33,7 @@ export function Ending({
   rereadLabel,
   onLibrary,
 }: Props) {
+  const t = useMessages();
   const theme = (story.theme ?? 'night') as StoryTheme;
   const tokens = resolveTokens(theme, mode);
 
@@ -57,23 +59,23 @@ export function Ending({
           <div className="stats__value">
             {endingsSeen}/{countEndings(story)}
           </div>
-          <div className="stats__label">fins de ce récit</div>
+          <div className="stats__label">{t.endingsOfStory}</div>
         </div>
         <div>
           <div className="stats__value">{steps}</div>
-          <div className="stats__label">choix faits</div>
+          <div className="stats__label">{t.choicesMade}</div>
         </div>
       </div>
 
       <div className="ending__actions">
         <button type="button" className="cta" onClick={onRestart}>
-          Rejouer ce récit
+          {t.replay}
         </button>
         <button type="button" className="cta cta--quiet" onClick={onReread}>
           {rereadLabel}
         </button>
         <button type="button" className="cta cta--quiet" onClick={onLibrary}>
-          Retour à la bibliothèque
+          {t.backToLibrary}
         </button>
       </div>
     </div>

@@ -8,10 +8,9 @@
 
 import type { Narrator } from '@embranche/story-format';
 
-const MINUTE = 60_000;
+import type { Messages } from './i18n';
 
-/** What a story says when it has not worded its own absence. */
-export const DEFAULT_AWAY = 'hors ligne';
+const MINUTE = 60_000;
 
 /**
  * « 3 h 12 », « 12 min », « 40 s » — the coarsest unit that still carries
@@ -35,13 +34,27 @@ export function formatRemaining(ms: number): string {
   return rest === 0 ? `${hours} h` : `${hours} h ${String(rest).padStart(2, '0')}`;
 }
 
-/** The line under the correspondent's name while they are away. */
-export function awayStatus(narrator: Narrator | undefined, remainingMs: number): string {
-  return `${narrator?.awayStatus || DEFAULT_AWAY} · ${formatRemaining(remainingMs)}`;
+/**
+ * The line under the correspondent's name while they are away. A story that
+ * has not worded its own absence borrows the reader's word for it.
+ */
+export function awayStatus(
+  narrator: Narrator | undefined,
+  remainingMs: number,
+  messages: Messages,
+): string {
+  return `${narrator?.awayStatus || messages.defaultAway} · ${formatRemaining(remainingMs)}`;
 }
 
 /** The same absence, told from the story sheet, where the name is not on screen. */
-export function awaySentence(narrator: Narrator | undefined, remainingMs: number): string {
-  const who = narrator?.name ?? 'Ton correspondant';
-  return `${who} est ${narrator?.awayStatus || DEFAULT_AWAY} — de retour dans ${formatRemaining(remainingMs)}.`;
+export function awaySentence(
+  narrator: Narrator | undefined,
+  remainingMs: number,
+  messages: Messages,
+): string {
+  return messages.awaySentence(
+    narrator?.name ?? messages.yourCorrespondent,
+    narrator?.awayStatus || messages.defaultAway,
+    formatRemaining(remainingMs),
+  );
 }

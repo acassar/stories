@@ -23,16 +23,6 @@ export type Pace = (typeof PACES)[number];
 
 export const DEFAULT_PACE: Pace = 1;
 
-/** How each pace says itself, in the second person the rest of the app uses. */
-export const PACE_LABELS: Record<string, string> = {
-  '1': 'Temps réel',
-  '2': '2× plus vite',
-  '3': '3× plus vite',
-  '5': '5× plus vite',
-  '10': '10× plus vite',
-  Infinity: 'Sans attente',
-};
-
 /**
  * What the reader is entitled to.
  *

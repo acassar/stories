@@ -1,5 +1,7 @@
 import { useRef } from 'react';
 
+import { useMessages } from '../hooks/useMessages';
+
 interface Props {
   onImport: (file: File) => void;
   className?: string;
@@ -13,6 +15,7 @@ interface Props {
  * need them.
  */
 export function ImportButton({ onImport, className = 'icon-btn', label }: Props) {
+  const t = useMessages();
   const input = useRef<HTMLInputElement>(null);
 
   return (
@@ -33,7 +36,7 @@ export function ImportButton({ onImport, className = 'icon-btn', label }: Props)
         type="button"
         className={className}
         onClick={() => input.current?.click()}
-        aria-label="Ouvrir une histoire depuis un fichier"
+        aria-label={t.importStory}
       >
         <span aria-hidden="true">＋</span>
         {label && <span className="rail__button-label">{label}</span>}

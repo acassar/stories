@@ -2,6 +2,7 @@ import type { ColorMode } from '@embranche/design-tokens';
 
 import { BrandMark, MoonIcon, PaceIcon, SunIcon } from './Icons';
 import { ImportButton } from './ImportButton';
+import { useMessages } from '../hooks/useMessages';
 
 interface Props {
   mode: ColorMode;
@@ -19,6 +20,7 @@ interface Props {
  * one is leaving.
  */
 export function Rail({ mode, onToggleMode, onSettings, onImport }: Props) {
+  const t = useMessages();
   return (
     <aside className="rail">
       <div className="rail__brand">
@@ -31,19 +33,19 @@ export function Rail({ mode, onToggleMode, onSettings, onImport }: Props) {
       <div className="rail__spacer" />
 
       <div className="rail__actions">
-        <ImportButton onImport={onImport} className="rail__button" label="Ouvrir un fichier" />
+        <ImportButton onImport={onImport} className="rail__button" label={t.openFile} />
         <button
           type="button"
           className="rail__button"
           onClick={onToggleMode}
-          aria-label={mode === 'light' ? 'Passer en mode nuit' : 'Passer en mode jour'}
+          aria-label={mode === 'light' ? t.toNight : t.toDay}
         >
           {mode === 'light' ? <SunIcon /> : <MoonIcon />}
-          <span className="rail__button-label">Jour / nuit</span>
+          <span className="rail__button-label">{t.dayNight}</span>
         </button>
-        <button type="button" className="rail__button" onClick={onSettings} aria-label="Réglages">
+        <button type="button" className="rail__button" onClick={onSettings} aria-label={t.settings}>
           <PaceIcon />
-          <span className="rail__button-label">Réglages</span>
+          <span className="rail__button-label">{t.settings}</span>
         </button>
       </div>
     </aside>

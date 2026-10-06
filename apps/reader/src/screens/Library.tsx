@@ -6,6 +6,7 @@ import { ImportButton } from '../components/ImportButton';
 import { StoryCover } from '../components/StoryCover';
 import { BrandMark, MoonIcon, PaceIcon, SunIcon } from '../components/Icons';
 import type { LayoutKind } from '../hooks/useLayoutKind';
+import { useMessages } from '../hooks/useMessages';
 import { countDecisions, countEndings, latestRun } from '../lib/library';
 
 interface Props {
@@ -34,6 +35,7 @@ export function Library({
   onOpen,
   onImport,
 }: Props) {
+  const t = useMessages();
   const resume = latestRun(stories, saves);
   // Each card wears the colour of its own story, not that of the shell.
   const resumeTokens = resume
@@ -57,11 +59,11 @@ export function Library({
             type="button"
             className="icon-btn"
             onClick={onToggleMode}
-            aria-label={mode === 'light' ? 'Passer en mode nuit' : 'Passer en mode jour'}
+            aria-label={mode === 'light' ? t.toNight : t.toDay}
           >
             {mode === 'light' ? <SunIcon /> : <MoonIcon />}
           </button>
-          <button type="button" className="icon-btn" onClick={onSettings} aria-label="Réglages">
+          <button type="button" className="icon-btn" onClick={onSettings} aria-label={t.settings}>
             <PaceIcon />
           </button>
         </header>
@@ -69,8 +71,8 @@ export function Library({
 
       <div className="scroll">
         <div className="library">
-          <p className="library__eyebrow">Ex-libris,</p>
-          <h1 className="library__title">Que vas-tu vivre&nbsp;?</h1>
+          <p className="library__eyebrow">{t.libraryEyebrow}</p>
+          <h1 className="library__title">{t.libraryTitle}</h1>
           <hr className="rule" />
 
           {resume && (
@@ -91,12 +93,15 @@ export function Library({
               />
               <span className="resume__body">
                 <span className="resume__label" style={{ color: resumeTokens?.accentText }}>
-                  Reprendre la lecture
+                  {t.resumeReading}
                 </span>
                 <span className="resume__title">{resume.story.title}</span>
                 <span className="resume__meta">
-                  {resumeDecisions} choix fait{resumeDecisions > 1 ? 's' : ''} ·{' '}
-                  {endings[resume.story.id]?.length ?? 0}/{countEndings(resume.story)} fins
+                  {t.decisionsMade(resumeDecisions)} ·{' '}
+                  {t.endingsCount(
+                    endings[resume.story.id]?.length ?? 0,
+                    countEndings(resume.story),
+                  )}
                 </span>
               </span>
             </button>
@@ -121,22 +126,22 @@ export function Library({
                     />
                     <span className="story-card__body">
                       <span className="story-card__tag" style={{ color: tokens.accentText }}>
-                        {story.tag ?? 'Récit'}
+                        {story.tag ?? t.defaultTag}
                       </span>
                       <span className="story-card__title">{story.title}</span>
-                      <span className="story-card__author">{story.author ?? 'anonyme'}</span>
+                      <span className="story-card__author">{story.author ?? t.anonymous}</span>
                       <span className="story-card__meta">
                         <strong style={{ color: tokens.accentText }}>
-                          {seen}/{total} fins
+                          {t.endingsCount(seen, total)}
                         </strong>
                         <span aria-hidden="true">·</span>
-                        <span>{Object.keys(story.scenes).length} scènes</span>
+                        <span>{t.scenesCount(Object.keys(story.scenes).length)}</span>
                         {save && (
                           <span
                             className="resume-chip"
                             style={{ background: tokens.accentText, color: tokens.onAccent }}
                           >
-                            En cours
+                            {t.inProgress}
                           </span>
                         )}
                       </span>
@@ -149,7 +154,7 @@ export function Library({
 
           {stories.length === 0 && (
             <p className="library__eyebrow" style={{ marginTop: 24 }}>
-              Aucune histoire. Ouvre un JSON exporté depuis le studio pour commencer.
+              {t.emptyLibrary}
             </p>
           )}
         </div>

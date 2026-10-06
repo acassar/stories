@@ -69,7 +69,7 @@ The reader is mobile-first: open it in your browser inspector in phone mode, or 
 
 ```bash
 pnpm verify        # lint + typecheck + tests
-pnpm test          # 445 tests
+pnpm test          # 452 tests
 pnpm test:coverage # the same, with the thresholds on the core
 pnpm lint
 pnpm typecheck
@@ -252,9 +252,9 @@ Whatever a translation leaves out reads in the original. A translated scene may 
 a different number of blocks: another language puts its sentences elsewhere.
 
 The reader shows a language switch on the story sheet as soon as a story offers more than one
-language, and remembers the choice per story. With no choice made, it opens the story in the first
-language the browser asks for that the story offers, its own otherwise. The app around the story
-stays in French.
+language, and remembers the choice per story. With no choice made, it opens the story in the
+language the reader app is set to if the story has it, then in the first language the browser asks
+for that the story offers, its own otherwise.
 
 `validateStory` warns, without blocking, about text given to a scene the story does not have
 (`translation-unknown-scene`), about a translation leaving scenes in the original — once per
@@ -424,7 +424,9 @@ Nothing is deleted when a story switches to a book: switching back restores both
 
 When the current node awaits no decision, the story carries on by itself — but only once its messages have arrived, and after the same silence as between two messages. That is what makes a forced player line, or two lines in a row from the correspondent, read as a real conversation rather than as a block dropping all at once.
 
-Saves, the record of seen endings and the light/dark mode live in `localStorage`, wired from the app.
+The reader speaks French and English. Its own words — buttons, sheets, toasts — live in one typed catalogue (`lib/i18n`), where every language is a full set of messages, so a string missing from one is a type error rather than a hole on screen. The language starts from the browser and is changed from the settings sheet, where each language is named in itself. It is the frame around the stories, not the stories themselves: a story with no translation into it is read as its author wrote it.
+
+Saves, the record of seen endings, the light/dark mode and the language live in `localStorage`, wired from the app.
 
 ### From the studio to the reader
 
@@ -437,7 +439,7 @@ The reader revalidates the document and flatly refuses an inconsistent story.
 
 ## Tests
 
-445 tests, all green.
+452 tests, all green.
 
 | Suite          | What it covers                                                                   |
 | -------------- | -------------------------------------------------------------------------------- |

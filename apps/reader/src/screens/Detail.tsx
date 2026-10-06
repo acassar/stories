@@ -7,6 +7,7 @@ import type { Story } from '@embranche/story-format';
 
 import { BackIcon, MoonIcon, SunIcon, ThemeIcon } from '../components/Icons';
 import type { LayoutKind } from '../hooks/useLayoutKind';
+import { useMessages } from '../hooks/useMessages';
 import { languageName } from '../lib/language';
 import { countEndings } from '../lib/library';
 
@@ -47,6 +48,7 @@ export function Detail({
   onStart,
   onRemove,
 }: Props) {
+  const t = useMessages();
   const theme = (story.theme ?? 'night') as StoryTheme;
   const tokens = resolveTokens(theme, mode);
   const [confirming, setConfirming] = useState(false);
@@ -63,7 +65,7 @@ export function Detail({
               type="button"
               className="icon-btn icon-btn--cut"
               onClick={onBack}
-              aria-label="Retour à la bibliothèque"
+              aria-label={t.backToLibrary}
             >
               <BackIcon />
             </button>
@@ -72,7 +74,7 @@ export function Detail({
                 type="button"
                 className="icon-btn icon-btn--cut"
                 onClick={onToggleMode}
-                aria-label={mode === 'light' ? 'Passer en mode nuit' : 'Passer en mode jour'}
+                aria-label={mode === 'light' ? t.toNight : t.toDay}
               >
                 {mode === 'light' ? <SunIcon /> : <MoonIcon />}
               </button>
@@ -83,18 +85,18 @@ export function Detail({
         {/* Outside the cover: on a phone it rides over the bottom of it, on a
             wide screen it starts the column beside it. */}
         <div className="detail__heading">
-          <div className="detail__tag">{story.tag ?? 'Récit'}</div>
+          <div className="detail__tag">{story.tag ?? t.defaultTag}</div>
           <h1 className="detail__title">{story.title}</h1>
         </div>
 
         <div className="detail__body">
-          <p className="detail__author">par {story.author ?? 'anonyme'}</p>
+          <p className="detail__author">{t.byAuthor(story.author ?? t.anonymous)}</p>
           {story.blurb && <p className="detail__blurb">{story.blurb}</p>}
 
           {/* A run in progress survives the switch and reads on in the new
               language: a translation changes the words, never a scene. */}
           {languages.length > 1 && (
-            <div className="languages" role="radiogroup" aria-label="Langue du récit">
+            <div className="languages" role="radiogroup" aria-label={t.storyLanguage}>
               {languages.map((language) => {
                 const on = language === languageOf(story);
                 return (
@@ -117,17 +119,17 @@ export function Detail({
           <div className="stats">
             <div className="stats__item">
               <div className="stats__value">{Object.keys(story.scenes).length}</div>
-              <div className="stats__label">scènes</div>
+              <div className="stats__label">{t.statScenes}</div>
             </div>
             <div className="stats__item">
               <div className="stats__value">
                 {endingsSeen}/{countEndings(story)}
               </div>
-              <div className="stats__label">fins vues</div>
+              <div className="stats__label">{t.statEndingsSeen}</div>
             </div>
             <div className="stats__item">
               <div className="stats__value">{story.estimatedMinutes ?? '—'}</div>
-              <div className="stats__label">minutes</div>
+              <div className="stats__label">{t.statMinutes}</div>
             </div>
           </div>
 
@@ -135,7 +137,7 @@ export function Detail({
             {hasSave && (
               <>
                 <button type="button" className="cta" onClick={onResume}>
-                  Reprendre la partie
+                  {t.resumeRun}
                 </button>
                 {/* Said before the press, not after: « Reprendre » that opens on
                     a silence looks like a story that failed to load. */}
@@ -143,7 +145,7 @@ export function Detail({
               </>
             )}
             <button type="button" className={hasSave ? 'cta cta--quiet' : 'cta'} onClick={onStart}>
-              {endingsSeen > 0 || hasSave ? 'Recommencer l’aventure' : 'Commencer l’aventure'}
+              {endingsSeen > 0 || hasSave ? t.restartAdventure : t.startAdventure}
             </button>
           </div>
 
@@ -152,21 +154,19 @@ export function Detail({
           <div className="detail__remove">
             {confirming ? (
               <>
-                <p className="detail__remove-warning">
-                  Ce récit quitte ta bibliothèque, avec la partie en cours et les fins trouvées.
-                </p>
+                <p className="detail__remove-warning">{t.removeWarning}</p>
                 <div className="detail__remove-actions">
                   <button type="button" className="danger" onClick={onRemove}>
-                    Retirer définitivement
+                    {t.removeForGood}
                   </button>
                   <button type="button" className="undo" onClick={() => setConfirming(false)}>
-                    Annuler
+                    {t.cancel}
                   </button>
                 </div>
               </>
             ) : (
               <button type="button" className="quiet-link" onClick={() => setConfirming(true)}>
-                Retirer ce récit de ma bibliothèque
+                {t.removeStory}
               </button>
             )}
           </div>

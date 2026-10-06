@@ -8,6 +8,7 @@ import type { GameState, SceneSection, Story } from '@embranche/story-format';
 import { BackIcon, MoonIcon, PaceIcon, ReadOnIcon, SunIcon } from '../components/Icons';
 import { usePrefersReducedMotion } from '../hooks/useColorMode';
 import type { LayoutKind } from '../hooks/useLayoutKind';
+import { useMessages } from '../hooks/useMessages';
 import { useNow } from '../hooks/useNow';
 import { REVEAL_TIMING, useReveal } from '../hooks/useReveal';
 import { WRITING_TIMING, useTypewriter } from '../hooks/useTypewriter';
@@ -63,6 +64,7 @@ export function Reading({
     onStateChange,
   });
 
+  const t = useMessages();
   const reduceMotion = usePrefersReducedMotion();
 
   /**
@@ -202,7 +204,7 @@ export function Reading({
         mode={mode}
         onRestart={restart}
         onReread={() => setShowEnding(false)}
-        rereadLabel={story.readingStyle === 'book' ? 'Relire le récit' : 'Relire la correspondance'}
+        rereadLabel={story.readingStyle === 'book' ? t.rereadBook : t.rereadCorrespondence}
         onLibrary={onLeave}
       />
     );
@@ -241,12 +243,7 @@ export function Reading({
       <header className="reading__head">
         {/* Leaving and undoing are two different intentions: this one always
             closes the story, whatever has been played. */}
-        <button
-          type="button"
-          className="icon-btn"
-          onClick={onLeave}
-          aria-label="Retour à la fiche du récit"
-        >
+        <button type="button" className="icon-btn" onClick={onLeave} aria-label={t.backToSheet}>
           <BackIcon />
         </button>
         {/* A book has a title on its spine, not someone on the other end. */}
@@ -261,11 +258,11 @@ export function Reading({
           </div>
           <div className="reading__status">
             {away.waiting
-              ? awayStatus(narrator, away.remainingMs)
+              ? awayStatus(narrator, away.remainingMs, t)
               : book
                 ? (story.tag ?? '')
                 : reveal.typing
-                  ? 'écrit…'
+                  ? t.typing
                   : (narrator?.status ?? story.tag ?? '')}
           </div>
         </div>
@@ -275,11 +272,11 @@ export function Reading({
               type="button"
               className="icon-btn"
               onClick={onToggleMode}
-              aria-label={mode === 'light' ? 'Passer en mode nuit' : 'Passer en mode jour'}
+              aria-label={mode === 'light' ? t.toNight : t.toDay}
             >
               {mode === 'light' ? <SunIcon /> : <MoonIcon />}
             </button>
-            <button type="button" className="icon-btn" onClick={onSettings} aria-label="Réglages">
+            <button type="button" className="icon-btn" onClick={onSettings} aria-label={t.settings}>
               <PaceIcon />
             </button>
           </>
@@ -291,7 +288,7 @@ export function Reading({
         lang={languageOf(story)}
         ref={thread}
         aria-live="polite"
-        aria-label={book ? 'Récit' : 'Correspondance'}
+        aria-label={book ? t.threadBook : t.threadCorrespondence}
         // Tapping the conversation skips the wait: nobody should have to wait
         // for an animation to read on.
         onClick={reveal.skip}
@@ -326,7 +323,7 @@ export function Reading({
         {away.waiting && (
           <li className="bubble-row">
             <div className="away" aria-live="polite">
-              {awaySentence(narrator, away.remainingMs)}
+              {awaySentence(narrator, away.remainingMs, t)}
             </div>
           </li>
         )}
@@ -335,7 +332,7 @@ export function Reading({
           // The player "types" too: a forced line arrives on their side of the
           // conversation, not on the correspondent's.
           <li className={`bubble-row${scene.speaker === 'player' ? ' bubble-row--player' : ''}`}>
-            <div className="typing" aria-label="En train d’écrire">
+            <div className="typing" aria-label={t.typingLabel}>
               <span />
               <span />
               <span />
@@ -347,7 +344,7 @@ export function Reading({
       <div className={`answers${book ? ' answers--book' : ''}`}>
         {/* The page does not follow the pen: this says there is more to read. */}
         {book && textBelow && (
-          <button type="button" className="read-on" onClick={readOn} aria-label="Lire la suite">
+          <button type="button" className="read-on" onClick={readOn} aria-label={t.readOn}>
             <ReadOnIcon />
           </button>
         )}
@@ -360,19 +357,19 @@ export function Reading({
               next line. */}
           {reveal.done && canGoBack && !scene.canAdvance && (
             <button type="button" className="undo" onClick={goBack}>
-              ↩ Revenir en arrière
+              {t.goBack}
             </button>
           )}
 
           {reveal.done && scene.isEnding && scene.ending && (
             <button type="button" className="cta" onClick={() => setShowEnding(true)}>
-              Voir la fin
+              {t.seeEnding}
             </button>
           )}
 
           {reveal.done && scene.choices.length > 0 && (
             <>
-              <div className="answers__label">{book ? 'Et ensuite…' : 'Répondre'}</div>
+              <div className="answers__label">{book ? t.whatNext : t.reply}</div>
               {scene.choices.map((choice) => (
                 <button
                   key={choice.id}
@@ -391,9 +388,7 @@ export function Reading({
           declared ending. A chaining node shows nothing — it moves on.
         */}
           {reveal.done && !scene.awaitsChoice && !scene.canAdvance && !scene.isEnding && (
-            <div className="answers__label">
-              Cette scène ne mène nulle part — le récit s’arrête ici.
-            </div>
+            <div className="answers__label">{t.deadEnd}</div>
           )}
         </div>
       </div>

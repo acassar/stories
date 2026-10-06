@@ -28,3 +28,12 @@ Object.defineProperty(window, 'matchMedia', {
 // jsdom cannot scroll: convenience calls must not break.
 Element.prototype.scrollTo = () => {};
 Element.prototype.scrollBy = () => {};
+
+/**
+ * jsdom announces an English browser, and the reader follows the browser's
+ * language. The suite reads the app in French unless a test says otherwise.
+ */
+Object.defineProperty(navigator, 'languages', {
+  configurable: true,
+  get: () => ['fr-FR'],
+});
