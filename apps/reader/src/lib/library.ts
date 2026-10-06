@@ -5,9 +5,10 @@
  * knows nothing of persistence, it is injected into it.
  */
 
-import { migrateStory, parseGameState, validateStory } from '@embranche/story-format';
+import { migrateStory, parseGameState, parseStory, validateStory } from '@embranche/story-format';
 import type { GameState, Story } from '@embranche/story-format';
 
+import vaelmont from '../stories/vaelmont.embranche.json';
 import { forgetLanguage } from './language';
 
 const IMPORTED_KEY = 'embranche.reader.stories.v1';
@@ -21,10 +22,15 @@ const ENDINGS_KEY = 'embranche.reader.endings.v1';
 const REMOVED_KEY = 'embranche.reader.removed.v1';
 
 /**
- * Stories built into the app, there before anything is imported. None today:
- * the library starts empty, and everything in it was opened from a file.
+ * Stories built into the app, there before anything is imported.
+ *
+ * Each is a copy of a version its author has validated, taken from the
+ * repository where it is written; drafts never land here. It goes through
+ * `parseStory` like any file opened from outside — a JSON import is typed by
+ * its contents, not by the format — and a test holds every one of them to zero
+ * issues, so a broken copy fails the suite before it can fail the app.
  */
-export const SHIPPED_STORIES: readonly Story[] = [];
+export const SHIPPED_STORIES: readonly Story[] = [parseStory(vaelmont)];
 
 function read<T>(storage: Storage, key: string, fallback: T): T {
   const raw = storage.getItem(key);

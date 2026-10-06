@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { StoryEngine } from '@embranche/story-engine';
-import { createEmptyStory } from '@embranche/story-format';
+import { createEmptyStory, validateStory } from '@embranche/story-format';
 import { clairiereStory, fixtureStories } from '@embranche/story-format/fixtures';
 
 import {
@@ -12,6 +12,7 @@ import {
   loadSave,
   recordEnding,
   removeStory,
+  SHIPPED_STORIES,
   saveImportedStory,
   writeSave,
 } from './library';
@@ -46,8 +47,12 @@ beforeEach(() => {
 const withShipped = () => loadLibrary(storage, fixtureStories);
 
 describe('library', () => {
-  it('starts empty: no story ships with the app', () => {
-    expect(loadLibrary(storage)).toEqual([]);
+  it('ships Vaelmont, and nothing else', () => {
+    expect(loadLibrary(storage).map((story) => story.id)).toEqual(['vaelmont']);
+  });
+
+  it('ships only stories without a single issue', () => {
+    for (const story of SHIPPED_STORIES) expect(validateStory(story).issues).toEqual([]);
   });
 
   it('lists the shipped stories first', () => {
@@ -75,7 +80,7 @@ describe('library', () => {
 
   it('ignores a stored story that has become invalid', () => {
     storage.setItem('embranche.reader.stories.v1', JSON.stringify([{ id: 'cassee' }]));
-    expect(loadLibrary(storage)).toEqual([]);
+    expect(loadLibrary(storage, [])).toEqual([]);
   });
 });
 

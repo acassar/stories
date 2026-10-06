@@ -614,10 +614,10 @@ describe('Embranche reader — real-time waits', () => {
 });
 
 describe('Embranche reader — first launch', () => {
-  it('opens on an empty library: no story ships with the app', () => {
+  it('opens on Vaelmont, the one story that ships with the app', () => {
     window.localStorage.clear();
     render(<App />);
-    expect(screen.getByText(/Aucune histoire/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Vaelmont/ })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Clairière/ })).not.toBeInTheDocument();
   });
 });

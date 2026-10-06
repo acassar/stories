@@ -1,0 +1,2936 @@
+{
+  "formatVersion": 2,
+  "id": "vaelmont",
+  "title": "Vaelmont",
+  "version": "0.1.0",
+  "tag": "Fantasy",
+  "theme": "fantasy",
+  "readingStyle": "book",
+  "language": "fr",
+  "status": "draft",
+  "blurb": "Tu as dix-sept ans, une auberge pour seul foyer et un pendentif que personne n’a jamais su lire. Aujourd’hui, Brumefosse fête les moissons. Chacun de tes choix forge qui tu deviens, et la voie que tu prendras t’ouvrira un destin qu’aucune autre ne partage.",
+  "startSceneId": "start",
+  "variables": {
+    "force": 0,
+    "agilite": 0,
+    "esprit": 0,
+    "foi": 0,
+    "eloquence": 0,
+    "classe": ""
+  },
+  "scenes": {
+    "start": {
+      "id": "start",
+      "kind": "npc",
+      "title": "P1 · La Fête des Moissons",
+      "position": {
+        "x": 520,
+        "y": 0
+      },
+      "tags": [
+        "prologue"
+      ],
+      "section": {
+        "title": "Chapitre 1 — La Fête des Moissons"
+      },
+      "blocks": [
+        {
+          "text": "Le matin de la Fête des Moissons, Brumefosse se réveille au bruit des charrettes. Une caravane marchande est arrivée de Vaelmont pendant la nuit, et ses bâches peintes de rouge et d’ocre couvrent déjà la moitié de la place."
+        },
+        {
+          "text": "Dans la salle commune de l’auberge, Maëlle s’essuie les mains sur son tablier et te regarde par-dessus le comptoir. « Va. Les tonneaux attendront. Mais je te veux ici avant que la lune se lève : ce soir, il y aura cent bouches à nourrir. »"
+        },
+        {
+          "text": "Tu touches machinalement le pendentif sous ta chemise, ce disque de métal sombre que tu portes depuis toujours, et tu sors dans la lumière."
+        },
+        {
+          "text": "Sur la place, tout le village semble s’être donné rendez-vous. Près du puits, un homme sec au visage couturé de cicatrices a tracé un cercle dans la poussière et provoque les jeunes du village, une épée de bois à la main. Derrière lui, les gens de la caravane s’échinent à décharger des caisses plus lourdes qu’eux. Au bout de la rue, la cloche du temple appelle à la bénédiction des récoltes. Sur les marches de la fontaine, un vieil homme en manteau élimé fait naître des étincelles bleues entre ses doigts, sous les cris ravis des enfants."
+        },
+        {
+          "text": "Un peu à l’écart, un jeune homme de la caravane fait courir une bille sous trois gobelets de cuivre, et les pièces des villageois changent de poche à chaque tour. Et sur la route de la forêt, la chasseuse du village revient de la lisière, un chevreuil en travers des épaules, l’air soucieux malgré sa prise."
+        }
+      ],
+      "next": [
+        {
+          "id": "vers-duel",
+          "to": "c-duel"
+        },
+        {
+          "id": "vers-caravane",
+          "to": "c-caravane"
+        },
+        {
+          "id": "vers-temple",
+          "to": "c-temple"
+        },
+        {
+          "id": "vers-erudit",
+          "to": "c-erudit"
+        },
+        {
+          "id": "vers-bonneteau",
+          "to": "c-bonneteau"
+        },
+        {
+          "id": "vers-chasse",
+          "to": "c-chasse"
+        }
+      ]
+    },
+    "c-bonneteau": {
+      "id": "c-bonneteau",
+      "kind": "choice",
+      "title": "Choix · Le bonneteau",
+      "label": "Observer le joueur de bonneteau",
+      "position": {
+        "x": 1320,
+        "y": 220
+      },
+      "tags": [
+        "prologue"
+      ],
+      "blocks": [
+        {
+          "text": "Tu te glisses au premier rang des curieux, autour des trois gobelets."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "bonneteau",
+          "effects": [
+            {
+              "op": "inc",
+              "variable": "agilite",
+              "value": 1
+            }
+          ]
+        }
+      ]
+    },
+    "bonneteau": {
+      "id": "bonneteau",
+      "kind": "npc",
+      "title": "P1 · Le joueur de bonneteau",
+      "position": {
+        "x": 1320,
+        "y": 380
+      },
+      "tags": [
+        "prologue"
+      ],
+      "blocks": [
+        {
+          "text": "Le joueur n’a guère plus de vingt ans, un sourire facile et des mains qui ne s’arrêtent jamais. Il soulève un gobelet, montre la bille, la recouvre, et les trois gobelets se mettent à danser sur une planche posée en travers de deux tonneaux."
+        },
+        {
+          "text": "Le meunier mise trois sous et perd. Le forgeron mise et perd. Entre deux parties, un homme en manteau gris gagne, puis gagne encore, et c’est toujours lui qui pousse les autres à relancer. Tu l’as vu ce matin, en train de décharger les charrettes de la caravane."
+        },
+        {
+          "text": "Tu croises le regard du joueur. Il a compris que tu as compris. Tu ne dis rien, et la partie continue."
+        },
+        {
+          "text": "Plus tard, quand la foule s’est dispersée, il te rattrape près de l’abreuvoir et marche un moment à tes côtés. « Un mot de toi, et le village nous chassait à coups de bâton. Pourquoi tu n’as rien dit ? » Tu hausses les épaules. Il sourit pour de bon. « Voir, tout le monde peut. Se taire au bon moment, c’est un métier. »"
+        },
+        {
+          "text": "Le joueur de bonneteau se souviendra de ton silence."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "soir"
+        }
+      ]
+    },
+    "c-chasse": {
+      "id": "c-chasse",
+      "kind": "choice",
+      "title": "Choix · La chasseuse",
+      "label": "Aller à la rencontre de la chasseuse",
+      "position": {
+        "x": 1640,
+        "y": 220
+      },
+      "tags": [
+        "prologue"
+      ],
+      "blocks": [
+        {
+          "text": "Tu remontes la route de la forêt à sa rencontre."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "chasse",
+          "effects": [
+            {
+              "op": "inc",
+              "variable": "agilite",
+              "value": 1
+            }
+          ]
+        }
+      ]
+    },
+    "chasse": {
+      "id": "chasse",
+      "kind": "npc",
+      "title": "P1 · La chasseuse",
+      "position": {
+        "x": 1640,
+        "y": 380
+      },
+      "tags": [
+        "prologue"
+      ],
+      "blocks": [
+        {
+          "text": "La chasseuse dépose le chevreuil sur le muret du lavoir et s’essuie le front. C’est une femme maigre et tannée, aux cheveux coupés court, un arc de frêne en bandoulière. On dit au village qu’elle connaît chaque arbre de la lisière par son nom."
+        },
+        {
+          "text": "Elle te jauge un instant, puis trace du doigt, dans la poussière, une empreinte large comme une assiette. « Trouvée ce matin, à une heure de marche. Et juste à côté, un sillon dans la terre. Continu, sans un écart, sur des centaines de pas. »"
+        },
+        {
+          "text": "Tu fixes le dessin en réfléchissant à voix haute : une bête énorme, qui traîne derrière elle quelque chose qui ne se détache jamais."
+        },
+        {
+          "text": "Elle te regarde avec un intérêt nouveau. « Une chaîne. C’est aussi ce que je me suis dit. » Elle efface l’empreinte du plat de la main. « J’en parlerai aux anciens, et ils me riront au nez, un jour de fête. Toi, tu as la tête d’un pisteur. Reste à te donner les jambes. »"
+        },
+        {
+          "text": "La chasseuse se souviendra de ton instinct."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "soir"
+        }
+      ]
+    },
+    "c-duel": {
+      "id": "c-duel",
+      "kind": "choice",
+      "title": "Choix · Le duel",
+      "label": "Défier le maître d’armes",
+      "position": {
+        "x": 40,
+        "y": 220
+      },
+      "tags": [
+        "prologue"
+      ],
+      "blocks": [
+        {
+          "text": "Tu entres dans le cercle avant d’avoir eu le temps d’y réfléchir."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "duel",
+          "effects": [
+            {
+              "op": "inc",
+              "variable": "force",
+              "value": 1
+            }
+          ]
+        }
+      ]
+    },
+    "duel": {
+      "id": "duel",
+      "kind": "npc",
+      "title": "P1 · Le maître d’armes",
+      "position": {
+        "x": 40,
+        "y": 380
+      },
+      "tags": [
+        "prologue"
+      ],
+      "blocks": [
+        {
+          "text": "Le maître d’armes te détaille de la tête aux pieds, sans un sourire, puis te lance une épée de bois que tu rattrapes de justesse. « En garde. »"
+        },
+        {
+          "text": "Le premier coup t’arrive sur l’épaule avant que tu l’aies vu partir. Le deuxième, tu le pares par chance. Au troisième, tu comprends qu’il te laisse venir, et tu fonces quand même."
+        },
+        {
+          "text": "Tu finis dans la poussière, la pointe de bois sur la gorge, sous les rires de la foule. Pourtant, quand il te tend la main pour te relever, lui ne rit pas. « Tu as tenu plus longtemps que les autres. Tu ne sais rien, et tu ne recules pas. C’est un début. »"
+        },
+        {
+          "text": "Le maître d’armes se souviendra de ton audace."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "soir"
+        }
+      ]
+    },
+    "c-caravane": {
+      "id": "c-caravane",
+      "kind": "choice",
+      "title": "Choix · La caravane",
+      "label": "Aider les marchands à décharger",
+      "position": {
+        "x": 360,
+        "y": 220
+      },
+      "tags": [
+        "prologue"
+      ],
+      "blocks": [
+        {
+          "text": "Tu retrousses tes manches et rejoins les gens de la caravane."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "caravane",
+          "effects": [
+            {
+              "op": "inc",
+              "variable": "eloquence",
+              "value": 1
+            }
+          ]
+        }
+      ]
+    },
+    "caravane": {
+      "id": "caravane",
+      "kind": "npc",
+      "title": "P1 · La marchande",
+      "position": {
+        "x": 360,
+        "y": 380
+      },
+      "tags": [
+        "prologue"
+      ],
+      "blocks": [
+        {
+          "text": "Une femme aux cheveux gris tressés serré dirige le déchargement du haut d’une charrette, une tablette de cire à la main. Elle te jauge d’un coup d’œil et désigne une pile de caisses du menton. « Celles-là vont au cellier de l’auberge. Ne fais rien tomber. »"
+        },
+        {
+          "text": "Tu portes, tu empiles, tu reviens. À la dixième caisse, tu remarques que la marque peinte sur le bois ne correspond pas à ce qu’elle a noté sur sa tablette, et tu le lui dis."
+        },
+        {
+          "text": "Elle vérifie, fronce les sourcils, puis te regarde pour de bon cette fois. « Deux tonneaux de vin de Vaelmont que j’aurais laissés ici au prix de la bière. » Elle te glisse une pièce de cuivre dans la main."
+        },
+        {
+          "text": "Tu la fais sauter dans ta paume sans la ranger. Tu lui fais remarquer, avec le sourire, que tu aurais pu te taire et laisser l’auberge gagner deux tonneaux de vin, et qu’une telle honnêteté vaut bien plus qu’une pièce. La marchande éclate de rire et en ajoute une deuxième. « Tu as l’œil, et la langue qui va avec. C’est plus rare que les bras. »"
+        },
+        {
+          "text": "La marchande se souviendra de ton aplomb."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "soir"
+        }
+      ]
+    },
+    "c-temple": {
+      "id": "c-temple",
+      "kind": "choice",
+      "title": "Choix · Le temple",
+      "label": "Assister à la bénédiction au temple",
+      "position": {
+        "x": 680,
+        "y": 220
+      },
+      "tags": [
+        "prologue"
+      ],
+      "blocks": [
+        {
+          "text": "Tu remontes la rue au son de la cloche."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "temple",
+          "effects": [
+            {
+              "op": "inc",
+              "variable": "foi",
+              "value": 1
+            }
+          ]
+        }
+      ]
+    },
+    "temple": {
+      "id": "temple",
+      "kind": "npc",
+      "title": "P1 · Le prêtre",
+      "position": {
+        "x": 680,
+        "y": 380
+      },
+      "tags": [
+        "prologue"
+      ],
+      "blocks": [
+        {
+          "text": "Le temple de Brumefosse est trop petit pour tout le village, et la moitié des fidèles se tient sur le parvis, en plein soleil. Au pied de l’autel, les premières gerbes de l’année attendent, liées de rubans."
+        },
+        {
+          "text": "Le prêtre est un homme rond et lent, à la voix plus grave qu’on ne l’attendrait. Quand il élève les mains, le silence se fait jusque dans la rue."
+        },
+        {
+          "text": "Pendant la prière, une gerbe glisse et menace de renverser les cierges. Tu la rattrapes avant qu’elle touche la flamme. Le prêtre poursuit sans s’interrompre, mais à la fin de l’office, il vient te trouver. « Peu de gens voient ce qui se passe autour d’eux pendant qu’ils prient. Je ne sais pas encore si c’est un défaut ou une grâce. »"
+        },
+        {
+          "text": "Le prêtre se souviendra de toi."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "soir"
+        }
+      ]
+    },
+    "c-erudit": {
+      "id": "c-erudit",
+      "kind": "choice",
+      "title": "Choix · L’érudit",
+      "label": "Écouter le vieil érudit",
+      "position": {
+        "x": 1000,
+        "y": 220
+      },
+      "tags": [
+        "prologue"
+      ],
+      "blocks": [
+        {
+          "text": "Tu t’assieds sur les marches de la fontaine, parmi les enfants, une tête au-dessus d’eux, et personne ne s’en offusque."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "erudit",
+          "effects": [
+            {
+              "op": "inc",
+              "variable": "esprit",
+              "value": 1
+            }
+          ]
+        }
+      ]
+    },
+    "erudit": {
+      "id": "erudit",
+      "kind": "npc",
+      "title": "P1 · L’érudit",
+      "position": {
+        "x": 1000,
+        "y": 380
+      },
+      "tags": [
+        "prologue"
+      ],
+      "blocks": [
+        {
+          "text": "Le vieil homme fait danser une flamme bleue au-dessus de sa paume, la change en papillon, puis en pluie d’étincelles qui s’éteignent avant de toucher le sol. Les petits hurlent de joie."
+        },
+        {
+          "text": "Toi, tu regardes sa main gauche. À chaque tour, ses doigts tracent le même petit signe dans l’air, si vite qu’on le prendrait pour un tremblement."
+        },
+        {
+          "text": "Quand les enfants se dispersent, il range ses affaires sans se presser, puis lève les yeux vers toi. « Tu as vu le geste. La plupart regardent la lumière. Ceux qui regardent la main finissent parfois par comprendre comment elle fonctionne. »"
+        },
+        {
+          "text": "Le vieil érudit se souviendra de ton regard."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "soir"
+        }
+      ]
+    },
+    "soir": {
+      "id": "soir",
+      "kind": "npc",
+      "title": "P1 · Le soir de fête",
+      "position": {
+        "x": 520,
+        "y": 580
+      },
+      "tags": [
+        "prologue"
+      ],
+      "blocks": [
+        {
+          "text": "Le soleil descend sur les champs fauchés quand tu reprends le chemin de l’auberge. La place s’est vidée de ses jeux et remplie de tables, les lanternes s’allument une à une, et quelqu’un a sorti un violon."
+        },
+        {
+          "text": "Toute la soirée, tu cours de la cuisine à la salle, les bras chargés de pichets. Maëlle chante en servant, ce qui ne lui arrive qu’une fois l’an."
+        },
+        {
+          "text": "Il est près de minuit quand le dernier buveur rentre chez lui. Tu montes à ta chambre sous les combles, les jambes lourdes, et tu t’endors avant d’avoir soufflé la chandelle."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "nuit"
+        }
+      ]
+    },
+    "nuit": {
+      "id": "nuit",
+      "kind": "npc",
+      "title": "P2 · L’alerte",
+      "position": {
+        "x": 520,
+        "y": 740
+      },
+      "tags": [
+        "prologue"
+      ],
+      "blocks": [
+        {
+          "text": "Ce sont les chiens qui te réveillent. Tous ceux du village aboient à la fois, puis, d’un coup, plus un seul."
+        },
+        {
+          "text": "Tu restes un moment dans le noir, l’oreille tendue. Rien. Tu descends l’escalier pieds nus en évitant la marche qui grince, pour ne pas réveiller Maëlle, et tu pousses la porte de l’auberge."
+        },
+        {
+          "text": "Sur la place, les lanternes de la fête achèvent de se consumer. Au bout de la route de la forêt, des torches avancent, des dizaines, et un premier toit de chaume s’embrase avec un bruit de soufflet."
+        },
+        {
+          "text": "Puis tu entends la chaîne. Un raclement de fer sur les pavés, lent, régulier. Derrière les torches surgit une silhouette massive, plus haute qu’un cheval, que trois hommes retiennent à grand-peine au bout de leurs chaînes. Une voix hurle le nom que les colporteurs murmurent depuis l’été : « Les Écorcheurs ! »"
+        },
+        {
+          "text": "En quelques instants, Brumefosse se réveille dans les cris. Des portes s’ouvrent sur des gens en chemise qui ne savent où courir. Contre le puits, une fourche oubliée depuis la fête. Dans l’enclos derrière la place, les chevaux de la caravane ruent et hennissent. Et derrière toi, une flammèche portée par le vent vient de se poser sur le toit de l’auberge."
+        }
+      ],
+      "next": [
+        {
+          "id": "vers-combat",
+          "to": "c-combat"
+        },
+        {
+          "id": "vers-refuge",
+          "to": "c-refuge"
+        },
+        {
+          "id": "vers-maelle",
+          "to": "c-maelle"
+        },
+        {
+          "id": "vers-chevaux",
+          "to": "c-chevaux"
+        }
+      ]
+    },
+    "c-combat": {
+      "id": "c-combat",
+      "kind": "choice",
+      "title": "Choix · Le combat",
+      "label": "Prendre une arme et affronter les brigands",
+      "position": {
+        "x": 40,
+        "y": 900
+      },
+      "tags": [
+        "prologue"
+      ],
+      "blocks": [
+        {
+          "text": "Tu ramasses la fourche, la soupèses une seconde, et tu cours vers les torches."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "combat",
+          "effects": [
+            {
+              "op": "inc",
+              "variable": "force",
+              "value": 1
+            },
+            {
+              "op": "inc",
+              "variable": "agilite",
+              "value": 1
+            }
+          ]
+        }
+      ]
+    },
+    "combat": {
+      "id": "combat",
+      "kind": "npc",
+      "title": "P2 · Le combat",
+      "position": {
+        "x": 40,
+        "y": 1060
+      },
+      "tags": [
+        "prologue"
+      ],
+      "blocks": [
+        {
+          "text": "Le premier brigand que tu croises ne s’attendait à rien. Les dents de la fourche le cueillent à la cuisse, il s’effondre en jurant, et tu as déjà le suivant devant toi, une hache levée."
+        },
+        {
+          "text": "Tu pares comme tu peux, le manche se fend, tu recules jusqu’à sentir un mur dans ton dos. Au milieu de la rue, le maître d’armes se bat avec une vraie lame cette fois, et d’autres villageois s’arment à leur tour : le forgeron avec son marteau, les fils du meunier avec leurs fléaux. À plusieurs, vous repoussez les pillards jusqu’au bout de la rue."
+        },
+        {
+          "text": "C’est là que la bête vous trouve. Les hommes qui la tenaient ont lâché ses chaînes, et elle charge droit sur vous. Le forgeron roule au sol. Tes jambes refusent de bouger."
+        },
+        {
+          "text": "Elle s’arrête net, à un pas de toi. Ses naseaux fument. Ses yeux jaunes, larges comme des poings, te fixent, et pendant un long moment, tu sens son souffle brûlant sur ton visage sans que rien d’autre ne bouge dans la rue."
+        },
+        {
+          "text": "Un sifflet strident retentit du côté de la forêt. La bête secoue la tête comme pour chasser une mouche, fait demi-tour et disparaît dans la fumée, sa chaîne raclant les pavés derrière elle."
+        },
+        {
+          "text": "Le reste de la nuit n’est plus qu’un brouillard de cris, de fumée et de seaux d’eau passés de main en main."
+        },
+        {
+          "text": "Le maître d’armes t’a vu tenir la rue."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "aube"
+        }
+      ]
+    },
+    "c-refuge": {
+      "id": "c-refuge",
+      "kind": "choice",
+      "title": "Choix · Le refuge",
+      "label": "Guider les villageois vers le temple",
+      "position": {
+        "x": 360,
+        "y": 900
+      },
+      "tags": [
+        "prologue"
+      ],
+      "blocks": [
+        {
+          "text": "Tu attrapes par le bras la première voisine qui passe et tu lui montres le clocher. « Au temple ! Les murs sont en pierre ! »"
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "refuge",
+          "effects": [
+            {
+              "op": "inc",
+              "variable": "foi",
+              "value": 1
+            },
+            {
+              "op": "inc",
+              "variable": "eloquence",
+              "value": 1
+            }
+          ]
+        }
+      ]
+    },
+    "refuge": {
+      "id": "refuge",
+      "kind": "npc",
+      "title": "P2 · Le refuge",
+      "position": {
+        "x": 360,
+        "y": 1060
+      },
+      "tags": [
+        "prologue"
+      ],
+      "blocks": [
+        {
+          "text": "Ta voix porte plus loin que tu ne l’aurais cru. Une famille te suit, puis une autre, puis des enfants en chemise de nuit, des vieux soutenus par leurs petits-enfants. Tu remontes la rue à travers la fumée en criant le même mot, encore et encore."
+        },
+        {
+          "text": "Le prêtre a ouvert les grandes portes et se tient sur le seuil, un cierge à la main, pour que sa lumière serve de phare. Il fait entrer les gens un à un et compte les têtes à voix basse."
+        },
+        {
+          "text": "Tu redescends chercher les retardataires. Au coin de la ruelle des tisserands, une mère s’est figée, son nourrisson dans les bras. Derrière elle, dans la lueur des flammes, quelque chose d’énorme approche."
+        },
+        {
+          "text": "Tu te jettes devant elle sans réfléchir. La bête s’arrête net, à un pas de toi. Ses naseaux fument. Ses yeux jaunes, larges comme des poings, te fixent, et pendant un long moment, tu sens son souffle brûlant sur ton visage sans que rien d’autre ne bouge dans la ruelle."
+        },
+        {
+          "text": "Un sifflet strident retentit du côté de la forêt. La bête secoue la tête comme pour chasser une mouche, fait demi-tour et disparaît dans la fumée, sa chaîne raclant les pavés derrière elle."
+        },
+        {
+          "text": "Tu ramènes la mère et l’enfant au temple. Les portes se referment derrière vous, et toute la nuit, serrés les uns contre les autres, vous écoutez le village brûler en priant à mi-voix."
+        },
+        {
+          "text": "Le prêtre se souviendra de ton courage."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "aube"
+        }
+      ]
+    },
+    "c-maelle": {
+      "id": "c-maelle",
+      "kind": "choice",
+      "title": "Choix · Maëlle",
+      "label": "Courir à l’auberge chercher Maëlle",
+      "position": {
+        "x": 680,
+        "y": 900
+      },
+      "tags": [
+        "prologue"
+      ],
+      "blocks": [
+        {
+          "text": "Tu fais demi-tour et te précipites dans l’auberge, dont le chaume commence déjà à flamber."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "maelle",
+          "effects": [
+            {
+              "op": "inc",
+              "variable": "force",
+              "value": 1
+            },
+            {
+              "op": "inc",
+              "variable": "foi",
+              "value": 1
+            }
+          ]
+        }
+      ]
+    },
+    "maelle": {
+      "id": "maelle",
+      "kind": "npc",
+      "title": "P2 · L’auberge en flammes",
+      "position": {
+        "x": 680,
+        "y": 1060
+      },
+      "tags": [
+        "prologue"
+      ],
+      "blocks": [
+        {
+          "text": "La salle commune est pleine de fumée. Tu appelles Maëlle, tu tousses, tu appelles encore. Au-dessus de toi, les poutres craquent comme des branches dans la tempête."
+        },
+        {
+          "text": "Tu la trouves en haut de l’escalier, à genoux, qui tente de descendre en s’appuyant au mur. Tu passes son bras sur tes épaules. Vous êtes au milieu des marches quand la charpente cède : une poutre en feu s’abat sur la rampe et lui écrase la jambe. Elle crie. Tu tires de toutes tes forces jusqu’à la dégager."
+        },
+        {
+          "text": "Tu la traînes dehors, dans la cour de l’écurie, et tu l’allonges contre l’abreuvoir. Quand tu te redresses, la bête est là, à quelques pas, sortie de la fumée comme si elle t’avait attendu."
+        },
+        {
+          "text": "Tu te places devant Maëlle. La bête avance encore, puis s’arrête net, à un pas de toi. Ses naseaux fument. Ses yeux jaunes, larges comme des poings, te fixent, et pendant un long moment, tu sens son souffle brûlant sur ton visage sans que rien d’autre ne bouge dans la cour."
+        },
+        {
+          "text": "Un sifflet strident retentit du côté de la forêt. La bête secoue la tête comme pour chasser une mouche, fait demi-tour et disparaît dans la fumée, sa chaîne raclant les pavés derrière elle."
+        },
+        {
+          "text": "Derrière toi, Maëlle a tout vu. Elle te regarde longtemps, sans un mot. Le reste de la nuit, tu la veilles dans la cour, et vous regardez ensemble le toit de l’auberge s’effondrer."
+        },
+        {
+          "text": "Maëlle n’oubliera pas cette nuit."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "aube"
+        }
+      ]
+    },
+    "c-chevaux": {
+      "id": "c-chevaux",
+      "kind": "choice",
+      "title": "Choix · Les chevaux",
+      "label": "Libérer les chevaux de la caravane",
+      "position": {
+        "x": 1000,
+        "y": 900
+      },
+      "tags": [
+        "prologue"
+      ],
+      "blocks": [
+        {
+          "text": "Tu cours vers l’enclos de la caravane."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "chevaux",
+          "effects": [
+            {
+              "op": "inc",
+              "variable": "esprit",
+              "value": 1
+            },
+            {
+              "op": "inc",
+              "variable": "agilite",
+              "value": 1
+            }
+          ]
+        }
+      ]
+    },
+    "chevaux": {
+      "id": "chevaux",
+      "kind": "npc",
+      "title": "P2 · Les chevaux",
+      "position": {
+        "x": 1000,
+        "y": 1060
+      },
+      "tags": [
+        "prologue"
+      ],
+      "blocks": [
+        {
+          "text": "Les bêtes tournent en rond dans l’enclos, folles de peur, les yeux blancs. De là, tu vois toute la route de la forêt : les pillards sont entrés par elle, et c’est par elle qu’ils repartiront, chargés de leur butin."
+        },
+        {
+          "text": "Tu soulèves la barre, ouvres la barrière en grand et frappes du plat de la main la croupe du premier cheval en hurlant. Le troupeau s’engouffre derrière lui, droit sur la route, une vague de sabots et de crinières qui balaie les charrettes des brigands et les renverse dans le fossé."
+        },
+        {
+          "text": "Tu n’as pas le temps de voir la suite. Un grondement monte derrière toi, si grave que tu le sens dans ta poitrine avant de l’entendre. Tu te retournes : la bête est entrée dans l’enclos vide."
+        },
+        {
+          "text": "Elle s’arrête net, à un pas de toi. Ses naseaux fument. Ses yeux jaunes, larges comme des poings, te fixent, et pendant un long moment, tu sens son souffle brûlant sur ton visage sans que rien d’autre ne bouge dans l’enclos."
+        },
+        {
+          "text": "Un sifflet strident retentit du côté de la forêt. La bête secoue la tête comme pour chasser une mouche, fait demi-tour et disparaît dans la fumée, sa chaîne raclant la terre derrière elle."
+        },
+        {
+          "text": "Le reste de la nuit, tu le passes à courir d’un incendie à l’autre avec les seaux. Les pillards, privés de leurs charrettes, devront abandonner la moitié de ce qu’ils avaient volé."
+        },
+        {
+          "text": "La marchande saura qui a lâché ses chevaux."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "aube"
+        }
+      ]
+    },
+    "aube": {
+      "id": "aube",
+      "kind": "npc",
+      "title": "P3 · Les cendres",
+      "position": {
+        "x": 520,
+        "y": 1260
+      },
+      "tags": [
+        "prologue"
+      ],
+      "blocks": [
+        {
+          "text": "À l’aube, des trompes résonnent sur la route de Vaelmont. Une patrouille royale, une vingtaine de cavaliers en manteaux bleus, a vu les flammes depuis la colline et arrive au galop. Les derniers brigands s’enfuient dans la forêt sans demander leur reste."
+        },
+        {
+          "text": "Quand le soleil se lève, Brumefosse n’est plus qu’un village à moitié noirci. Une fumée grise traîne entre les maisons. Les gens errent, hébétés, ou fouillent les décombres à mains nues. De l’auberge, il ne reste que les murs de pierre et une odeur de bois mouillé."
+        }
+      ],
+      "next": [
+        {
+          "id": "vers-veille",
+          "to": "aube-veille",
+          "condition": {
+            "op": "visited",
+            "scene": "c-maelle"
+          }
+        },
+        {
+          "id": "vers-cellier",
+          "to": "aube-cellier"
+        }
+      ]
+    },
+    "aube-veille": {
+      "id": "aube-veille",
+      "kind": "npc",
+      "title": "P3 · Maëlle, sauvée par le héros",
+      "position": {
+        "x": 360,
+        "y": 1420
+      },
+      "tags": [
+        "prologue"
+      ],
+      "blocks": [
+        {
+          "text": "Maëlle n’a pas quitté l’abreuvoir. Le prêtre est venu à l’aube lui poser une attelle de fortune, et elle est assise là, la jambe raide devant elle, le visage gris de suie et de fatigue. Quand tu t’approches, elle prend ta main et la garde un moment dans la sienne."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "adieu"
+        }
+      ]
+    },
+    "aube-cellier": {
+      "id": "aube-cellier",
+      "kind": "npc",
+      "title": "P3 · Maëlle, retrouvée au cellier",
+      "position": {
+        "x": 680,
+        "y": 1420
+      },
+      "tags": [
+        "prologue"
+      ],
+      "blocks": [
+        {
+          "text": "Tu cherches Maëlle partout, le cœur au bord des lèvres, jusqu’à ce qu’une voisine te tire par la manche. On l’a trouvée au petit matin, recroquevillée dans le cellier, où elle s’était réfugiée quand l’escalier a pris feu. Une poutre lui a brisé la jambe en tombant, et elle a respiré la fumée toute la nuit."
+        },
+        {
+          "text": "Le prêtre dit qu’elle a eu de la chance. Quand tu la vois, assise contre le mur du temple, grise de suie, la jambe serrée dans une attelle de fortune, tu as du mal à le croire. Elle te fait signe d’approcher, prend ta main et la garde un moment dans la sienne."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "adieu"
+        }
+      ]
+    },
+    "adieu": {
+      "id": "adieu",
+      "kind": "npc",
+      "title": "P3 · Le départ",
+      "position": {
+        "x": 520,
+        "y": 1580
+      },
+      "tags": [
+        "prologue"
+      ],
+      "blocks": [
+        {
+          "text": "« L’auberge, c’était ma vie à moi, dit-elle enfin. Toi, tu as la tienne à faire. »"
+        },
+        {
+          "text": "Tu veux protester, dire que tu vas rebâtir, que tu resteras pour l’aider. Elle secoue la tête avant que tu aies ouvert la bouche."
+        },
+        {
+          "text": "« Ce village ne peut plus rien t’offrir. Pars, et deviens quelqu’un. »"
+        },
+        {
+          "text": "Elle lâche ta main. Derrière toi, sur la place couverte de cendres, des pas s’approchent."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "ceremonie"
+        }
+      ]
+    },
+    "ceremonie": {
+      "id": "ceremonie",
+      "kind": "npc",
+      "title": "C · La cérémonie",
+      "position": {
+        "x": 400,
+        "y": 1740
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "À midi, les anciens rassemblent ce qui reste du village sur la place. Il n’y a ni musique ni tables, seulement des visages noircis et des enfants qui ne lâchent plus la main de leurs parents."
+        },
+        {
+          "text": "Le doyen remercie la patrouille, puis ceux qui se sont battus, ceux qui ont porté l’eau, ceux qui ont ouvert leur porte. Le sergent de la patrouille, un homme carré à la barbe grise, répond d’un simple hochement de tête. Assise sur un banc, la jambe raide devant elle, Maëlle ne te quitte pas des yeux."
+        },
+        {
+          "text": "Quand la foule se disperse, plusieurs personnes s’attardent sur la place, et plus d’une regarde dans ta direction : le maître d’armes, la marchande, le prêtre, le vieil érudit, le joueur de bonneteau, la chasseuse."
+        }
+      ],
+      "next": [
+        {
+          "id": "approche-armes",
+          "to": "approche-armes",
+          "condition": {
+            "op": "visited",
+            "scene": "c-duel"
+          }
+        },
+        {
+          "id": "approche-marchande",
+          "to": "approche-marchande",
+          "condition": {
+            "op": "visited",
+            "scene": "c-caravane"
+          }
+        },
+        {
+          "id": "approche-pretre",
+          "to": "approche-pretre",
+          "condition": {
+            "op": "visited",
+            "scene": "c-temple"
+          }
+        },
+        {
+          "id": "approche-erudit",
+          "to": "approche-erudit",
+          "condition": {
+            "op": "visited",
+            "scene": "c-erudit"
+          }
+        },
+        {
+          "id": "approche-bonneteau",
+          "to": "approche-bonneteau",
+          "condition": {
+            "op": "visited",
+            "scene": "c-bonneteau"
+          }
+        },
+        {
+          "id": "approche-chasseuse",
+          "to": "approche-chasseuse",
+          "condition": {
+            "op": "visited",
+            "scene": "c-chasse"
+          }
+        },
+        {
+          "id": "vers-place",
+          "to": "place"
+        }
+      ]
+    },
+    "place": {
+      "id": "place",
+      "kind": "npc",
+      "title": "C · La place (plaque tournante)",
+      "position": {
+        "x": 400,
+        "y": 2300
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Tu parcours la place du regard."
+        }
+      ],
+      "next": [
+        {
+          "id": "vers-armes",
+          "to": "c-parler-armes"
+        },
+        {
+          "id": "vers-marchande",
+          "to": "c-parler-marchande"
+        },
+        {
+          "id": "vers-pretre",
+          "to": "c-parler-pretre"
+        },
+        {
+          "id": "vers-erudit",
+          "to": "c-parler-erudit"
+        },
+        {
+          "id": "vers-bonneteau",
+          "to": "c-parler-bonneteau"
+        },
+        {
+          "id": "vers-chasseuse",
+          "to": "c-parler-chasseuse"
+        }
+      ]
+    },
+    "approche-armes": {
+      "id": "approche-armes",
+      "kind": "npc",
+      "title": "C · Le maître d’armes s’approche (mentor rencontré)",
+      "position": {
+        "x": -600,
+        "y": 1900
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Le maître d’armes est le premier à venir vers toi. Il s’arrête à deux pas, les pouces passés dans son ceinturon, et t’observe comme la veille, devant le cercle tracé dans la poussière."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "offre-armes-chaleur"
+        }
+      ]
+    },
+    "offre-armes-chaleur": {
+      "id": "offre-armes-chaleur",
+      "kind": "npc",
+      "title": "C · Offre du maître d’armes (chaleureuse)",
+      "position": {
+        "x": -600,
+        "y": 2060
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "« Hier, dans le cercle, tu ne savais rien et tu n’as pas reculé. » Il jette un regard aux toits noircis. « J’ai vu des gens bâtis comme des bœufs lâcher leur arme au premier coup. Le courage, ça ne s’apprend guère. Le reste, si. »"
+        },
+        {
+          "text": "« Je repars demain vers le sud. Il y a des tournois dans les baronnies, des seigneurs qui paient bien pour qu’on défende leurs couleurs, et entre les deux, des routes où il vaut mieux savoir se servir d’une lame. »"
+        },
+        {
+          "text": "« Il me faut quelqu’un pour porter mon bagage, tenir mon cheval et graisser mes armes. Les premiers mois, tu dormiras par terre et tu te réveilleras avec des bleus partout. » Il esquisse ce qui ressemble presque à un sourire. « Ensuite, je t’apprendrai à les rendre. »"
+        }
+      ],
+      "next": [
+        {
+          "id": "vers-suivre",
+          "to": "c-suivre-armes"
+        },
+        {
+          "id": "vers-autre",
+          "to": "c-autre"
+        }
+      ]
+    },
+    "c-parler-armes": {
+      "id": "c-parler-armes",
+      "kind": "choice",
+      "title": "Choix · Parler au maître d’armes",
+      "position": {
+        "x": -600,
+        "y": 2460
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Tu t’approches du maître d’armes."
+        }
+      ],
+      "next": [
+        {
+          "id": "deja-vu",
+          "to": "offre-armes-bis",
+          "condition": {
+            "op": "or",
+            "conditions": [
+              {
+                "op": "visited",
+                "scene": "offre-armes"
+              },
+              {
+                "op": "visited",
+                "scene": "offre-armes-chaleur"
+              }
+            ]
+          }
+        },
+        {
+          "id": "premiere-fois",
+          "to": "offre-armes"
+        }
+      ],
+      "label": "Parler au maître d’armes"
+    },
+    "offre-armes": {
+      "id": "offre-armes",
+      "kind": "npc",
+      "title": "C · Offre du maître d’armes (distante)",
+      "position": {
+        "x": -600,
+        "y": 2620
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Il nettoie sa lame avec un chiffon, sans lever les yeux. « Si tu viens me remercier, c’est fait. Si tu viens pour autre chose, parle. »"
+        },
+        {
+          "text": "Tu lui dis que tu cherches ta route. Il grogne. « Tout le monde cherche sa route au lendemain d’un massacre. La plupart la retrouvent dès que les toits sont refaits. » Il examine le fil de sa lame à la lumière. « Je repars demain vers le sud, vers les tournois des baronnies. Des seigneurs qui paient bien, et des routes où il vaut mieux savoir se défendre. »"
+        },
+        {
+          "text": "Il te détaille enfin de la tête aux pieds, comme on jauge un cheval. « Il me faut quelqu’un pour porter mon bagage et tenir mon cheval. La paie, c’est le gîte et le couvert. Le reste, on verra si tu le mérites. »"
+        }
+      ],
+      "next": [
+        {
+          "id": "vers-suivre",
+          "to": "c-suivre-armes"
+        },
+        {
+          "id": "vers-autre",
+          "to": "c-autre"
+        }
+      ]
+    },
+    "offre-armes-bis": {
+      "id": "offre-armes-bis",
+      "kind": "npc",
+      "title": "C · Offre du maître d’armes (déjà entendue)",
+      "position": {
+        "x": -420,
+        "y": 2780
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Il lève à peine les yeux. « Je t’ai fait mon offre. Je pars demain à l’aube, avec ou sans toi. »"
+        }
+      ],
+      "next": [
+        {
+          "id": "vers-suivre",
+          "to": "c-suivre-armes"
+        },
+        {
+          "id": "vers-autre",
+          "to": "c-autre"
+        }
+      ]
+    },
+    "c-suivre-armes": {
+      "id": "c-suivre-armes",
+      "kind": "choice",
+      "title": "Choix · Suivre le maître d’armes",
+      "position": {
+        "x": -600,
+        "y": 2960
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Tu dis au maître d’armes que tu porteras son bagage."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "fin-armes",
+          "effects": [
+            {
+              "op": "set",
+              "variable": "classe",
+              "value": "guerrier"
+            }
+          ]
+        }
+      ],
+      "label": "Suivre le maître d’armes"
+    },
+    "fin-armes": {
+      "id": "fin-armes",
+      "kind": "npc",
+      "title": "C · Fin du prologue : la voie du guerrier",
+      "position": {
+        "x": -600,
+        "y": 3120
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Le soir venu, tu fais tes adieux à Maëlle. Elle t’écoute raconter ton choix sans t’interrompre, puis elle te tient longuement la main."
+        },
+        {
+          "text": "« Reviens me voir quand tu seras quelqu’un. Ou avant, si la route est trop dure. »"
+        },
+        {
+          "text": "À l’aube, tu quittes Brumefosse derrière le cheval du maître d’armes, son bagage sur le dos, vers le sud et ses tournois."
+        }
+      ],
+      "next": [],
+      "ending": {
+        "type": "Fin du prologue",
+        "name": "La voie du guerrier",
+        "blurb": "Ta route commence ici. La suite reste à écrire."
+      }
+    },
+    "approche-marchande": {
+      "id": "approche-marchande",
+      "kind": "npc",
+      "title": "C · La marchande s’approche (mentor rencontré)",
+      "position": {
+        "x": -200,
+        "y": 1900
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "La marchande fend la foule dans ta direction, sa tablette de cire sous le bras. Elle a les traits tirés, mais son regard s’éclaire en te voyant."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "offre-marchande-chaleur"
+        }
+      ]
+    },
+    "offre-marchande-chaleur": {
+      "id": "offre-marchande-chaleur",
+      "kind": "npc",
+      "title": "C · Offre de la marchande (chaleureuse)",
+      "position": {
+        "x": -200,
+        "y": 2060
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "« L’œil et la langue », dit-elle en guise de salut. Puis son sourire s’efface. « La caravane a perdu un commis cette nuit. Tomas. Il avait seize ans, et il comptait mieux que moi. »"
+        },
+        {
+          "text": "« Sa place est à toi si tu la veux. Je ne vais pas te mentir : c’est la route par tous les temps, les comptes à la chandelle jusqu’à minuit, des clients qui essaient de te voler et des péages qui le font en toute légalité. »"
+        },
+        {
+          "text": "« En échange, tu verras Vaelmont, et après Vaelmont, les ports du sud et les foires de l’est. Et tu auras une vraie part des bénéfices, puisque tu sais déjà défendre ce qui te revient. » Elle tapote sa tablette de cire. « On part dans deux jours. »"
+        }
+      ],
+      "next": [
+        {
+          "id": "vers-suivre",
+          "to": "c-suivre-marchande"
+        },
+        {
+          "id": "vers-autre",
+          "to": "c-autre"
+        }
+      ]
+    },
+    "c-parler-marchande": {
+      "id": "c-parler-marchande",
+      "kind": "choice",
+      "title": "Choix · Parler à la marchande",
+      "position": {
+        "x": -200,
+        "y": 2460
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Tu t’approches de la marchande."
+        }
+      ],
+      "next": [
+        {
+          "id": "deja-vu",
+          "to": "offre-marchande-bis",
+          "condition": {
+            "op": "or",
+            "conditions": [
+              {
+                "op": "visited",
+                "scene": "offre-marchande"
+              },
+              {
+                "op": "visited",
+                "scene": "offre-marchande-chaleur"
+              }
+            ]
+          }
+        },
+        {
+          "id": "premiere-fois",
+          "to": "offre-marchande"
+        }
+      ],
+      "label": "Parler à la marchande"
+    },
+    "offre-marchande": {
+      "id": "offre-marchande",
+      "kind": "npc",
+      "title": "C · Offre de la marchande (distante)",
+      "position": {
+        "x": -200,
+        "y": 2620
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Elle t’écoute d’une oreille, les yeux sur sa tablette, où elle fait le compte de ce que la nuit lui a coûté. « Trois chevaux, deux charrettes, et un commis. » Elle trace un trait dans la cire. « Les chevaux et les charrettes, je les rachèterai. Le garçon, non. »"
+        },
+        {
+          "text": "Elle lève enfin les yeux sur toi. « Sa place est libre. La route, le froid, les comptes jusqu’à minuit. Tu sais lire ? Compter ? » Tu hoches la tête. « Bien. Ça m’évitera de tout t’apprendre. »"
+        },
+        {
+          "text": "« Le gîte, le couvert, et un salaire de commis. Les bénéfices, on en reparlera quand tu auras fait tes preuves. On part pour Vaelmont dans deux jours, avec ou sans toi. »"
+        }
+      ],
+      "next": [
+        {
+          "id": "vers-suivre",
+          "to": "c-suivre-marchande"
+        },
+        {
+          "id": "vers-autre",
+          "to": "c-autre"
+        }
+      ]
+    },
+    "offre-marchande-bis": {
+      "id": "offre-marchande-bis",
+      "kind": "npc",
+      "title": "C · Offre de la marchande (déjà entendue)",
+      "position": {
+        "x": -20,
+        "y": 2780
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "« Tu reviens négocier ? » Elle sourit. « La place est toujours libre. Elle ne le restera pas longtemps. »"
+        }
+      ],
+      "next": [
+        {
+          "id": "vers-suivre",
+          "to": "c-suivre-marchande"
+        },
+        {
+          "id": "vers-autre",
+          "to": "c-autre"
+        }
+      ]
+    },
+    "c-suivre-marchande": {
+      "id": "c-suivre-marchande",
+      "kind": "choice",
+      "title": "Choix · Rejoindre la caravane",
+      "position": {
+        "x": -200,
+        "y": 2960
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Tu tends la main à la marchande, et elle la serre."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "fin-marchande",
+          "effects": [
+            {
+              "op": "set",
+              "variable": "classe",
+              "value": "commercant"
+            }
+          ]
+        }
+      ],
+      "label": "Rejoindre la caravane"
+    },
+    "fin-marchande": {
+      "id": "fin-marchande",
+      "kind": "npc",
+      "title": "C · Fin du prologue : la voie du commerçant",
+      "position": {
+        "x": -200,
+        "y": 3120
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Le soir venu, tu fais tes adieux à Maëlle. Elle t’écoute raconter ton choix sans t’interrompre, puis elle te tient longuement la main."
+        },
+        {
+          "text": "« Reviens me voir quand tu seras quelqu’un. Ou avant, si la route est trop dure. »"
+        },
+        {
+          "text": "Deux jours plus tard, la caravane reprend la route de Vaelmont. Tu marches à côté de la charrette de tête, une tablette de cire à la main."
+        }
+      ],
+      "next": [],
+      "ending": {
+        "type": "Fin du prologue",
+        "name": "La voie du commerçant",
+        "blurb": "Ta route commence ici. La suite reste à écrire."
+      }
+    },
+    "approche-pretre": {
+      "id": "approche-pretre",
+      "kind": "npc",
+      "title": "C · Le prêtre s’approche (mentor rencontré)",
+      "position": {
+        "x": 200,
+        "y": 1900
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Le prêtre te rejoint à pas lents, les manches de sa robe encore grises de cendre, avec les yeux rougis de quelqu’un qui n’a pas dormi."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "offre-pretre-chaleur"
+        }
+      ]
+    },
+    "offre-pretre-chaleur": {
+      "id": "offre-pretre-chaleur",
+      "kind": "npc",
+      "title": "C · Offre du prêtre (chaleureuse)",
+      "position": {
+        "x": 200,
+        "y": 2060
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "« Je t’ai vu rattraper cette gerbe, hier, pendant que tout le monde gardait les yeux fermés. » Il esquisse un sourire fatigué. « J’y ai repensé cette nuit, entre deux blessés. Il y a des gens qui prient, et des gens qui veillent pendant que les autres prient. Il faut les deux. Les seconds sont plus rares. »"
+        },
+        {
+          "text": "« Le séminaire de Vaelmont accueille chaque automne quelques jeunes gens qui n’ont rien d’autre que leur bonne volonté. J’y ai passé six ans, autrefois. On y apprend les textes, les soins, la langue ancienne, et surtout à servir avant d’apprendre à prier. »"
+        },
+        {
+          "text": "Il pose une main sur ton épaule. « J’ai déjà commencé la lettre. Je ne te promets pas une vie facile : on y dort peu, on y mange mal, et le monde attend beaucoup de ceux qui portent la robe. Mais je crois que tu y as ta place. »"
+        }
+      ],
+      "next": [
+        {
+          "id": "vers-suivre",
+          "to": "c-suivre-pretre"
+        },
+        {
+          "id": "vers-autre",
+          "to": "c-autre"
+        }
+      ]
+    },
+    "c-parler-pretre": {
+      "id": "c-parler-pretre",
+      "kind": "choice",
+      "title": "Choix · Parler au prêtre",
+      "position": {
+        "x": 200,
+        "y": 2460
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Tu t’approches du prêtre."
+        }
+      ],
+      "next": [
+        {
+          "id": "deja-vu",
+          "to": "offre-pretre-bis",
+          "condition": {
+            "op": "or",
+            "conditions": [
+              {
+                "op": "visited",
+                "scene": "offre-pretre"
+              },
+              {
+                "op": "visited",
+                "scene": "offre-pretre-chaleur"
+              }
+            ]
+          }
+        },
+        {
+          "id": "premiere-fois",
+          "to": "offre-pretre"
+        }
+      ],
+      "label": "Parler au prêtre"
+    },
+    "offre-pretre": {
+      "id": "offre-pretre",
+      "kind": "npc",
+      "title": "C · Offre du prêtre (distante)",
+      "position": {
+        "x": 200,
+        "y": 2620
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Le prêtre te salue avec la douceur un peu lasse qu’il réserve à tous ses fidèles. Ses manches sont tachées de sang séché, et il sent la fumée et l’onguent."
+        },
+        {
+          "text": "« Beaucoup viennent me voir ce matin. Certains veulent comprendre pourquoi les dieux ont laissé faire, et je n’ai pas de réponse à leur donner. D’autres veulent savoir quoi faire de leur vie, maintenant. À ceux-là, j’ai au moins une porte à montrer. »"
+        },
+        {
+          "text": "« Le séminaire de Vaelmont accueille chaque automne quelques jeunes gens qui n’ont rien d’autre que leur bonne volonté. Si tu sens l’appel, je peux écrire pour toi. On y apprend à servir avant d’apprendre à prier. » Il te regarde longuement. « Réfléchis-y bien. On n’entre pas au séminaire pour fuir des cendres. »"
+        }
+      ],
+      "next": [
+        {
+          "id": "vers-suivre",
+          "to": "c-suivre-pretre"
+        },
+        {
+          "id": "vers-autre",
+          "to": "c-autre"
+        }
+      ]
+    },
+    "offre-pretre-bis": {
+      "id": "offre-pretre-bis",
+      "kind": "npc",
+      "title": "C · Offre du prêtre (déjà entendue)",
+      "position": {
+        "x": 380,
+        "y": 2780
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Le prêtre t’accueille du même sourire patient. « Prends le temps qu’il te faut. Le séminaire attendra. »"
+        }
+      ],
+      "next": [
+        {
+          "id": "vers-suivre",
+          "to": "c-suivre-pretre"
+        },
+        {
+          "id": "vers-autre",
+          "to": "c-autre"
+        }
+      ]
+    },
+    "c-suivre-pretre": {
+      "id": "c-suivre-pretre",
+      "kind": "choice",
+      "title": "Choix · Partir pour le séminaire",
+      "position": {
+        "x": 200,
+        "y": 2960
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Tu demandes au prêtre d’écrire sa lettre."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "fin-pretre",
+          "effects": [
+            {
+              "op": "set",
+              "variable": "classe",
+              "value": "pretre"
+            }
+          ]
+        }
+      ],
+      "label": "Partir pour le séminaire"
+    },
+    "fin-pretre": {
+      "id": "fin-pretre",
+      "kind": "npc",
+      "title": "C · Fin du prologue : la voie du prêtre",
+      "position": {
+        "x": 200,
+        "y": 3120
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Le soir venu, tu fais tes adieux à Maëlle. Elle t’écoute raconter ton choix sans t’interrompre, puis elle te tient longuement la main."
+        },
+        {
+          "text": "« Reviens me voir quand tu seras quelqu’un. Ou avant, si la route est trop dure. »"
+        },
+        {
+          "text": "Une semaine plus tard, la réponse du séminaire arrive. Tu pars pour Vaelmont avec une lettre scellée et un baluchon presque vide."
+        }
+      ],
+      "next": [],
+      "ending": {
+        "type": "Fin du prologue",
+        "name": "La voie du prêtre",
+        "blurb": "Ta route commence ici. La suite reste à écrire."
+      }
+    },
+    "approche-erudit": {
+      "id": "approche-erudit",
+      "kind": "npc",
+      "title": "C · L’érudit s’approche (mentor rencontré)",
+      "position": {
+        "x": 600,
+        "y": 1900
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Le vieil érudit vient s’asseoir près de toi sur le rebord de la fontaine, en grimaçant un peu, comme si ses genoux lui reprochaient la nuit."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "offre-erudit-chaleur"
+        }
+      ]
+    },
+    "offre-erudit-chaleur": {
+      "id": "offre-erudit-chaleur",
+      "kind": "npc",
+      "title": "C · Offre de l’érudit (chaleureuse)",
+      "position": {
+        "x": 600,
+        "y": 2060
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "« Tu te souviens du geste ? » Il le refait lentement devant toi, et une étincelle bleue naît au bout de ses doigts avant de s’éteindre. « Les enfants voient la lumière. Toi, tu as vu le travail. C’est le premier pas, et la plupart des gens ne le font jamais. »"
+        },
+        {
+          "text": "« L’Académie des Arcanes de Vaelmont passe des années à enseigner ce que tu as remarqué en une après-midi. Les runes, les sceaux, la mécanique des sortilèges. On y apprend aussi l’humilité, à force d’échouer. » Il rit doucement. « Moi, j’ai mis quatre ans à allumer une bougie. »"
+        },
+        {
+          "text": "Il tire de son manteau une plume et un feuillet vierge. « Une recommandation. Il me suffit d’y écrire ton nom, et ils refusent rarement un élève que je leur envoie. Je ne te promets pas de miracles. Je te promets que tu comprendras le monde mieux que ceux qui le gouvernent. »"
+        }
+      ],
+      "next": [
+        {
+          "id": "vers-suivre",
+          "to": "c-suivre-erudit"
+        },
+        {
+          "id": "vers-autre",
+          "to": "c-autre"
+        }
+      ]
+    },
+    "c-parler-erudit": {
+      "id": "c-parler-erudit",
+      "kind": "choice",
+      "title": "Choix · Parler au vieil érudit",
+      "position": {
+        "x": 600,
+        "y": 2460
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Tu t’approches de l’érudit."
+        }
+      ],
+      "next": [
+        {
+          "id": "deja-vu",
+          "to": "offre-erudit-bis",
+          "condition": {
+            "op": "or",
+            "conditions": [
+              {
+                "op": "visited",
+                "scene": "offre-erudit"
+              },
+              {
+                "op": "visited",
+                "scene": "offre-erudit-chaleur"
+              }
+            ]
+          }
+        },
+        {
+          "id": "premiere-fois",
+          "to": "offre-erudit"
+        }
+      ],
+      "label": "Parler au vieil érudit"
+    },
+    "offre-erudit": {
+      "id": "offre-erudit",
+      "kind": "npc",
+      "title": "C · Offre de l’érudit (distante)",
+      "position": {
+        "x": 600,
+        "y": 2620
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Il lève un sourcil en te voyant approcher, comme s’il cherchait ton visage parmi ceux des enfants de la veille, sans le trouver."
+        },
+        {
+          "text": "« L’Académie des Arcanes de Vaelmont cherche toujours des esprits curieux. Bien peu le sont vraiment. On y vient pour lancer des boules de feu, et on y découvre des années de grammaire runique, de calcul et de lecture à la chandelle. La moitié des élèves repartent avant la fin de la première année. »"
+        },
+        {
+          "text": "Il tire de son manteau une plume et un feuillet vierge, et le fait tourner entre ses doigts. « Je veux bien écrire une recommandation. Encore faut-il que je sache quel nom y écrire, et ce qu’il vaut. »"
+        }
+      ],
+      "next": [
+        {
+          "id": "vers-suivre",
+          "to": "c-suivre-erudit"
+        },
+        {
+          "id": "vers-autre",
+          "to": "c-autre"
+        }
+      ]
+    },
+    "offre-erudit-bis": {
+      "id": "offre-erudit-bis",
+      "kind": "npc",
+      "title": "C · Offre de l’érudit (déjà entendue)",
+      "position": {
+        "x": 780,
+        "y": 2780
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Il fait tourner la plume entre ses doigts. « Le feuillet est toujours vierge. »"
+        }
+      ],
+      "next": [
+        {
+          "id": "vers-suivre",
+          "to": "c-suivre-erudit"
+        },
+        {
+          "id": "vers-autre",
+          "to": "c-autre"
+        }
+      ]
+    },
+    "c-suivre-erudit": {
+      "id": "c-suivre-erudit",
+      "kind": "choice",
+      "title": "Choix · Accepter la lettre de l’érudit",
+      "position": {
+        "x": 600,
+        "y": 2960
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Tu regardes le vieil homme tremper sa plume dans l’encre."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "fin-erudit",
+          "effects": [
+            {
+              "op": "set",
+              "variable": "classe",
+              "value": "mage"
+            }
+          ]
+        }
+      ],
+      "label": "Accepter la lettre de l’érudit"
+    },
+    "fin-erudit": {
+      "id": "fin-erudit",
+      "kind": "npc",
+      "title": "C · Fin du prologue : la voie du mage",
+      "position": {
+        "x": 600,
+        "y": 3120
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Le soir venu, tu fais tes adieux à Maëlle. Elle t’écoute raconter ton choix sans t’interrompre, puis elle te tient longuement la main."
+        },
+        {
+          "text": "« Reviens me voir quand tu seras quelqu’un. Ou avant, si la route est trop dure. »"
+        },
+        {
+          "text": "Tu prends la route de Vaelmont avec, cousue dans la doublure de ton manteau, une lettre qui porte ton nom."
+        }
+      ],
+      "next": [],
+      "ending": {
+        "type": "Fin du prologue",
+        "name": "La voie du mage",
+        "blurb": "Ta route commence ici. La suite reste à écrire."
+      }
+    },
+    "approche-bonneteau": {
+      "id": "approche-bonneteau",
+      "kind": "npc",
+      "title": "C · Le joueur de bonneteau s’approche (mentor rencontré)",
+      "position": {
+        "x": 1000,
+        "y": 1900
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Le joueur de bonneteau surgit à ton côté sans que tu l’aies entendu approcher, une bille roulant entre ses doigts."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "offre-bonneteau-chaleur"
+        }
+      ]
+    },
+    "offre-bonneteau-chaleur": {
+      "id": "offre-bonneteau-chaleur",
+      "kind": "npc",
+      "title": "C · Offre du joueur de bonneteau (chaleureuse)",
+      "position": {
+        "x": 1000,
+        "y": 2060
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Il te fait un clin d’œil. « Le témoin muet. Tu sais que mon associé voulait te faire passer l’envie de parler, hier soir ? Je lui ai dit de te laisser tranquille. J’avais vu juste. »"
+        },
+        {
+          "text": "« La caravane repart, mais moi, je la quitte. Je descends à Vaelmont par mes propres moyens. Là-bas, il y a des gens qui cherchent des yeux vifs et une bouche close : des marchands qui veulent savoir ce que font leurs concurrents, des nobles qui égarent des lettres, des portes qui ne s’ouvrent que la nuit. »"
+        },
+        {
+          "text": "Il fait disparaître sa bille d’un geste et la fait réapparaître derrière ton oreille. « Ils paient bien, et ils ne posent jamais de questions. Tu sais déjà te taire. Le reste, les serrures, les foules, l’art de ne jamais être là où on te cherche, je te l’apprendrai en route. »"
+        }
+      ],
+      "next": [
+        {
+          "id": "vers-suivre",
+          "to": "c-suivre-bonneteau"
+        },
+        {
+          "id": "vers-autre",
+          "to": "c-autre"
+        }
+      ]
+    },
+    "c-parler-bonneteau": {
+      "id": "c-parler-bonneteau",
+      "kind": "choice",
+      "title": "Choix · Parler au joueur de bonneteau",
+      "position": {
+        "x": 1000,
+        "y": 2460
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Tu t’approches du joueur de bonneteau."
+        }
+      ],
+      "next": [
+        {
+          "id": "deja-vu",
+          "to": "offre-bonneteau-bis",
+          "condition": {
+            "op": "or",
+            "conditions": [
+              {
+                "op": "visited",
+                "scene": "offre-bonneteau"
+              },
+              {
+                "op": "visited",
+                "scene": "offre-bonneteau-chaleur"
+              }
+            ]
+          }
+        },
+        {
+          "id": "premiere-fois",
+          "to": "offre-bonneteau"
+        }
+      ],
+      "label": "Parler au joueur de bonneteau"
+    },
+    "offre-bonneteau": {
+      "id": "offre-bonneteau",
+      "kind": "npc",
+      "title": "C · Offre du joueur de bonneteau (distante)",
+      "position": {
+        "x": 1000,
+        "y": 2620
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Il ramasse sa planche et ses gobelets sans se presser, et te jette un regard en coin. « Tu as la tête de quelqu’un qui n’a plus rien à perdre. D’habitude, ce sont les meilleurs clients. »"
+        },
+        {
+          "text": "« La caravane repart, mais moi, je descends à Vaelmont par mes propres moyens. J’y connais des gens qui cherchent des yeux vifs et des mains habiles. Rien de bien honnête, je te préviens. Rien de bien sanglant non plus, la plupart du temps. »"
+        },
+        {
+          "text": "« Ils paient bien, et ils ne posent jamais de questions. » Il hausse les épaules. « À toi de voir si tu as les nerfs. Moi, je pars demain, quand la lune sera couchée. »"
+        }
+      ],
+      "next": [
+        {
+          "id": "vers-suivre",
+          "to": "c-suivre-bonneteau"
+        },
+        {
+          "id": "vers-autre",
+          "to": "c-autre"
+        }
+      ]
+    },
+    "offre-bonneteau-bis": {
+      "id": "offre-bonneteau-bis",
+      "kind": "npc",
+      "title": "C · Offre du joueur de bonneteau (déjà entendue)",
+      "position": {
+        "x": 1180,
+        "y": 2780
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "« Encore toi ? » Il rit. « Je ne le dirai pas deux fois. Si tu veux venir, viens. »"
+        }
+      ],
+      "next": [
+        {
+          "id": "vers-suivre",
+          "to": "c-suivre-bonneteau"
+        },
+        {
+          "id": "vers-autre",
+          "to": "c-autre"
+        }
+      ]
+    },
+    "c-suivre-bonneteau": {
+      "id": "c-suivre-bonneteau",
+      "kind": "choice",
+      "title": "Choix · Partir avec le joueur de bonneteau",
+      "position": {
+        "x": 1000,
+        "y": 2960
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Tu fais signe au joueur que tu en es."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "fin-bonneteau",
+          "effects": [
+            {
+              "op": "set",
+              "variable": "classe",
+              "value": "voleur"
+            }
+          ]
+        }
+      ],
+      "label": "Partir avec le joueur de bonneteau"
+    },
+    "fin-bonneteau": {
+      "id": "fin-bonneteau",
+      "kind": "npc",
+      "title": "C · Fin du prologue : la voie du voleur",
+      "position": {
+        "x": 1000,
+        "y": 3120
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Le soir venu, tu fais tes adieux à Maëlle. Elle t’écoute raconter ton choix sans t’interrompre, puis elle te tient longuement la main."
+        },
+        {
+          "text": "« Reviens me voir quand tu seras quelqu’un. Ou avant, si la route est trop dure. »"
+        },
+        {
+          "text": "Une nuit sans lune, tu quittes Brumefosse par le chemin des bois, sur les talons du joueur de bonneteau, sans avoir dit à personne d’autre où tu allais."
+        }
+      ],
+      "next": [],
+      "ending": {
+        "type": "Fin du prologue",
+        "name": "La voie du voleur",
+        "blurb": "Ta route commence ici. La suite reste à écrire."
+      }
+    },
+    "approche-chasseuse": {
+      "id": "approche-chasseuse",
+      "kind": "npc",
+      "title": "C · La chasseuse s’approche (mentor rencontré)",
+      "position": {
+        "x": 1400,
+        "y": 1900
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "La chasseuse traverse la place droit vers toi, son arc à l’épaule, de la boue de la forêt jusqu’aux genoux."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "offre-chasseuse-chaleur"
+        }
+      ]
+    },
+    "offre-chasseuse-chaleur": {
+      "id": "offre-chasseuse-chaleur",
+      "kind": "npc",
+      "title": "C · Offre de la chasseuse (chaleureuse)",
+      "position": {
+        "x": 1400,
+        "y": 2060
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "« La chaîne », dit-elle simplement. « Tu avais vu juste, et les anciens n’ont rien voulu entendre. » Ses mâchoires se serrent. « Si j’avais insisté, peut-être… » Elle n’achève pas."
+        },
+        {
+          "text": "« Je pars sur la piste des Écorcheurs. Ils ont un camp quelque part dans la forêt, et leur bête laisse des traces qu’un enfant suivrait. La patrouille ne s’enfoncera pas sous les arbres, elle a des routes à garder. Alors j’irai, moi. Je veux savoir où ils dorment, combien ils sont, et qui tient le sifflet. »"
+        },
+        {
+          "text": "Elle te tend une corde d’arc de rechange, roulée serré. « Tu as la tête d’un pisteur. Viens, et la forêt te donnera les jambes. Là-bas, on dort sur des racines, on mange froid et on se tait pendant des jours. En échange, tu apprendras à lire chaque trace, et plus rien ne pourra te surprendre. »"
+        }
+      ],
+      "next": [
+        {
+          "id": "vers-suivre",
+          "to": "c-suivre-chasseuse"
+        },
+        {
+          "id": "vers-autre",
+          "to": "c-autre"
+        }
+      ]
+    },
+    "c-parler-chasseuse": {
+      "id": "c-parler-chasseuse",
+      "kind": "choice",
+      "title": "Choix · Parler à la chasseuse",
+      "position": {
+        "x": 1400,
+        "y": 2460
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Tu t’approches de la chasseuse."
+        }
+      ],
+      "next": [
+        {
+          "id": "deja-vu",
+          "to": "offre-chasseuse-bis",
+          "condition": {
+            "op": "or",
+            "conditions": [
+              {
+                "op": "visited",
+                "scene": "offre-chasseuse"
+              },
+              {
+                "op": "visited",
+                "scene": "offre-chasseuse-chaleur"
+              }
+            ]
+          }
+        },
+        {
+          "id": "premiere-fois",
+          "to": "offre-chasseuse"
+        }
+      ],
+      "label": "Parler à la chasseuse"
+    },
+    "offre-chasseuse": {
+      "id": "offre-chasseuse",
+      "kind": "npc",
+      "title": "C · Offre de la chasseuse (distante)",
+      "position": {
+        "x": 1400,
+        "y": 2620
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Elle a déjà son arc sur l’épaule et te répond sans s’arrêter de marcher, si bien que tu dois presser le pas pour rester à sa hauteur. « Je pars sur la piste des Écorcheurs. Ils ont un camp quelque part dans la forêt. »"
+        },
+        {
+          "text": "« La patrouille a des routes à garder, les anciens des toits à refaire. Il ne reste que moi pour aller voir où se cachent ceux qui ont fait ça, et ce qu’ils comptent faire ensuite. »"
+        },
+        {
+          "text": "Elle s’arrête enfin et te jauge longuement. « Deux paires d’yeux valent mieux qu’une. Si tu sais marcher sans bruit et dormir par terre, tu peux venir. Mais je n’attendrai personne, et je ne porterai personne. »"
+        }
+      ],
+      "next": [
+        {
+          "id": "vers-suivre",
+          "to": "c-suivre-chasseuse"
+        },
+        {
+          "id": "vers-autre",
+          "to": "c-autre"
+        }
+      ]
+    },
+    "offre-chasseuse-bis": {
+      "id": "offre-chasseuse-bis",
+      "kind": "npc",
+      "title": "C · Offre de la chasseuse (déjà entendue)",
+      "position": {
+        "x": 1580,
+        "y": 2780
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Elle resserre la sangle de son carquois. « La piste refroidit pendant qu’on parle. »"
+        }
+      ],
+      "next": [
+        {
+          "id": "vers-suivre",
+          "to": "c-suivre-chasseuse"
+        },
+        {
+          "id": "vers-autre",
+          "to": "c-autre"
+        }
+      ]
+    },
+    "c-suivre-chasseuse": {
+      "id": "c-suivre-chasseuse",
+      "kind": "choice",
+      "title": "Choix · Suivre la chasseuse",
+      "position": {
+        "x": 1400,
+        "y": 2960
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Tu vas chercher ton manteau."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "fin-chasseuse",
+          "effects": [
+            {
+              "op": "set",
+              "variable": "classe",
+              "value": "rodeur"
+            }
+          ]
+        }
+      ],
+      "label": "Suivre la chasseuse"
+    },
+    "fin-chasseuse": {
+      "id": "fin-chasseuse",
+      "kind": "npc",
+      "title": "C · Fin du prologue : la voie du rôdeur",
+      "position": {
+        "x": 1400,
+        "y": 3120
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Le soir venu, tu fais tes adieux à Maëlle. Elle t’écoute raconter ton choix sans t’interrompre, puis elle te tient longuement la main."
+        },
+        {
+          "text": "« Reviens me voir quand tu seras quelqu’un. Ou avant, si la route est trop dure. »"
+        },
+        {
+          "text": "À l’aube, tu t’enfonces dans la forêt derrière la chasseuse, sur la piste des Écorcheurs et de leur bête."
+        }
+      ],
+      "next": [],
+      "ending": {
+        "type": "Fin du prologue",
+        "name": "La voie du rôdeur",
+        "blurb": "Ta route commence ici. La suite reste à écrire."
+      }
+    },
+    "c-autre": {
+      "id": "c-autre",
+      "kind": "choice",
+      "title": "Choix · Aller voir quelqu’un d’autre",
+      "position": {
+        "x": 1800,
+        "y": 2780
+      },
+      "tags": [
+        "carrefour"
+      ],
+      "blocks": [
+        {
+          "text": "Tu remercies d’un signe de tête et tu t’éloignes."
+        }
+      ],
+      "next": [
+        {
+          "id": "suite",
+          "to": "place"
+        }
+      ],
+      "label": "Aller voir quelqu’un d’autre"
+    }
+  },
+  "translations": {
+    "en": {
+      "title": "Vaelmont",
+      "tag": "Fantasy",
+      "blurb": "You are seventeen, with an inn for your only home and a pendant no one has ever been able to read. Today, Brumefosse celebrates the harvest. Each of your choices shapes who you become, and the path you take will open a destiny no other shares.",
+      "scenes": {
+        "start": {
+          "section": {
+            "title": "Chapter 1 — The Harvest Festival"
+          },
+          "blocks": [
+            "On the morning of the Harvest Festival, Brumefosse wakes to the rumble of carts. A merchant caravan came in from Vaelmont during the night, and its canvas covers, painted red and ochre, already fill half the square.",
+            "In the inn’s common room, Maëlle wipes her hands on her apron and looks at you over the counter. “Go on. The barrels can wait. But I want you back here before the moon rises: tonight there’ll be a hundred mouths to feed.”",
+            "Without thinking, you touch the pendant under your shirt, the disc of dark metal you have worn for as long as you can remember, and you step out into the light.",
+            "The whole village seems to have gathered on the square. By the well, a wiry man with a scar-seamed face has drawn a circle in the dust and is taunting the village youths, a wooden sword in his hand. Behind him, the caravan folk struggle to unload crates heavier than they are. At the end of the street, the temple bell calls everyone to the blessing of the harvest. On the steps of the fountain, an old man in a threadbare coat coaxes blue sparks from between his fingers, to the delighted shrieks of the children.",
+            "A little apart, a young man from the caravan runs a ball beneath three copper cups, and the villagers’ coins change pockets with every round. And on the forest road, the village huntress is coming back from the edge of the woods, a roe deer slung across her shoulders, looking troubled despite her catch."
+          ]
+        },
+        "c-bonneteau": {
+          "label": "Watch the shell-game player",
+          "blocks": [
+            "You slip into the front row of onlookers around the three cups."
+          ]
+        },
+        "bonneteau": {
+          "blocks": [
+            "The player is barely twenty, with an easy smile and hands that never stop. He lifts a cup, shows the ball, covers it again, and the three cups start to dance on a plank laid across two barrels.",
+            "The miller bets three pennies and loses. The blacksmith bets and loses. Between rounds, a man in a grey coat wins, then wins again, and he is always the one urging the others to bet once more. You saw him this morning, unloading the caravan’s carts.",
+            "You meet the player’s eyes. He knows that you know. You say nothing, and the game goes on.",
+            "Later, when the crowd has scattered, he catches up with you by the horse trough and walks beside you for a while. “One word from you and the village would have run us out with sticks. Why didn’t you say anything?” You shrug. His smile turns real. “Anyone can see. Keeping quiet at the right moment, that’s a trade.”",
+            "The shell-game player will remember your silence."
+          ]
+        },
+        "c-chasse": {
+          "label": "Go and meet the huntress",
+          "blocks": [
+            "You walk up the forest road to meet her."
+          ]
+        },
+        "chasse": {
+          "blocks": [
+            "The huntress sets the deer down on the low wall of the washhouse and wipes her brow. She is a lean, weathered woman with close-cropped hair and an ash bow slung across her back. In the village they say she knows every tree at the forest’s edge by name.",
+            "She sizes you up for a moment, then traces a footprint in the dust with her finger, as wide as a plate. “Found it this morning, an hour’s walk from here. And right beside it, a furrow in the earth. Unbroken, never straying, for hundreds of paces.”",
+            "You stare at the drawing, thinking aloud: a huge beast, dragging behind it something that never comes loose.",
+            "She looks at you with new interest. “A chain. That’s what I thought too.” She wipes the print away with the flat of her hand. “I’ll tell the elders, and they’ll laugh in my face, on a feast day. You, though, you’ve got a tracker’s head. All that’s left is to give you the legs.”",
+            "The huntress will remember your instinct."
+          ]
+        },
+        "c-duel": {
+          "label": "Challenge the master-at-arms",
+          "blocks": [
+            "You step into the circle before you have had time to think about it."
+          ]
+        },
+        "duel": {
+          "blocks": [
+            "The master-at-arms looks you up and down without a smile, then tosses you a wooden sword that you only just catch. “On guard.”",
+            "The first blow lands on your shoulder before you see it coming. The second you parry by luck. On the third, you realize he is letting you come at him, and you charge anyway.",
+            "You end up in the dust, the wooden point at your throat, while the crowd laughs. Yet when he holds out his hand to help you up, he is not laughing. “You lasted longer than the others. You know nothing, and you don’t back down. That’s a start.”",
+            "The master-at-arms will remember your daring."
+          ]
+        },
+        "c-caravane": {
+          "label": "Help the merchants unload",
+          "blocks": [
+            "You roll up your sleeves and join the caravan folk."
+          ]
+        },
+        "caravane": {
+          "blocks": [
+            "A woman with tightly braided grey hair directs the unloading from atop a cart, a wax tablet in her hand. She takes your measure at a glance and nods towards a stack of crates. “Those go to the inn’s cellar. Don’t drop anything.”",
+            "You carry, you stack, you come back. At the tenth crate, you notice that the mark painted on the wood doesn’t match what she wrote on her tablet, and you tell her.",
+            "She checks, frowns, then truly looks at you this time. “Two barrels of Vaelmont wine I’d have left here at the price of ale.” She slips a copper coin into your hand.",
+            "You toss it in your palm without putting it away. With a smile, you point out that you could have kept quiet and let the inn gain two barrels of wine, and that honesty like that is worth a good deal more than one coin. The merchant bursts out laughing and adds a second. “You’ve got the eye, and the tongue to go with it. That’s rarer than strong arms.”",
+            "The merchant will remember your nerve."
+          ]
+        },
+        "c-temple": {
+          "label": "Attend the blessing at the temple",
+          "blocks": [
+            "You head up the street to the sound of the bell."
+          ]
+        },
+        "temple": {
+          "blocks": [
+            "The temple of Brumefosse is too small for the whole village, and half the faithful stand on the forecourt in the full sun. At the foot of the altar, the first sheaves of the year wait, tied with ribbons.",
+            "The priest is a round, slow man with a voice deeper than you would expect. When he raises his hands, silence falls all the way out into the street.",
+            "During the prayer, a sheaf slips and threatens to topple the candles. You catch it before it touches the flame. The priest carries on without a pause, but when the service ends, he comes to find you. “Few people see what happens around them while they pray. I can’t tell yet whether it’s a flaw or a grace.”",
+            "The priest will remember you."
+          ]
+        },
+        "c-erudit": {
+          "label": "Listen to the old scholar",
+          "blocks": [
+            "You sit down on the fountain steps among the children, a head taller than all of them, and nobody minds."
+          ]
+        },
+        "erudit": {
+          "blocks": [
+            "The old man makes a blue flame dance above his palm, turns it into a butterfly, then into a shower of sparks that die before they touch the ground. The little ones scream with joy.",
+            "You are watching his left hand. With every trick, his fingers trace the same small sign in the air, so fast you could mistake it for a tremor.",
+            "When the children scatter, he packs up his things unhurriedly, then raises his eyes to you. “You saw the gesture. Most people watch the light. Those who watch the hand sometimes end up understanding how it works.”",
+            "The old scholar will remember your eye."
+          ]
+        },
+        "soir": {
+          "blocks": [
+            "The sun is sinking over the mown fields when you head back to the inn. The square has emptied of its games and filled with tables, the lanterns are lit one by one, and someone has brought out a fiddle.",
+            "All evening you run between the kitchen and the hall, your arms full of jugs. Maëlle sings as she serves, something she does only once a year.",
+            "It is close to midnight when the last drinker goes home. You climb to your room under the eaves, legs heavy, and fall asleep before you have blown out the candle."
+          ]
+        },
+        "nuit": {
+          "blocks": [
+            "It is the dogs that wake you. Every one in the village barks at once, and then, all of a sudden, not a single one.",
+            "You lie still in the dark for a while, listening. Nothing. You creep down the stairs barefoot, skipping the step that creaks so as not to wake Maëlle, and push open the door of the inn.",
+            "On the square, the festival lanterns are guttering out. At the end of the forest road, torches are moving closer, dozens of them, and a first thatched roof goes up with the roar of a bellows.",
+            "Then you hear the chain. A scrape of iron on cobblestones, slow and steady. Behind the torches looms a massive shape, taller than a horse, which three men struggle to hold back at the ends of their chains. A voice screams the name peddlers have been whispering since summer: “The Flayers!”",
+            "In moments, Brumefosse wakes to screams. Doors open on people in their nightshirts who don’t know where to run. Against the well, a pitchfork left over from the festival. In the paddock behind the square, the caravan’s horses kick and whinny. And behind you, a spark carried on the wind has just settled on the roof of the inn."
+          ]
+        },
+        "c-combat": {
+          "label": "Take up a weapon and face the brigands",
+          "blocks": [
+            "You pick up the pitchfork, weigh it for a second, and run towards the torches."
+          ]
+        },
+        "combat": {
+          "blocks": [
+            "The first brigand you meet was expecting nothing. The tines of the pitchfork catch him in the thigh, he goes down cursing, and already the next one is in front of you, axe raised.",
+            "You parry as best you can, the shaft splits, and you back away until you feel a wall behind you. In the middle of the street, the master-at-arms is fighting with a real blade this time, and other villagers are arming themselves in turn: the blacksmith with his hammer, the miller’s sons with their flails. Together, you drive the raiders back to the end of the street.",
+            "That is where the beast finds you. The men who held it have let go of its chains, and it charges straight at you. The blacksmith goes rolling across the ground. Your legs refuse to move.",
+            "It stops dead, one step away from you. Its nostrils smoke. Its yellow eyes, as big as fists, stare at you, and for a long moment you feel its scorching breath on your face while nothing else in the street moves.",
+            "A shrill whistle sounds from the direction of the forest. The beast shakes its head as if to chase off a fly, turns around and vanishes into the smoke, its chain scraping over the cobblestones behind it.",
+            "The rest of the night is nothing but a haze of shouting, smoke, and buckets of water passed from hand to hand.",
+            "The master-at-arms saw you hold the street."
+          ]
+        },
+        "c-refuge": {
+          "label": "Lead the villagers to the temple",
+          "blocks": [
+            "You grab the first neighbour who runs past by the arm and point at the bell tower. “To the temple! The walls are stone!”"
+          ]
+        },
+        "refuge": {
+          "blocks": [
+            "Your voice carries further than you would have believed. One family follows you, then another, then children in nightshirts, old folk propped up by their grandchildren. You climb the street through the smoke, shouting the same word over and over.",
+            "The priest has thrown open the great doors and stands on the threshold, a candle in his hand, so that its light serves as a beacon. He brings people in one by one and counts heads under his breath.",
+            "You go back down for the stragglers. At the corner of Weavers’ Lane, a mother stands frozen, her baby in her arms. Behind her, in the glow of the flames, something enormous is coming closer.",
+            "You throw yourself in front of her without thinking. The beast stops dead, one step away from you. Its nostrils smoke. Its yellow eyes, as big as fists, stare at you, and for a long moment you feel its scorching breath on your face while nothing else in the lane moves.",
+            "A shrill whistle sounds from the direction of the forest. The beast shakes its head as if to chase off a fly, turns around and vanishes into the smoke, its chain scraping over the cobblestones behind it.",
+            "You bring the mother and child back to the temple. The doors close behind you, and all night long, huddled together, you listen to the village burn, praying under your breath.",
+            "The priest will remember your courage."
+          ]
+        },
+        "c-maelle": {
+          "label": "Run to the inn for Maëlle",
+          "blocks": [
+            "You turn back and rush into the inn, whose thatch is already catching fire."
+          ]
+        },
+        "maelle": {
+          "blocks": [
+            "The common room is full of smoke. You call for Maëlle, you cough, you call again. Above you, the beams crack like branches in a storm.",
+            "You find her at the top of the stairs, on her knees, trying to make her way down with one hand against the wall. You put her arm across your shoulders. You are halfway down when the roof gives way: a burning beam crashes onto the banister and crushes her leg. She screams. You pull with all your strength until she is free.",
+            "You drag her outside into the stable yard and lay her down against the trough. When you straighten up, the beast is there, a few paces away, come out of the smoke as if it had been waiting for you.",
+            "You place yourself in front of Maëlle. The beast comes on a little further, then stops dead, one step away from you. Its nostrils smoke. Its yellow eyes, as big as fists, stare at you, and for a long moment you feel its scorching breath on your face while nothing else in the yard moves.",
+            "A shrill whistle sounds from the direction of the forest. The beast shakes its head as if to chase off a fly, turns around and vanishes into the smoke, its chain scraping over the cobblestones behind it.",
+            "Behind you, Maëlle has seen everything. She looks at you for a long time without a word. For the rest of the night you keep watch over her in the yard, and together you watch the roof of the inn fall in.",
+            "Maëlle will not forget this night."
+          ]
+        },
+        "c-chevaux": {
+          "label": "Free the caravan’s horses",
+          "blocks": [
+            "You run to the caravan’s paddock."
+          ]
+        },
+        "chevaux": {
+          "blocks": [
+            "The horses are circling the paddock, mad with fear, the whites of their eyes showing. From here you can see the whole forest road: the raiders came in by it, and by it they will leave, loaded with their plunder.",
+            "You lift the bar, swing the gate wide and slap the rump of the first horse with the flat of your hand, yelling. The herd surges after it, straight onto the road, a wave of hooves and manes that sweeps through the brigands’ carts and tips them into the ditch.",
+            "You have no time to see what comes next. A growl rises behind you, so deep that you feel it in your chest before you hear it. You turn: the beast has come into the empty paddock.",
+            "It stops dead, one step away from you. Its nostrils smoke. Its yellow eyes, as big as fists, stare at you, and for a long moment you feel its scorching breath on your face while nothing else in the paddock moves.",
+            "A shrill whistle sounds from the direction of the forest. The beast shakes its head as if to chase off a fly, turns around and vanishes into the smoke, its chain scraping over the earth behind it.",
+            "You spend the rest of the night running from one fire to the next with the buckets. The raiders, robbed of their carts, will have to leave behind half of what they stole.",
+            "The merchant will know who let her horses loose."
+          ]
+        },
+        "aube": {
+          "blocks": [
+            "At dawn, horns ring out on the Vaelmont road. A royal patrol, some twenty riders in blue cloaks, saw the flames from the hill and comes in at a gallop. The last brigands flee into the forest without waiting to be asked twice.",
+            "When the sun rises, Brumefosse is a half-blackened village. Grey smoke drifts between the houses. People wander about in a daze or dig through the rubble with their bare hands. Of the inn, nothing remains but the stone walls and a smell of wet wood."
+          ]
+        },
+        "aube-veille": {
+          "blocks": [
+            "Maëlle has not left the trough. The priest came at dawn to splint her leg as best he could, and she sits there, the leg stiff before her, her face grey with soot and weariness. When you come near, she takes your hand and holds it in hers for a while."
+          ]
+        },
+        "aube-cellier": {
+          "blocks": [
+            "You search everywhere for Maëlle, your heart in your throat, until a neighbour tugs at your sleeve. They found her in the early morning, curled up in the cellar, where she had taken refuge when the stairs caught fire. A falling beam broke her leg, and she breathed smoke all night long.",
+            "The priest says she was lucky. When you see her, sitting against the temple wall, grey with soot, her leg bound in a makeshift splint, you find that hard to believe. She beckons you over, takes your hand and holds it in hers for a while."
+          ]
+        },
+        "adieu": {
+          "blocks": [
+            "“The inn was my life,” she says at last. “You have yours to make.”",
+            "You want to protest, to say you will rebuild, that you will stay and help her. She shakes her head before you have even opened your mouth.",
+            "“This village has nothing left to give you. Go, and become someone.”",
+            "She lets go of your hand. Behind you, on the ash-covered square, footsteps are coming closer."
+          ]
+        },
+        "ceremonie": {
+          "blocks": [
+            "At noon, the elders gather what is left of the village on the square. There is no music and there are no tables, only blackened faces and children who will no longer let go of their parents’ hands.",
+            "The headman thanks the patrol, then those who fought, those who carried water, those who opened their doors. The patrol’s sergeant, a square-built man with a grey beard, answers with a simple nod. Seated on a bench, her leg stiff before her, Maëlle never takes her eyes off you.",
+            "When the crowd breaks up, several people linger on the square, and more than one glances your way: the master-at-arms, the merchant, the priest, the old scholar, the shell-game player, the huntress."
+          ]
+        },
+        "place": {
+          "blocks": [
+            "Your gaze travels across the square."
+          ]
+        },
+        "approche-armes": {
+          "blocks": [
+            "The master-at-arms is the first to come over to you. He stops two paces away, thumbs hooked in his belt, and watches you as he did the day before, by the circle drawn in the dust."
+          ]
+        },
+        "offre-armes-chaleur": {
+          "blocks": [
+            "“Yesterday, in the circle, you knew nothing and you didn’t back down.” He glances at the blackened roofs. “I’ve seen folk built like oxen drop their weapon at the first blow. Courage can hardly be taught. The rest can.”",
+            "“I head south tomorrow. There are tournaments in the baronies, lords who pay well to have their colours defended, and between the two, roads where you’d better know how to use a blade.”",
+            "“I need someone to carry my pack, hold my horse and oil my weapons. The first months, you’ll sleep on the ground and wake up bruised all over.” He gives what is almost a smile. “After that, I’ll teach you to hand them back.”"
+          ]
+        },
+        "c-parler-armes": {
+          "label": "Talk to the master-at-arms",
+          "blocks": [
+            "You walk over to the master-at-arms."
+          ]
+        },
+        "offre-armes": {
+          "blocks": [
+            "He is wiping his blade with a rag and does not look up. “If you’ve come to thank me, it’s done. If you’ve come for something else, speak.”",
+            "You tell him you are looking for your road. He grunts. “Everyone looks for their road the day after a massacre. Most find it again as soon as the roofs are mended.” He studies the edge of his blade against the light. “I head south tomorrow, to the tournaments in the baronies. Lords who pay well, and roads where you’d better know how to defend yourself.”",
+            "At last he looks you over from head to toe, the way one sizes up a horse. “I need someone to carry my pack and hold my horse. The pay is board and lodging. The rest, we’ll see if you earn it.”"
+          ]
+        },
+        "offre-armes-bis": {
+          "blocks": [
+            "He barely raises his eyes. “I’ve made you my offer. I leave tomorrow at dawn, with or without you.”"
+          ]
+        },
+        "c-suivre-armes": {
+          "label": "Follow the master-at-arms",
+          "blocks": [
+            "You tell the master-at-arms you will carry his pack."
+          ]
+        },
+        "fin-armes": {
+          "blocks": [
+            "When evening comes, you say your farewells to Maëlle. She listens to you tell her your choice without interrupting, then holds your hand for a long time.",
+            "“Come back and see me when you’ve become someone. Or sooner, if the road is too hard.”",
+            "At dawn, you leave Brumefosse behind the master-at-arms’ horse, his pack on your back, heading south towards his tournaments."
+          ],
+          "ending": {
+            "type": "End of the Prologue",
+            "name": "The Warrior’s Path",
+            "blurb": "Your road begins here. The rest is yet to be written."
+          }
+        },
+        "approche-marchande": {
+          "blocks": [
+            "The merchant cuts through the crowd towards you, her wax tablet under her arm. Her features are drawn, but her face brightens when she sees you."
+          ]
+        },
+        "offre-marchande-chaleur": {
+          "blocks": [
+            "“The eye and the tongue,” she says by way of greeting. Then her smile fades. “The caravan lost a clerk last night. Tomas. He was sixteen, and he could count better than me.”",
+            "“His place is yours if you want it. I won’t lie to you: it’s the road in all weathers, accounts by candlelight until midnight, customers who try to rob you and tolls that do it all perfectly legally.”",
+            "“In exchange, you’ll see Vaelmont, and after Vaelmont, the southern ports and the eastern fairs. And you’ll get a real share of the profits, since you already know how to stand up for what’s yours.” She taps her wax tablet. “We leave in two days.”"
+          ]
+        },
+        "c-parler-marchande": {
+          "label": "Talk to the merchant",
+          "blocks": [
+            "You walk over to the merchant."
+          ]
+        },
+        "offre-marchande": {
+          "blocks": [
+            "She listens with half an ear, her eyes on her tablet, where she is tallying what the night has cost her. “Three horses, two carts, and a clerk.” She draws a line in the wax. “The horses and the carts, I’ll buy again. The boy, I can’t.”",
+            "At last she looks up at you. “His place is free. The road, the cold, the accounts until midnight. Can you read? Count?” You nod. “Good. That saves me teaching you everything.”",
+            "“Board, lodging, and a clerk’s wage. We’ll talk about profits once you’ve proved yourself. We leave for Vaelmont in two days, with or without you.”"
+          ]
+        },
+        "offre-marchande-bis": {
+          "blocks": [
+            "“Back to bargain?” She smiles. “The place is still free. It won’t stay that way for long.”"
+          ]
+        },
+        "c-suivre-marchande": {
+          "label": "Join the caravan",
+          "blocks": [
+            "You hold out your hand to the merchant, and she shakes it."
+          ]
+        },
+        "fin-marchande": {
+          "blocks": [
+            "When evening comes, you say your farewells to Maëlle. She listens to you tell her your choice without interrupting, then holds your hand for a long time.",
+            "“Come back and see me when you’ve become someone. Or sooner, if the road is too hard.”",
+            "Two days later, the caravan takes the Vaelmont road again. You walk beside the lead cart, a wax tablet in your hand."
+          ],
+          "ending": {
+            "type": "End of the Prologue",
+            "name": "The Merchant’s Path",
+            "blurb": "Your road begins here. The rest is yet to be written."
+          }
+        },
+        "approche-pretre": {
+          "blocks": [
+            "The priest makes his slow way over to you, the sleeves of his robe still grey with ash, his eyes red like someone who has not slept."
+          ]
+        },
+        "offre-pretre-chaleur": {
+          "blocks": [
+            "“I saw you catch that sheaf yesterday, while everyone else kept their eyes shut.” He gives a tired smile. “I thought about it last night, between two of the wounded. There are people who pray, and people who keep watch while the others pray. Both are needed. The second kind are rarer.”",
+            "“Every autumn, the seminary in Vaelmont takes in a few young people who have nothing but their goodwill. I spent six years there, long ago. They teach the scriptures, healing, the old tongue, and above all how to serve before you learn to pray.”",
+            "He lays a hand on your shoulder. “I’ve already started the letter. I can’t promise you an easy life: you sleep little there, you eat badly, and the world expects a great deal of those who wear the robe. But I believe there’s a place for you there.”"
+          ]
+        },
+        "c-parler-pretre": {
+          "label": "Talk to the priest",
+          "blocks": [
+            "You walk over to the priest."
+          ]
+        },
+        "offre-pretre": {
+          "blocks": [
+            "The priest greets you with the slightly weary gentleness he keeps for all his flock. His sleeves are stained with dried blood, and he smells of smoke and salve.",
+            "“Many have come to see me this morning. Some want to understand why the gods let this happen, and I have no answer to give them. Others want to know what to do with their lives now. To those, at least, I have a door to show.”",
+            "“Every autumn, the seminary in Vaelmont takes in a few young people who have nothing but their goodwill. If you feel the call, I can write for you. There, you learn to serve before you learn to pray.” He looks at you for a long time. “Think it over carefully. No one enters the seminary to flee from ashes.”"
+          ]
+        },
+        "offre-pretre-bis": {
+          "blocks": [
+            "The priest welcomes you with the same patient smile. “Take all the time you need. The seminary will wait.”"
+          ]
+        },
+        "c-suivre-pretre": {
+          "label": "Leave for the seminary",
+          "blocks": [
+            "You ask the priest to write his letter."
+          ]
+        },
+        "fin-pretre": {
+          "blocks": [
+            "When evening comes, you say your farewells to Maëlle. She listens to you tell her your choice without interrupting, then holds your hand for a long time.",
+            "“Come back and see me when you’ve become someone. Or sooner, if the road is too hard.”",
+            "A week later, the seminary’s answer arrives. You set off for Vaelmont with a sealed letter and an almost empty bundle."
+          ],
+          "ending": {
+            "type": "End of the Prologue",
+            "name": "The Priest’s Path",
+            "blurb": "Your road begins here. The rest is yet to be written."
+          }
+        },
+        "approche-erudit": {
+          "blocks": [
+            "The old scholar comes to sit beside you on the rim of the fountain, wincing a little, as if his knees held the night against him."
+          ]
+        },
+        "offre-erudit-chaleur": {
+          "blocks": [
+            "“Do you remember the gesture?” He makes it again, slowly, before your eyes, and a blue spark kindles at his fingertips before going out. “Children see the light. You saw the work. That’s the first step, and most people never take it.”",
+            "“The Arcane Academy of Vaelmont spends years teaching what you noticed in a single afternoon. Runes, seals, the mechanics of spells. You also learn humility there, by dint of failing.” He laughs softly. “It took me four years to light a candle.”",
+            "He draws a quill and a blank sheet from his coat. “A recommendation. I need only write your name on it, and they seldom refuse a student I send them. I don’t promise you miracles. I promise you’ll understand the world better than those who rule it.”"
+          ]
+        },
+        "c-parler-erudit": {
+          "label": "Talk to the old scholar",
+          "blocks": [
+            "You walk over to the scholar."
+          ]
+        },
+        "offre-erudit": {
+          "blocks": [
+            "He raises an eyebrow as you approach, as if searching for your face among those of yesterday’s children, without finding it.",
+            "“The Arcane Academy of Vaelmont is always looking for curious minds. Very few truly are. People come to throw fireballs, and find years of runic grammar, arithmetic and reading by candlelight. Half the students leave before the end of the first year.”",
+            "He draws a quill and a blank sheet from his coat and turns the quill between his fingers. “I’m willing to write a recommendation. Still, I’d need to know what name to write on it, and what it’s worth.”"
+          ]
+        },
+        "offre-erudit-bis": {
+          "blocks": [
+            "He turns the quill between his fingers. “The sheet is still blank.”"
+          ]
+        },
+        "c-suivre-erudit": {
+          "label": "Accept the scholar’s letter",
+          "blocks": [
+            "You watch the old man dip his quill in the ink."
+          ]
+        },
+        "fin-erudit": {
+          "blocks": [
+            "When evening comes, you say your farewells to Maëlle. She listens to you tell her your choice without interrupting, then holds your hand for a long time.",
+            "“Come back and see me when you’ve become someone. Or sooner, if the road is too hard.”",
+            "You take the road to Vaelmont with a letter bearing your name sewn into the lining of your coat."
+          ],
+          "ending": {
+            "type": "End of the Prologue",
+            "name": "The Mage’s Path",
+            "blurb": "Your road begins here. The rest is yet to be written."
+          }
+        },
+        "approche-bonneteau": {
+          "blocks": [
+            "The shell-game player appears at your side without your having heard him come, a ball rolling between his fingers."
+          ]
+        },
+        "offre-bonneteau-chaleur": {
+          "blocks": [
+            "He winks at you. “The silent witness. Did you know my partner wanted to cure you of any urge to talk, last night? I told him to leave you be. I was right.”",
+            "“The caravan is moving on, but I’m leaving it. I’m heading down to Vaelmont on my own. There are people there looking for sharp eyes and a shut mouth: merchants who want to know what their rivals are up to, nobles who mislay letters, doors that only open at night.”",
+            "He makes his ball vanish with a flick of the wrist and brings it back from behind your ear. “They pay well, and they never ask questions. You already know how to keep quiet. The rest — locks, crowds, the art of never being where they look for you — I’ll teach you on the way.”"
+          ]
+        },
+        "c-parler-bonneteau": {
+          "label": "Talk to the shell-game player",
+          "blocks": [
+            "You walk over to the shell-game player."
+          ]
+        },
+        "offre-bonneteau": {
+          "blocks": [
+            "He gathers up his plank and cups unhurriedly and gives you a sidelong look. “You’ve got the face of someone with nothing left to lose. Usually, those are the best customers.”",
+            "“The caravan is moving on, but I’m heading down to Vaelmont on my own. I know people there who are looking for sharp eyes and nimble hands. Nothing very honest, I’ll warn you. Nothing very bloody either, most of the time.”",
+            "“They pay well, and they never ask questions.” He shrugs. “It’s up to you whether you have the nerve. Me, I leave tomorrow, once the moon has set.”"
+          ]
+        },
+        "offre-bonneteau-bis": {
+          "blocks": [
+            "“You again?” He laughs. “I won’t say it twice. If you want to come, come.”"
+          ]
+        },
+        "c-suivre-bonneteau": {
+          "label": "Leave with the shell-game player",
+          "blocks": [
+            "You signal to the player that you’re in."
+          ]
+        },
+        "fin-bonneteau": {
+          "blocks": [
+            "When evening comes, you say your farewells to Maëlle. She listens to you tell her your choice without interrupting, then holds your hand for a long time.",
+            "“Come back and see me when you’ve become someone. Or sooner, if the road is too hard.”",
+            "On a moonless night, you leave Brumefosse by the woodland path, on the heels of the shell-game player, without telling anyone else where you are going."
+          ],
+          "ending": {
+            "type": "End of the Prologue",
+            "name": "The Thief’s Path",
+            "blurb": "Your road begins here. The rest is yet to be written."
+          }
+        },
+        "approche-chasseuse": {
+          "blocks": [
+            "The huntress crosses the square straight towards you, bow on her shoulder, forest mud up to her knees."
+          ]
+        },
+        "offre-chasseuse-chaleur": {
+          "blocks": [
+            "“The chain,” she says simply. “You saw it right, and the elders wouldn’t hear a word.” Her jaw tightens. “If I’d pushed harder, maybe…” She does not finish.",
+            "“I’m going after the Flayers. They have a camp somewhere in the forest, and their beast leaves tracks a child could follow. The patrol won’t go in under the trees; it has roads to guard. So I’ll go myself. I want to know where they sleep, how many they are, and who holds the whistle.”",
+            "She hands you a spare bowstring, tightly coiled. “You’ve got a tracker’s head. Come, and the forest will give you the legs. Out there, you sleep on roots, eat cold and keep silent for days. In exchange, you’ll learn to read every track, and nothing will ever take you by surprise again.”"
+          ]
+        },
+        "c-parler-chasseuse": {
+          "label": "Talk to the huntress",
+          "blocks": [
+            "You walk over to the huntress."
+          ]
+        },
+        "offre-chasseuse": {
+          "blocks": [
+            "She already has her bow on her shoulder and answers you without breaking stride, so that you have to hurry to keep up. “I’m going after the Flayers. They have a camp somewhere in the forest.”",
+            "“The patrol has roads to guard, the elders have roofs to mend. That leaves only me to go and see where the ones who did this are hiding, and what they mean to do next.”",
+            "At last she stops and looks you over for a long time. “Two pairs of eyes are better than one. If you can walk without a sound and sleep on the ground, you can come. But I won’t wait for anyone, and I won’t carry anyone.”"
+          ]
+        },
+        "offre-chasseuse-bis": {
+          "blocks": [
+            "She tightens the strap of her quiver. “The trail goes cold while we talk.”"
+          ]
+        },
+        "c-suivre-chasseuse": {
+          "label": "Follow the huntress",
+          "blocks": [
+            "You go to fetch your coat."
+          ]
+        },
+        "fin-chasseuse": {
+          "blocks": [
+            "When evening comes, you say your farewells to Maëlle. She listens to you tell her your choice without interrupting, then holds your hand for a long time.",
+            "“Come back and see me when you’ve become someone. Or sooner, if the road is too hard.”",
+            "At dawn, you plunge into the forest behind the huntress, on the trail of the Flayers and their beast."
+          ],
+          "ending": {
+            "type": "End of the Prologue",
+            "name": "The Ranger’s Path",
+            "blurb": "Your road begins here. The rest is yet to be written."
+          }
+        },
+        "c-autre": {
+          "label": "Go and see someone else",
+          "blocks": [
+            "You give a nod of thanks and walk away."
+          ]
+        }
+      }
+    }
+  }
+}

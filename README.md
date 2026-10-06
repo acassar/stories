@@ -69,7 +69,7 @@ The reader is mobile-first: open it in your browser inspector in phone mode, or 
 
 ```bash
 pnpm verify        # lint + typecheck + tests
-pnpm test          # 453 tests
+pnpm test          # 454 tests
 pnpm test:coverage # the same, with the thresholds on the core
 pnpm lint
 pnpm typecheck
@@ -287,9 +287,11 @@ the board at the twelfth move. Nothing is added to the format, nothing is stored
 A name the story never sets is left standing, braces included, and reported as a warning: a
 mistyped variable has no other symptom.
 
-### Test stories
+### Shipped and test stories
 
-No story ships with the apps: the reader and the studio both start empty, and everything in them was opened from a file. The stories the repository holds are test fixtures, behind their own entry point — `@embranche/story-format/fixtures` — that only tests import; the lint fails an app that tries. Most are short and each isolates one shape of the graph.
+One story ships with the reader: **« Vaelmont »**, in [`apps/reader/src/stories`](apps/reader/src/stories/vaelmont.embranche.json). It is written in a separate, private repository, and only a version its author has validated is copied here, byte for byte — drafts never land in this one. The reader parses it like any file opened from outside, and a test holds it to zero issues. The studio starts empty.
+
+Every other story in the repository is a test fixture, behind their own entry point — `@embranche/story-format/fixtures` — that only tests import; the lint fails an app that tries. Most are short and each isolates one shape of the graph.
 
 **« La Fréquence Kerlaven »** is the long one: 229 nodes, 9 endings, five acts, in [`fixtures/kerlaven.ts`](packages/story-format/src/fixtures/kerlaven.ts). It lives in its own module because of its size, and it is what the format is stress-tested against — item gates (`hasItem` / `lacksItem` on the links that open a button), chaining switches that pick a node from the state, hub nodes several acts fall back into, and an ending gated on a `visited` scene. A seeded walk in the `story-engine` suite reaches each of its nine endings and asserts no run ever stalls.
 
@@ -439,7 +441,7 @@ The reader revalidates the document and flatly refuses an inconsistent story.
 
 ## Tests
 
-453 tests, all green.
+454 tests, all green.
 
 | Suite          | What it covers                                                                   |
 | -------------- | -------------------------------------------------------------------------------- |
